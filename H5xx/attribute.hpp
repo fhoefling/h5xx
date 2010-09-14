@@ -1,6 +1,6 @@
 /* HDF5 C++ extensions
  *
- * Copyright © 2008-2009  Peter Colberg
+ * Copyright © 2008-2010  Peter Colberg and Felix Höfling
  *
  * This file is part of HALMD.
  *
@@ -164,7 +164,7 @@ template <typename T>
 typename boost::enable_if<boost::is_same<T, std::string>, attribute&>::type
 attribute::operator=(T const& value)
 {
-    H5::StrType tid(H5::PredType::C_S1, 256);
+    H5::StrType tid(H5::PredType::C_S1, value.size());
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
@@ -173,7 +173,7 @@ attribute::operator=(T const& value)
     catch (H5::AttributeIException const&) {
         attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     }
-    attr.write(tid, value.c_str());
+    attr.write(tid, value.data());
     return *this;
 }
 
@@ -196,9 +196,11 @@ attribute::as()
     if (ds.getSimpleExtentType() != H5S_SCALAR) {
         throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not scalar");
     }
-    // fixed string length includes terminating NULL character
-    char value[256];
-    attr.read(H5::StrType(H5::PredType::C_S1, 256), value);
+    // determine string length first
+    H5::StrType tid(attr.getDataType());
+    std::string value(tid.getSize());
+    attr.read(tid, value.data());
+//     attr.read(H5::StrType(H5::PredType::C_S1, 256), value);
     return value;
 }
 
@@ -209,7 +211,7 @@ template <typename T>
 typename boost::enable_if<boost::is_same<T, char const*>, attribute&>::type
 attribute::operator=(T value)
 {
-    H5::StrType tid(H5::PredType::C_S1, 256);
+    H5::StrType tid(H5::PredType::C_S1, strlen(value));
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
@@ -258,7 +260,11 @@ attribute::operator=(T const& value)
 
     hsize_t dim[1] = { size };
     H5::DataSpace ds(1, dim);
-    H5::StrType tid(H5::PredType::C_S1, 256);
+    size_t max_len = 0;
+    for (size_t i = 0; i < size; ++i) {
+        max_len = max(max_len, strlen(value[i]) + 1);  // include terminating NULL character
+    }
+    H5::StrType tid(H5::PredType::C_S1, max_len);
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
@@ -267,9 +273,9 @@ attribute::operator=(T const& value)
     catch (H5::AttributeIException const&) {
         attr = m_node->createAttribute(m_name, tid, ds);
     }
-    boost::array<char[256], size> data;
+    std::vector<char> data(max_len * size);
     for (size_t i = 0; i < size; ++i) {
-        strncpy(data[i], value[i], 256);
+        strncpy(data[i * max_len], value[i], max_len);
     }
     attr.write(tid, data.data());
     return *this;

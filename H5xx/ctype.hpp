@@ -39,6 +39,7 @@ template <> struct ctype<CTYPE> \
 
 MAKE_CTYPE(float, FLOAT);
 MAKE_CTYPE(double, DOUBLE);
+MAKE_CTYPE(long double, LDOUBLE);
 MAKE_CTYPE(int8_t, INT8);
 MAKE_CTYPE(uint8_t, UINT8);
 MAKE_CTYPE(int16_t, INT16);
@@ -47,6 +48,8 @@ MAKE_CTYPE(int32_t, INT32);
 MAKE_CTYPE(uint32_t, UINT32);
 MAKE_CTYPE(int64_t, INT64);
 MAKE_CTYPE(uint64_t, UINT64);
+
+#undef MAKE_CTYPE
 
 } // namespace H5xx
 

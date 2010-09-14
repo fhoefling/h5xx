@@ -125,6 +125,10 @@ attribute::operator=(T const& value)
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         attr = m_node->openAttribute(m_name);
+        // FIXME we need something like the following, but it doesn't work :-(
+        if (attr.getTypeClass() != H5::PredType(ctype<T>()).getClass()) {
+            throw H5::AttributeIException();
+        }
     }
     catch (H5::AttributeIException const&) {
         attr = m_node->createAttribute(m_name, ctype<T>(), H5S_SCALAR);
@@ -196,12 +200,11 @@ attribute::as()
     if (ds.getSimpleExtentType() != H5S_SCALAR) {
         throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not scalar");
     }
-    // determine string length first
-    H5::StrType tid(attr.getDataType());
-    std::string value(tid.getSize());
-    attr.read(tid, value.data());
-//     attr.read(H5::StrType(H5::PredType::C_S1, 256), value);
-    return value;
+    // determine string length first and allocate space
+    size_t len = attr.getDataType().getSize();
+    std::vector<std::string::value_type> value(len);
+    attr.read(H5::StrType(H5::PredType::C_S1, len), value.data());
+    return std::string(value.data(), value.size());
 }
 
 /**
@@ -262,7 +265,7 @@ attribute::operator=(T const& value)
     H5::DataSpace ds(1, dim);
     size_t max_len = 0;
     for (size_t i = 0; i < size; ++i) {
-        max_len = max(max_len, strlen(value[i]) + 1);  // include terminating NULL character
+        max_len = std::max(max_len, strlen(value[i]) + 1);  // include terminating NULL character
     }
     H5::StrType tid(H5::PredType::C_S1, max_len);
     H5::Attribute attr;
@@ -275,7 +278,7 @@ attribute::operator=(T const& value)
     }
     std::vector<char> data(max_len * size);
     for (size_t i = 0; i < size; ++i) {
-        strncpy(data[i * max_len], value[i], max_len);
+        strncpy(data.data() + i * max_len, value[i], max_len);
     }
     attr.write(tid, data.data());
     return *this;
@@ -325,7 +328,7 @@ template <typename T>
 typename boost::enable_if<is_boost_multi_array<T>, attribute&>::type
 attribute::operator=(T const& value)
 {
-    typedef typename T::value_type value_type;
+    typedef typename T::element value_type;
     enum { dimension = T::dimensionality };
 
     hsize_t dim[dimension];
@@ -350,7 +353,7 @@ template <typename T>
 typename boost::enable_if<is_boost_multi_array<T>, T>::type
 attribute::as()
 {
-    typedef typename T::value_type value_type;
+    typedef typename T::element value_type;
     enum { dimension = T::dimensionality };
 
     H5::Attribute attr;

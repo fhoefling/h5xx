@@ -35,7 +35,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     H5File file(filename, H5F_ACC_TRUNC);
     Group group = file.openGroup("/");
 
-    uint64_t uint_value = 1346581934865;
+    uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
     attribute(group, "integral, scalar") = 1; // works with 1UL;
     attribute(group, "integral, scalar") = uint_value;  // overwrite value
 
@@ -78,6 +78,11 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     value_multi_array.assign(data3, data3 + 2 * 3 * 4);
     attribute(group, "int, multi_array") = value_multi_array;
 
+    //
+    // test H5::dataset
+    //
+    make_dataset_writer(group, "dataset, uint", &uint_value)();
+
     // re-open file
     file.close();
     file.openFile(filename, H5F_ACC_RDONLY);
@@ -98,6 +103,6 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 
     // remove file
 #ifndef NDEBUG
-    unlink(filename);
+//     unlink(filename);
 #endif
 }

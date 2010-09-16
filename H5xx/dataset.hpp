@@ -61,6 +61,12 @@ create_dataset(
         hsize_t chunk_dim[1] = { 1 };
         cparms.setChunk(1, chunk_dim);
 
+        // remove dataset if it exists
+        try {
+            H5XX_NO_AUTO_PRINT(H5::GroupIException);
+            group.unlink(name);
+        }
+        catch (H5::GroupIException const&) {}
         return group.createDataSet(name, H5xx::ctype<T>(), ds, cparms);
 }
 
@@ -110,12 +116,8 @@ read(H5::DataSet& dataset, T* data, ssize_t index)
     LOG_DEBUG("read from dataset " << path(dataset) << " at " << index);
 
     H5::DataSpace dataspace(dataset.getSpace());
-
-    if (!dataspace.isSimple()) {
-        throw std::runtime_error("HDF5 reader: dataspace is not simple");
-    }
-    if (dataspace.getSimpleExtentNdims() != 1) {
-        throw std::runtime_error("HDF5 reader: dataspace has invalid dimensionality");
+    if (!has_type<T>(dataset) || !has_rank<1>(dataspace)) {
+        throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
     }
 
     hsize_t dim[1];
@@ -304,6 +306,14 @@ void hdf5<dimension, float_type>::write_vector_dataset(
 #endif // 0
 
 /**
+ * return first dimension of dataset
+ */
+inline hsize_t elements(H5::DataSet ds)
+{
+    return ds.getSpace().getSimpleExtentNpoints();
+}
+
+/**
  * helper functions for convenience
  *
  * we pass the data via pointer to make it transparent for the client code
@@ -323,7 +333,7 @@ boost::function<void (hsize_t)> make_dataset_write_at(H5::DataSet const& dataset
 
 template <typename T>
 boost::function<void ()> make_dataset_writer(
-    H5::CommonFG const& group, std::string const& name, T const* data)
+    H5::Group const& group, std::string const& name, T const* data)
 {
     H5::DataSet dataset = create_dataset<T>(group, name);
     return make_dataset_writer(dataset, data);
@@ -331,7 +341,7 @@ boost::function<void ()> make_dataset_writer(
 
 template <typename T>
 boost::function<void (hsize_t)> make_dataset_write_at(
-    H5::CommonFG const& group, std::string const& name, T const* data)
+    H5::Group const& group, std::string const& name, T const* data)
 {
     H5::DataSet dataset = create_dataset<T>(group, name);
     return make_dataset_write_at(dataset, data);

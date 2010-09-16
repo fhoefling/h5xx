@@ -138,10 +138,11 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     Group group = file.openGroup("/");
 
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
+    H5xx::make_dataset_writer(group, "dataset, uint", &uint_value)();
+    // overwrite data set
     DataSet uint_dataset = create_dataset<uint64_t>(group, "dataset, uint");
     H5xx::write(uint_dataset, uint_value);
-    H5xx::write(uint_dataset, uint_value);
-//     H5xx::make_dataset_writer(group, "dataset, uint", &uint_value)();
+    H5xx::write(uint_dataset, uint_value + 1);
 
     // re-open file
     file.close();
@@ -150,9 +151,20 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
 
     // read datasets
     uint_dataset = group.openDataSet("dataset, uint");
+    BOOST_CHECK(has_type<uint64_t>(uint_dataset));
+    BOOST_CHECK(elements(uint_dataset) == 2);
+
     uint64_t uint_value_;
-    read(uint_dataset, &uint_value_, 1);
+    read(uint_dataset, &uint_value_, 0);
     BOOST_CHECK(uint_value_ == uint_value);
+    read(uint_dataset, &uint_value_, 1);
+    BOOST_CHECK(uint_value_ == uint_value + 1);
+    read(uint_dataset, &uint_value_, -1);
+    BOOST_CHECK(uint_value_ == uint_value + 1);
+    read(uint_dataset, &uint_value_, -2);
+    BOOST_CHECK(uint_value_ == uint_value);
+    BOOST_CHECK_THROW(read(uint_dataset, &uint_value_, 2), std::runtime_error);
+    BOOST_CHECK_THROW(read(uint_dataset, &uint_value_, -3), std::runtime_error);
 
     // remove file
 #ifndef NDEBUG

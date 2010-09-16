@@ -127,6 +127,18 @@ inline bool has_simple_space(H5::AbstractDs const& ds)
     return ds.getSpace().isSimple();
 }
 
+template <hsize_t rank>
+bool has_rank(H5::DataSpace const& ds)
+{
+    return ds.isSimple() && ds.getSimpleExtentNdims() == rank;
+}
+
+template <hsize_t rank>
+bool has_rank(H5::AbstractDs const& ds)
+{
+    return has_rank<rank>(ds.getSpace());
+}
+
 /**
  * check data space extent of abstract dataset (dataset or attribute)
  */
@@ -135,7 +147,7 @@ typename boost::enable_if<is_boost_array<T>, bool>::type
 has_extent(H5::AbstractDs const& ds)
 {
     H5::DataSpace dataspace = ds.getSpace();
-    if (!dataspace.isSimple() || dataspace.getSimpleExtentNdims() != 1)
+    if (!has_rank<1>(dataspace))
         return false;
 
     hsize_t dim[1];

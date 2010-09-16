@@ -159,8 +159,7 @@ attribute::operator=(T const& value)
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         m_node->removeAttr(m_name);
     }
-    catch (H5::AttributeIException const&) {
-    }
+    catch (H5::AttributeIException const&) {}
     attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     attr.write(tid, value.data());
     return *this;
@@ -206,8 +205,7 @@ attribute::operator=(T value)
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         m_node->removeAttr(m_name);
     }
-    catch (H5::AttributeIException const&) {
-    }
+    catch (H5::AttributeIException const&) {}
     attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     attr.write(tid, value);
     return *this;
@@ -265,8 +263,7 @@ attribute::operator=(T const& value)
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         m_node->removeAttr(m_name);
     }
-    catch (H5::AttributeIException const&) {
-    }
+    catch (H5::AttributeIException const&) {}
     attr = m_node->createAttribute(m_name, tid, ds);
     std::vector<char> data(max_len * size);
     for (size_t i = 0; i < size; ++i) {

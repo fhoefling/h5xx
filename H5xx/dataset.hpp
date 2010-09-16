@@ -29,44 +29,29 @@
 #include <boost/function.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>
+#include <boost/ref.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <vector>
 
 #include <H5xx/attribute.hpp>
 #include <H5xx/util.hpp>
-// #include <halmd/io/logger.hpp>
+#include <halmd/io/logger.hpp>
 
 namespace H5xx
 {
 
 /**
- * base class for HD5 dataset wrapper
+ * create dataset 'name' in given group or file with given size
  */
-
-template <typename T, typename Enable = void>
-class dataset_base : public H5::DataSet
-{
-public:
-    /** upgrade H5::DataSet */
-    dataset_base(H5::DataSet const& node) : H5::DataSet(node) {}
-    /** open or create dataset 'name' in given group or file */
-    dataset_base(H5::CommonFG const& group, std::string const& name, hsize_t max_size=H5S_UNLIMITED);
-
-    /** write data to dataset at given index, default argument appends dataset */
-    void write_at(T const* data, hsize_t index=H5S_UNLIMITED);
-};
-
 template <typename T>
-class dataset_base<T, typename boost::enable_if<boost::is_fundamental<T> >::type>
-    : public H5::DataSet
+typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
+create_dataset(
+    H5::Group const& group
+  , std::string const& name
+  , hsize_t max_size=H5S_UNLIMITED)
 {
-public:
-    // constructors
-    dataset_base(H5::DataSet const& node) : H5::DataSet(node) {}
-    dataset_base(H5::CommonFG const& group, std::string const& name, hsize_t max_size)
-    {
-//         LOG("create dataset " << path(*this));
+        LOG_DEBUG("create dataset '" << name << "' in " << path(group));
         // scalar sample file dataspace
         hsize_t dim[1] = { 0 };
         hsize_t max_dim[1] = { max_size };
@@ -76,14 +61,23 @@ public:
         hsize_t chunk_dim[1] = { 1 };
         cparms.setChunk(1, chunk_dim);
 
-        *this = group.createDataSet(name, H5xx::ctype<T>(), ds, cparms);
-    }
+        return group.createDataSet(name, H5xx::ctype<T>(), ds, cparms);
+}
 
-    // write function
-    void write_at(T const* data, hsize_t index)
-    {
-//         LOG("write dataset " << path(*this) << " at " << index);
-        H5::DataSpace dataspace(getSpace());
+/**
+ * write data to dataset at given index, default argument appends dataset
+ */
+template <typename T>
+typename boost::enable_if<boost::is_fundamental<T> >::type
+write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+{
+        if (index == H5S_UNLIMITED) {
+            LOG_DEBUG("append to dataset " << path(dataset));
+        }
+        else {
+            LOG_DEBUG("write to dataset " << path(dataset) << " at " << index);
+        }
+        H5::DataSpace dataspace(dataset.getSpace());
 
         // select hyperslab
         hsize_t dim[1];
@@ -96,16 +90,59 @@ public:
             // extend dataspace to append another scalar sample
             dim[0]++;
             dataspace.setExtentSimple(1, dim);
-            extend(dim);
+            dataset.extend(dim);
         }
         else {
             start[0] = index;
         }
         dataspace.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
 
-        write(data, H5xx::ctype<T>(), H5S_SCALAR, dataspace);
+        dataset.write(&data, H5xx::ctype<T>(), H5S_SCALAR, dataspace);
+}
+
+/**
+ * read data to dataset at given index
+ */
+template <typename T>
+typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
+read(H5::DataSet& dataset, T* data, ssize_t index)
+{
+    LOG_DEBUG("read from dataset " << path(dataset) << " at " << index);
+
+    H5::DataSpace dataspace(dataset.getSpace());
+
+    if (!dataspace.isSimple()) {
+        throw std::runtime_error("HDF5 reader: dataspace is not simple");
     }
-};
+    if (dataspace.getSimpleExtentNdims() != 1) {
+        throw std::runtime_error("HDF5 reader: dataspace has invalid dimensionality");
+    }
+
+    hsize_t dim[1];
+    dataspace.getSimpleExtentDims(dim);
+
+    ssize_t const len = dim[0];
+    if ((index >= len) || ((-index) > len)) {
+        throw std::runtime_error("HDF5 reader: index out of bounds");
+    }
+    index = (index < 0) ? (index + len) : index;
+
+    hsize_t count[1]  = { 1 };
+    hsize_t start[1]  = { index };
+    hsize_t stride[1] = { 1 };
+    hsize_t block[1]  = { 1 };
+    dataspace.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
+
+    try {
+        H5XX_NO_AUTO_PRINT(H5::Exception);
+        dataset.read(data, H5xx::ctype<T>(), H5S_SCALAR, dataspace);
+    }
+    catch (H5::Exception const&) {
+        throw std::runtime_error("HDF5 reader: failed to read scalar data");
+    }
+
+    return index;
+}
 
 #if 0
 
@@ -267,48 +304,38 @@ void hdf5<dimension, float_type>::write_vector_dataset(
 #endif // 0
 
 /**
- * HDF5 dataset
+ * helper functions for convenience
+ *
+ * we pass the data via pointer to make it transparent for the client code
+ * that we store a const reference
  */
 template <typename T>
-class dataset : public dataset_base<T>
+boost::function<void ()> make_dataset_writer(H5::DataSet const& dataset, T const* data)
 {
-public:
-    dataset() {}
-    /** upgrade H5::DataSet */
-    dataset(H5::DataSet const& node) : H5::DataSet(node) {}
-    /** open or create dataset 'name' in given group or file */
-    dataset(H5::CommonFG const& group, std::string const& name, hsize_t max_size=H5S_UNLIMITED)
-      : dataset_base<T>(group, name, max_size) {}
+    return boost::bind(&write<T>, dataset, boost::cref(*data), H5S_UNLIMITED);
+}
 
-    /** return function object to dataset::write() in append mode */
-    boost::function<void ()> append(T const* data)
-    {
-        return boost::bind(&dataset_base<T>::write_at, this, data, H5S_UNLIMITED);
-    }
-    /** return function object to dataset::write() */
-    boost::function<void (hsize_t)> write_at(T const* data)
-    {
-        return boost::bind(&dataset_base<T>::write_at, this, data, _1);
-    }
-
-    /**
-     * returns existing or creates attribute
-     */
-    attribute operator[](char const* name) const
-    {
-        return attribute(*this, name);
-    }
-};
+template <typename T>
+boost::function<void (hsize_t)> make_dataset_write_at(H5::DataSet const& dataset, T const* data)
+{
+    return boost::bind(&write<T>, dataset, boost::cref(*data), _1);
+}
 
 template <typename T>
 boost::function<void ()> make_dataset_writer(
-    H5::CommonFG const& group
-  , std::string const& name
-  , T const* data)
+    H5::CommonFG const& group, std::string const& name, T const* data)
 {
-    return dataset<T>(group, name).append(data);
+    H5::DataSet dataset = create_dataset<T>(group, name);
+    return make_dataset_writer(dataset, data);
 }
 
+template <typename T>
+boost::function<void (hsize_t)> make_dataset_write_at(
+    H5::CommonFG const& group, std::string const& name, T const* data)
+{
+    H5::DataSet dataset = create_dataset<T>(group, name);
+    return make_dataset_write_at(dataset, data);
+}
 } // namespace H5xx
 
 #endif /* ! HALMD_UTIL_H5XX_DATASET_HPP */

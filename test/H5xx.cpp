@@ -21,7 +21,6 @@
 #define BOOST_TEST_MODULE test_H5xx
 #include <boost/test/unit_test.hpp>
 
-#include <boost/array.hpp>
 #include <unistd.h>
 #include <H5Cpp.h>
 #include <H5xx.hpp>
@@ -78,16 +77,12 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     value_multi_array.assign(data3, data3 + 2 * 3 * 4);
     attribute(group, "int, multi_array") = value_multi_array;
 
-    //
-    // test H5::dataset
-    //
-    make_dataset_writer(group, "dataset, uint", &uint_value)();
-
     // re-open file
     file.close();
     file.openFile(filename, H5F_ACC_RDONLY);
     group = file.openGroup("/");
 
+    // read attributes
     BOOST_CHECK(attribute(group, "integral, scalar").as<uint64_t>() == uint_value);
     BOOST_CHECK(attribute(group, "long double, scalar").as<long double>() == ldouble_value);
     BOOST_CHECK(attribute(group, "double, scalar").as<double>()
@@ -103,6 +98,38 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 
     // remove file
 #ifndef NDEBUG
-//     unlink(filename);
+    unlink(filename);
+#endif
+}
+
+BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
+{
+    using namespace H5;
+    using namespace H5xx;
+
+    char const filename[] = "test_H5xx.hdf5";
+    H5File file(filename, H5F_ACC_TRUNC);
+    Group group = file.openGroup("/");
+
+    uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
+    DataSet uint_dataset = create_dataset<uint64_t>(group, "dataset, uint");
+    H5xx::write(uint_dataset, uint_value);
+    H5xx::write(uint_dataset, uint_value);
+//     H5xx::make_dataset_writer(group, "dataset, uint", &uint_value)();
+
+    // re-open file
+    file.close();
+    file.openFile(filename, H5F_ACC_RDONLY);
+    group = file.openGroup("/");
+
+    // read datasets
+    uint_dataset = group.openDataSet("dataset, uint");
+    uint64_t uint_value_;
+    read(uint_dataset, &uint_value_, 1);
+    BOOST_CHECK(uint_value_ == uint_value);
+
+    // remove file
+#ifndef NDEBUG
+    unlink(filename);
 #endif
 }

@@ -75,9 +75,9 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
         83,82,81,80,
         79,78,77,76
     };
-    multi_array3 value_multi_array(boost::extents[2][3][4]);
-    value_multi_array.assign(data3, data3 + 2 * 3 * 4);
-    attribute(group, "int, multi_array") = value_multi_array;
+    multi_array3 multi_array_value(boost::extents[2][3][4]);
+    multi_array_value.assign(data3, data3 + 2 * 3 * 4);
+    attribute(group, "int, multi_array") = multi_array_value;
 
     // re-open file
     file.close();
@@ -106,7 +106,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     BOOST_CHECK(has_extent<string_array_type>(group.openAttribute("char [], array")));
     BOOST_CHECK(has_extent<double_array_type>(group.openAttribute("double, array")));
     BOOST_CHECK(has_extent<multi_array3>(group.openAttribute("int, multi_array"),
-                value_multi_array.shape()));
+                multi_array_value.shape()));
 
     // read attributes
     BOOST_CHECK(attribute(group, "integral, scalar").as<uint64_t>() == uint_value);
@@ -120,7 +120,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     BOOST_CHECK(attribute(group, "double, array").as<double_array_type>() == value_array);
     value_vector = attribute(group, "double, array").as<double_vector_type>();
     BOOST_CHECK(equal(value_vector.begin(), value_vector.end(), value_array.begin()));
-    BOOST_CHECK(attribute(group, "int, multi_array").as<multi_array3>() == value_multi_array);
+    BOOST_CHECK(attribute(group, "int, multi_array").as<multi_array3>() == multi_array_value);
 
     // remove file
 #ifndef NDEBUG
@@ -137,20 +137,56 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     H5File file(filename, H5F_ACC_TRUNC);
     Group group = file.openGroup("/");
 
+    //
+    // create and write datasets
+    //
+
+    // scalar type
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
-    H5xx::make_dataset_writer(group, "dataset, uint", &uint_value)();
+    H5xx::make_dataset_writer(group, "uint", &uint_value)();
     // overwrite data set
-    DataSet uint_dataset = create_dataset<uint64_t>(group, "dataset, uint");
+    DataSet uint_dataset = create_dataset<uint64_t>(group, "uint");
     H5xx::write(uint_dataset, uint_value);
     H5xx::write(uint_dataset, uint_value + 1);
 
+    // array type
+    typedef boost::array<double, 3> array_type;
+    array_type array_value = {{ 1, sqrt(2), 2 }};
+    array_type array_value2 = {{ -1, sqrt(3), -3 }};
+    DataSet array_dataset
+        = create_dataset<array_type>(group, "array", 2);  // fixed size
+    H5xx::write(array_dataset, array_value, 0);           // write entry #0
+    H5xx::write(array_dataset, array_value2, 1);          // write entry #1
+
+    // multi-array type
+    typedef boost::multi_array<int, 2> multi_array2;
+    int data2[] = {
+        99,98,97,96,
+        95,94,93,92,
+        91,90,89,88,
+    };
+    multi_array2 multi_array_value(boost::extents[3][4]);
+    multi_array_value.assign(data2, data2 + 3 * 4);
+    DataSet multi_array_dataset
+        = create_dataset<multi_array2>(group, "multi_array", multi_array_value.shape());
+    H5xx::write(multi_array_dataset, multi_array_value);    // append
+    multi_array_value[1][2] = 1;
+    H5xx::write(multi_array_dataset, multi_array_value);    // append
+    multi_array_value[1][2] = 2;
+    H5xx::write(multi_array_dataset, multi_array_value, 0);  // overwrite first entry
+
     // re-open file
+    file.flush(H5F_SCOPE_GLOBAL);
     file.close();
     file.openFile(filename, H5F_ACC_RDONLY);
     group = file.openGroup("/");
 
+    //
     // read datasets
-    uint_dataset = group.openDataSet("dataset, uint");
+    //
+
+    // scalar type dataset
+    uint_dataset = group.openDataSet("uint");
     BOOST_CHECK(has_type<uint64_t>(uint_dataset));
     BOOST_CHECK(elements(uint_dataset) == 2);
 
@@ -165,6 +201,18 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     BOOST_CHECK(uint_value_ == uint_value);
     BOOST_CHECK_THROW(read(uint_dataset, &uint_value_, 2), std::runtime_error);
     BOOST_CHECK_THROW(read(uint_dataset, &uint_value_, -3), std::runtime_error);
+
+    // array type dataset
+    array_dataset = group.openDataSet("array");
+    BOOST_CHECK(has_type<array_type>(array_dataset));
+//     BOOST_CHECK(has_extent<array_type>(array_dataset));
+    BOOST_CHECK(elements(array_dataset) == 2 * 3);
+
+    // multi-array type dataset
+    multi_array_dataset = group.openDataSet("multi_array");
+    BOOST_CHECK(has_type<multi_array2>(multi_array_dataset));
+//     BOOST_CHECK(has_extent<multi_array2>(multi_array_dataset, multi_array_value.shape()));
+    BOOST_CHECK(elements(multi_array_dataset) == 2 * 3 * 4);
 
     // remove file
 #ifndef NDEBUG

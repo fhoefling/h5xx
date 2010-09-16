@@ -41,9 +41,13 @@
 namespace H5xx
 {
 
+enum { compression_level = 6 };
+
 /**
- * create dataset 'name' in given group or file with given size
+ * create dataset 'name' in given group with given size
  */
+// first argument could be H5::CommonFG if the LOG_DEBUG line would be omitted
+// chunks of scalars
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_dataset(
@@ -51,59 +55,226 @@ create_dataset(
   , std::string const& name
   , hsize_t max_size=H5S_UNLIMITED)
 {
-        LOG_DEBUG("create dataset '" << name << "' in " << path(group));
-        // scalar sample file dataspace
-        hsize_t dim[1] = { 0 };
-        hsize_t max_dim[1] = { max_size };
-        H5::DataSpace ds(1, dim, max_dim);
+    LOG_DEBUG("create dataset '" << name << "' in " << path(group));
+    // scalar sample file dataspace
+    hsize_t dim[1] = { max_size == H5S_UNLIMITED ? 0 : max_size };
+    hsize_t max_dim[1] = { max_size };
+    hsize_t chunk_dim[1] = { 1 };
 
-        H5::DSetCreatPropList cparms;
-        hsize_t chunk_dim[1] = { 1 };
-        cparms.setChunk(1, chunk_dim);
+    H5::DataSpace dataspace(1, dim, max_dim);
+    H5::DSetCreatPropList cparms;
+    cparms.setChunk(1, chunk_dim);
+    cparms.setDeflate(compression_level);    // enable GZIP compression
 
-        // remove dataset if it exists
-        try {
-            H5XX_NO_AUTO_PRINT(H5::GroupIException);
-            group.unlink(name);
-        }
-        catch (H5::GroupIException const&) {}
-        return group.createDataSet(name, H5xx::ctype<T>(), ds, cparms);
+    // remove dataset if it exists
+    try {
+        H5XX_NO_AUTO_PRINT(H5::GroupIException);
+        group.unlink(name);
+    }
+    catch (H5::GroupIException const&) {}
+    return group.createDataSet(name, ctype<T>(), dataspace, cparms);
+}
+
+// chunks of fixed-size arrays
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_boost_array<T>, boost::is_fundamental<typename T::value_type>
+    >, H5::DataSet>::type
+create_dataset(
+    H5::Group const& group
+  , std::string const& name
+  , hsize_t max_size=H5S_UNLIMITED)
+{
+    LOG_DEBUG("create dataset '" << name << "' in " << path(group));
+
+    // file dataspace holding max_size chunks of fixed-size arrays
+    hsize_t dim[2] = { max_size == H5S_UNLIMITED ? 0 : max_size, T::static_size };
+    hsize_t max_dim[2] = { max_size, T::static_size };
+    hsize_t chunk_dim[2] = { 1, T::static_size };
+
+    H5::DataSpace dataspace(2, dim, max_dim);
+    H5::DSetCreatPropList cparms;
+    cparms.setChunk(2, chunk_dim);
+    cparms.setDeflate(compression_level);    // enable GZIP compression
+
+    // remove dataset if it exists
+    try {
+        H5XX_NO_AUTO_PRINT(H5::GroupIException);
+        group.unlink(name);
+    }
+    catch (H5::GroupIException const&) {}
+    return group.createDataSet(name, ctype<typename T::value_type>(), dataspace, cparms);
+}
+
+// chunks of multi-arrays of fixed rank
+template <typename T>
+typename boost::enable_if<is_boost_multi_array<T>, H5::DataSet>::type
+create_dataset(
+    H5::Group const& group
+  , std::string const& name
+  , typename T::size_type const* shape
+  , hsize_t max_size=H5S_UNLIMITED)
+{
+    LOG_DEBUG("create dataset '" << name << "' in " << path(group));
+
+    // file dataspace holding max_size multi_array chunks of fixed rank
+    enum { rank = T::dimensionality };
+    boost::array<hsize_t, rank+1> dim, max_dim, chunk_dim;
+    std::copy(shape, shape + rank, dim.begin() + 1);
+    max_dim = dim;
+    chunk_dim = dim;
+    dim[0] = (max_size == H5S_UNLIMITED) ? 0 : max_size;
+    max_dim[0] = max_size;
+    chunk_dim[0] = 1;
+
+    H5::DataSpace dataspace(dim.size(), dim.data(), max_dim.data());
+    H5::DSetCreatPropList cparms;
+    cparms.setChunk(chunk_dim.size(), chunk_dim.data());
+    cparms.setDeflate(compression_level);    // enable GZIP compression
+
+    // remove dataset if it exists
+    try {
+        H5XX_NO_AUTO_PRINT(H5::GroupIException);
+        group.unlink(name);
+    }
+    catch (H5::GroupIException const&) {}
+    return group.createDataSet(name, ctype<typename T::element>(), dataspace, cparms);
 }
 
 /**
  * write data to dataset at given index, default argument appends dataset
  */
+// chunks of scalars
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T> >::type
 write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
-        if (index == H5S_UNLIMITED) {
-            LOG_DEBUG("append to dataset " << path(dataset));
-        }
-        else {
-            LOG_DEBUG("write to dataset " << path(dataset) << " at " << index);
-        }
-        H5::DataSpace dataspace(dataset.getSpace());
+    if (index == H5S_UNLIMITED) {
+        LOG_DEBUG("append to dataset " << path(dataset));
+    }
+    else {
+        LOG_DEBUG("write to dataset " << path(dataset) << " at " << index);
+    }
+    H5::DataSpace dataspace(dataset.getSpace());
 
-        // select hyperslab
-        hsize_t dim[1];
-        dataspace.getSimpleExtentDims(dim);
-        hsize_t count[1]  = { 1 };
-        hsize_t start[1]  = { dim[0] };
-        hsize_t stride[1] = { 1 };
-        hsize_t block[1]  = { 1 };
-        if (index == H5S_UNLIMITED) {
-            // extend dataspace to append another scalar sample
-            dim[0]++;
-            dataspace.setExtentSimple(1, dim);
+    // select hyperslab
+    hsize_t dim[1];
+    dataspace.getSimpleExtentDims(dim);
+    hsize_t count[1]  = { 1 };
+    hsize_t start[1]  = { dim[0] };
+    hsize_t stride[1] = { 1 };
+    hsize_t block[1]  = { 1 };
+    if (index == H5S_UNLIMITED) {
+        // extend dataspace to append another scalar sample
+        dim[0]++;
+        dataspace.setExtentSimple(1, dim);
+        try {
+            H5XX_NO_AUTO_PRINT(H5::DataSpaceIException);
             dataset.extend(dim);
         }
-        else {
-            start[0] = index;
+        catch (H5::DataSpaceIException const&) {
+            throw std::runtime_error("HDF5 writer: fixed-size dataset cannot be extended");
         }
-        dataspace.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
+    }
+    else {
+        start[0] = index;
+    }
+    dataspace.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
 
-        dataset.write(&data, H5xx::ctype<T>(), H5S_SCALAR, dataspace);
+    dataset.write(&data, ctype<T>(), H5S_SCALAR, dataspace);
+}
+
+// chunks of fixed-size arrays
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+    is_boost_array<T>, boost::is_fundamental<typename T::value_type>
+> >::type
+write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+{
+    if (index == H5S_UNLIMITED) {
+        LOG_DEBUG("append to dataset " << path(dataset));
+    }
+    else {
+        LOG_DEBUG("write to dataset " << path(dataset) << " at " << index);
+    }
+    H5::DataSpace dataspace(dataset.getSpace());
+
+    // select hyperslab
+    hsize_t dim[2];
+    dataspace.getSimpleExtentDims(dim);
+    hsize_t count[2]  = { 1, 1 };
+    hsize_t start[2]  = { dim[0], 0 };
+    hsize_t stride[2] = { 1, 1 };
+    hsize_t block[2]  = { 1, T::static_size };
+    if (index == H5S_UNLIMITED) {
+        // extend dataspace to append another chunk
+        dim[0]++;
+        dataspace.setExtentSimple(2, dim);
+        try {
+            H5XX_NO_AUTO_PRINT(H5::DataSetIException);
+            dataset.extend(dim);
+        }
+        catch (H5::DataSetIException const&) {
+            throw std::runtime_error("HDF5 writer: fixed-size dataset cannot be extended");
+        }
+    }
+    else {
+        start[0] = index;
+    }
+    dataspace.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
+
+    // memory dataspace
+    hsize_t dim_mem[1] = { T::static_size };
+    H5::DataSpace mem_dataspace(1, dim_mem);
+
+    dataset.write(data.data(), ctype<typename T::value_type>(), mem_dataspace, dataspace);
+}
+
+// chunks of multi_arrays of fixed rank
+template <typename T>
+typename boost::enable_if<is_boost_multi_array<T> >::type
+write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+{
+    if (index == H5S_UNLIMITED) {
+        LOG_DEBUG("append to dataset " << path(dataset));
+    }
+    else {
+        LOG_DEBUG("write to dataset " << path(dataset) << " at " << index);
+    }
+    H5::DataSpace dataspace(dataset.getSpace());
+
+    // select hyperslab of multi_array chunk
+    enum { rank = T::dimensionality };
+    boost::array<hsize_t, rank+1> dim, count, start, stride, block;
+    dataspace.getSimpleExtentDims(dim.data());
+    std::fill(count.begin(), count.end(), 1);
+    start[0] = dim[0];
+    std::fill(start.begin() + 1, start.end(), 0);
+    std::fill(stride.begin(), stride.end(), 1);
+    block[0] = 1;
+    std::copy(data.shape(), data.shape() + rank, block.begin() + 1);
+
+    if (index == H5S_UNLIMITED) {
+        // extend dataspace to append another chunk
+        dim[0]++;
+        dataspace.setExtentSimple(dim.size(), dim.data());
+        try {
+            H5XX_NO_AUTO_PRINT(H5::DataSetIException);
+            dataset.extend(dim.data());
+        }
+        catch (H5::DataSetIException const&) {
+            throw std::runtime_error("HDF5 writer: fixed-size dataset cannot be extended");
+        }
+    }
+    else {
+        start[0] = index;
+    }
+    dataspace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), block.data());
+
+    // memory dataspace
+    H5::DataSpace mem_dataspace(rank, block.begin() + 1);
+
+    dataset.write(data.data(), ctype<typename T::element>(), mem_dataspace, dataspace);
 }
 
 /**
@@ -137,7 +308,7 @@ read(H5::DataSet& dataset, T* data, ssize_t index)
 
     try {
         H5XX_NO_AUTO_PRINT(H5::Exception);
-        dataset.read(data, H5xx::ctype<T>(), H5S_SCALAR, dataspace);
+        dataset.read(data, ctype<T>(), H5S_SCALAR, dataspace);
     }
     catch (H5::Exception const&) {
         throw std::runtime_error("HDF5 reader: failed to read scalar data");
@@ -145,165 +316,6 @@ read(H5::DataSet& dataset, T* data, ssize_t index)
 
     return index;
 }
-
-#if 0
-
-/**
- * create scalar sample dataset
- */
-template <int dimension, typename float_type>
-H5::DataSet hdf5<dimension, float_type>::create_scalar_dataset(
-    H5::Group where
-  , std::string const& name
-  , float_type sample
-  )
-{
-    H5::DataType const tid = H5xx::ctype<double>();
-
-    // scalar sample file dataspace
-    hsize_t dim[1] = { 0 };
-    hsize_t max_dim[1] = { H5S_UNLIMITED };
-    H5::DataSpace ds(1, dim, max_dim);
-
-    H5::DSetCreatPropList cparms;
-    hsize_t chunk_dim[1] = { 1 };
-    cparms.setChunk(1, chunk_dim);
-
-    return where.createDataSet(name, tid, ds, cparms);
-}
-
-
-/**
- * write vector sample dataset
- */
-template <int dimension, typename float_type>
-void hdf5<dimension, float_type>::write_vector_dataset(
-    H5::DataSet dset
-  , sample_vector_ptr sample
-  )
-{
-    H5::DataType const tid = H5xx::ctype<float_type>();
-    size_t const size = sample->size();
-
-    // extend vector sample file dataspace
-    H5::DataSpace ds(dset.getSpace());
-    hsize_t dim[3];
-    ds.getSimpleExtentDims(dim);
-    hsize_t count[3]  = { 1, 1, 1 };
-    hsize_t start[3]  = { dim[0], 0, 0 };
-    hsize_t stride[3] = { 1, 1, 1 };
-    hsize_t block[3]  = { 1, size, dimension };
-    dim[0]++;
-    ds.setExtentSimple(3, dim);
-    ds.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
-
-    // vector sample memory dataspace
-    hsize_t dim_sample[2] = { size, dimension };
-    H5::DataSpace ds_sample(2, dim_sample);
-
-    dset.extend(dim);
-    dset.write(sample->data(), tid, ds_sample, ds);
-}
-
-/**
- * read scalar sample dataset
- */
-template <int dimension, typename float_type>
-size_t hdf5<dimension, float_type>::read(H5::DataSet dset, float_type& sample)
-{
-    H5::DataSpace ds(dset.getSpace());
-
-    if (!ds.isSimple()) {
-        throw runtime_error("HDF5 scalar dataspace is not a simple dataspace");
-    }
-    if (ds.getSimpleExtentNdims() != 1) {
-        throw runtime_error("HDF5 scalar dataspace has invalid dimensionality");
-    }
-
-    hsize_t dim[1];
-    ds.getSimpleExtentDims(dim);
-
-    ssize_t const len = dim[0];
-    if ((offset_ >= len) || ((-offset_) > len)) {
-        throw runtime_error("trajectory input sample number out of bounds");
-    }
-    size_t offset = (offset_ < 0) ? (offset_ + len) : offset_;
-
-    hsize_t count[1]  = { 1 };
-    hsize_t start[1]  = { offset };
-    hsize_t stride[1] = { 1 };
-    hsize_t block[1]  = { 1 };
-    ds.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
-
-    try {
-        H5XX_NO_AUTO_PRINT(H5::Exception);
-        dset.read(&sample, H5xx::ctype<float_type>(), H5S_SCALAR, ds);
-    }
-    catch (H5::Exception const&) {
-        throw runtime_error("failed to read scalar sample from HDF5 trajectory input file");
-    }
-
-    return offset;
-}
-
-
-/**
- * create vector sample dataset
- */
-template <int dimension, typename float_type>
-H5::DataSet hdf5<dimension, float_type>::create_vector_dataset(
-    H5::Group where
-  , std::string const& name
-  , sample_vector_ptr sample
-  )
-{
-    H5::DataType const tid = H5xx::ctype<float_type>();
-    size_t const size = sample->size();
-
-    // vector sample file dataspace
-    hsize_t dim[3] = { 0, size, dimension };
-    hsize_t max_dim[3] = { H5S_UNLIMITED, size, dimension };
-    H5::DataSpace ds(3, dim, max_dim);
-
-    H5::DSetCreatPropList cparms;
-    hsize_t chunk_dim[3] = { 1, size, dimension };
-    cparms.setChunk(3, chunk_dim);
-    // enable GZIP compression
-    cparms.setDeflate(6);
-
-    return where.createDataSet(name, tid, ds, cparms);
-}
-
-template <int dimension, typename float_type>
-void hdf5<dimension, float_type>::write_vector_dataset(
-    H5::DataSet dset
-  , sample_vector_ptr sample
-  )
-{
-    H5::DataType const tid = H5xx::ctype<float_type>();
-    size_t const size = sample->size();
-
-    // extend vector sample file dataspace
-    H5::DataSpace ds(dset.getSpace());
-    hsize_t dim[3];
-    ds.getSimpleExtentDims(dim);
-    hsize_t count[3]  = { 1, 1, 1 };
-    hsize_t start[3]  = { dim[0], 0, 0 };
-    hsize_t stride[3] = { 1, 1, 1 };
-    hsize_t block[3]  = { 1, size, dimension };
-    dim[0]++;
-    ds.setExtentSimple(3, dim);
-    ds.selectHyperslab(H5S_SELECT_SET, count, start, stride, block);
-
-    // vector sample memory dataspace
-    hsize_t dim_sample[2] = { size, dimension };
-    H5::DataSpace ds_sample(2, dim_sample);
-
-    dset.extend(dim);
-    dset.write(sample->data(), tid, ds_sample, ds);
-}
-
-#endif // 0
 
 /**
  * return first dimension of dataset

@@ -147,7 +147,7 @@ create_dataset(
 // chunks of scalars
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T> >::type
-write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     if (index == H5S_UNLIMITED) {
         LOG_DEBUG("append to dataset " << path(dataset));
@@ -189,7 +189,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
     is_boost_array<T>, boost::is_fundamental<typename T::value_type>
 > >::type
-write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     if (index == H5S_UNLIMITED) {
         LOG_DEBUG("append to dataset " << path(dataset));
@@ -233,7 +233,7 @@ write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 // chunks of multi_arrays of fixed rank
 template <typename T>
 typename boost::enable_if<is_boost_multi_array<T> >::type
-write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     if (index == H5S_UNLIMITED) {
         LOG_DEBUG("append to dataset " << path(dataset));
@@ -282,7 +282,7 @@ write(H5::DataSet& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
  */
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
-read(H5::DataSet& dataset, T* data, ssize_t index)
+read(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     LOG_DEBUG("read from dataset " << path(dataset) << " at " << index);
 

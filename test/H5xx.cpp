@@ -35,22 +35,24 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     Group group = file.openGroup("/");
 
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
-    attribute(group, "integral, scalar") = 1; // works with 1UL;
+    attribute(group, "integral, scalar") = 1;   // store something of wrong type first
     attribute(group, "integral, scalar") = uint_value;  // overwrite value
 
     // long double is supported by the HDF5 library,
     // but neither by h5dump nor pytables ...
     long double ldouble_value = sqrtl(2.);
+    attribute(group, "long double, scalar") = 2;   // store something of wrong type first
     attribute(group, "long double, scalar") = ldouble_value;
     attribute(group, "double, scalar") = static_cast<double>(ldouble_value);
 
-    boost::array<char const*, 3> string_array = {{
+    boost::array<char const*, 3> cstring_array = {{
         "HALMD", "HAL's MD package",
         "Highly accelerated large-scale molecular dynamics simulation package"
     }};
-    attribute(group, "char [], scalar") = string_array[1];
-    attribute(group, "string, scalar") = std::string(string_array[1]);
-    attribute(group, "char [], array") = string_array;
+    typedef boost::array<std::string, 3> string_array_type;
+    attribute(group, "char [], scalar") = cstring_array[1];
+    attribute(group, "string, scalar") = std::string(cstring_array[1]);
+    attribute(group, "char [], array") = cstring_array;
 
     typedef boost::array<double, 5> double_array_type;
     double_array_type value_array = {{
@@ -82,15 +84,39 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     file.openFile(filename, H5F_ACC_RDONLY);
     group = file.openGroup("/");
 
+    // check has_type<>
+    BOOST_CHECK(has_type<uint64_t>(group.openAttribute("integral, scalar")));
+    BOOST_CHECK(has_type<long double>(group.openAttribute("long double, scalar")));
+    BOOST_CHECK(has_type<double>(group.openAttribute("double, scalar")));
+    BOOST_CHECK(has_type<char const*>(group.openAttribute("char [], scalar")));
+    BOOST_CHECK(has_type<std::string>(group.openAttribute("string, scalar")));
+    BOOST_CHECK(has_type<string_array_type>(group.openAttribute("char [], array")));
+    BOOST_CHECK(has_type<double_array_type>(group.openAttribute("double, array")));
+    BOOST_CHECK(has_type<double_vector_type>(group.openAttribute("double, std::vector")));
+    BOOST_CHECK(has_type<multi_array3>(group.openAttribute("int, multi_array")));
+
+    // check has_scalar_space()
+    BOOST_CHECK(has_scalar_space(group.openAttribute("integral, scalar")));
+    BOOST_CHECK(has_scalar_space(group.openAttribute("long double, scalar")));
+    BOOST_CHECK(has_scalar_space(group.openAttribute("double, scalar")));
+    BOOST_CHECK(has_scalar_space(group.openAttribute("char [], scalar")));
+    BOOST_CHECK(has_scalar_space(group.openAttribute("string, scalar")));
+
+    // check has_extent<>
+    BOOST_CHECK(has_extent<string_array_type>(group.openAttribute("char [], array")));
+    BOOST_CHECK(has_extent<double_array_type>(group.openAttribute("double, array")));
+    BOOST_CHECK(has_extent<multi_array3>(group.openAttribute("int, multi_array"),
+                value_multi_array.shape()));
+
     // read attributes
     BOOST_CHECK(attribute(group, "integral, scalar").as<uint64_t>() == uint_value);
     BOOST_CHECK(attribute(group, "long double, scalar").as<long double>() == ldouble_value);
     BOOST_CHECK(attribute(group, "double, scalar").as<double>()
                 == static_cast<double>(ldouble_value));
-    BOOST_CHECK(attribute(group, "char [], scalar").as<std::string>() == string_array[1]);
-    BOOST_CHECK(attribute(group, "string, scalar").as<std::string>() == string_array[1]);
-    // TODO read support for string array is missing
-//     BOOST_CHECK(attribute(group, "char [], array").as<boost::array<char const*, 3> >() == strings);
+    BOOST_CHECK(attribute(group, "char [], scalar").as<std::string>() == cstring_array[1]);
+    BOOST_CHECK(attribute(group, "string, scalar").as<std::string>() == cstring_array[1]);
+    // read support for fixed-size string array is missing
+//     BOOST_CHECK(attribute(group, "char [], array").as<const char*>() == cstring_array);
     BOOST_CHECK(attribute(group, "double, array").as<double_array_type>() == value_array);
     value_vector = attribute(group, "double, array").as<double_vector_type>();
     BOOST_CHECK(equal(value_vector.begin(), value_vector.end(), value_array.begin()));

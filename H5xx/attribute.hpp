@@ -33,27 +33,10 @@
 
 #include <H5xx/ctype.hpp>
 #include <H5xx/exception.hpp>
+#include <H5xx/util.hpp>
 
 namespace H5xx
 {
-
-template <typename T>
-struct is_boost_array : public boost::false_type {};
-
-template <typename T, size_t size>
-struct is_boost_array<boost::array<T, size> >: public boost::true_type {};
-
-template <typename T>
-struct is_boost_multi_array : public boost::false_type {};
-
-template <typename T, size_t dimension>
-struct is_boost_multi_array<boost::multi_array<T, dimension> >: public boost::true_type {};
-
-template <typename T>
-struct is_vector : public boost::false_type {};
-
-template <typename T>
-struct is_vector<std::vector<T> >: public boost::true_type {};
 
 /**
  * HDF5 attribute
@@ -125,8 +108,9 @@ attribute::operator=(T const& value)
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         attr = m_node->openAttribute(m_name);
-        // FIXME we need something like the following, but it doesn't work :-(
-        if (attr.getTypeClass() != H5::PredType(ctype<T>()).getClass()) {
+        if (!has_type<T>(attr) || !has_scalar_space(attr)) {
+            // recreate attribute with proper type
+            m_node->removeAttr(m_name);
             throw H5::AttributeIException();
         }
     }
@@ -170,13 +154,14 @@ attribute::operator=(T const& value)
 {
     H5::StrType tid(H5::PredType::C_S1, value.size());
     H5::Attribute attr;
+    // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        m_node->removeAttr(m_name);
     }
     catch (H5::AttributeIException const&) {
-        attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     }
+    attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     attr.write(tid, value.data());
     return *this;
 }
@@ -216,13 +201,14 @@ attribute::operator=(T value)
 {
     H5::StrType tid(H5::PredType::C_S1, strlen(value));
     H5::Attribute attr;
+    // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        m_node->removeAttr(m_name);
     }
     catch (H5::AttributeIException const&) {
-        attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     }
+    attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     attr.write(tid, value);
     return *this;
 }
@@ -243,6 +229,11 @@ attribute::operator=(T const& value)
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         attr = m_node->openAttribute(m_name);
+        if (!has_type<T>(attr) || !has_extent<T>(attr)) {
+            // recreate attribute with proper type and size
+            m_node->removeAttr(m_name);
+            throw H5::AttributeIException();
+        }
     }
     catch (H5::AttributeIException const&) {
         attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
@@ -269,13 +260,14 @@ attribute::operator=(T const& value)
     }
     H5::StrType tid(H5::PredType::C_S1, max_len);
     H5::Attribute attr;
+    // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        m_node->removeAttr(m_name);
     }
     catch (H5::AttributeIException const&) {
-        attr = m_node->createAttribute(m_name, tid, ds);
     }
+    attr = m_node->createAttribute(m_name, tid, ds);
     std::vector<char> data(max_len * size);
     for (size_t i = 0; i < size; ++i) {
         strncpy(data.data() + i * max_len, value[i], max_len);
@@ -338,6 +330,11 @@ attribute::operator=(T const& value)
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         attr = m_node->openAttribute(m_name);
+        if (!has_type<T>(attr) || !has_extent<T>(attr, value.shape())) {
+            // recreate attribute with proper type and size
+            m_node->removeAttr(m_name);
+            throw H5::AttributeIException();
+        }
     }
     catch (H5::AttributeIException const&) {
         attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
@@ -396,6 +393,11 @@ attribute::operator=(T const& value)
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         attr = m_node->openAttribute(m_name);
+        if (!has_type<T>(attr)) {
+            // recreate attribute with proper type
+            m_node->removeAttr(m_name);
+            throw H5::AttributeIException();
+        }
     }
     catch (H5::AttributeIException const&) {
         attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);

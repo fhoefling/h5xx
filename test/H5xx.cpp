@@ -64,6 +64,8 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     double_vector_type value_vector(value_array.size());
     std::copy(value_array.begin(), value_array.end(), value_vector.begin());
     attribute(group, "double, std::vector") = value_vector;
+    value_vector.resize(4);
+    attribute(group, "double, std::vector") = value_vector;     // overwrite with different size
 
     typedef boost::multi_array<int, 3> multi_array3;
     int data3[] = {
@@ -121,6 +123,10 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     value_vector = attribute(group, "double, array").as<double_vector_type>();
     BOOST_CHECK(equal(value_vector.begin(), value_vector.end(), value_array.begin()));
     BOOST_CHECK(attribute(group, "int, multi_array").as<multi_array3>() == multi_array_value);
+    // read multi_array as linear vector
+    std::vector<int> int_vector = attribute(group, "int, multi_array").as<std::vector<int> >();
+    BOOST_CHECK(int_vector.size() == multi_array_value.num_elements());
+    BOOST_CHECK(equal(int_vector.begin(), int_vector.end(), multi_array_value.data()));
 
     // remove file
 #ifndef NDEBUG

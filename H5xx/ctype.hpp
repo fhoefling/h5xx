@@ -141,33 +141,47 @@ bool has_rank(H5::AbstractDs const& ds)
 
 /**
  * check data space extent of abstract dataset (dataset or attribute)
+ *
+ * the bool parameter needs to be false for datasets which contain
+ * multiple values (enumerated by the first dimension)
  */
 template <typename T>
 typename boost::enable_if<is_boost_array<T>, bool>::type
-has_extent(H5::AbstractDs const& ds)
+has_extent(H5::AbstractDs const& ds, bool is_single_valued=true)
 {
     H5::DataSpace dataspace = ds.getSpace();
-    if (!has_rank<1>(dataspace))
+    if (is_single_valued && has_rank<1>(dataspace)) {
+        hsize_t dim[1];
+        dataspace.getSimpleExtentDims(dim);
+        return dim[0] == T::static_size;
+    }
+    else if(!is_single_valued && has_rank<2>(dataspace)) {
+        hsize_t dim[2];
+        dataspace.getSimpleExtentDims(dim);
+        return dim[1] == T::static_size;
+    }
+    else
         return false;
-
-    hsize_t dim[1];
-    dataspace.getSimpleExtentDims(dim);
-    return dim[0] == T::static_size;
 }
 
 template <typename T>
 typename boost::enable_if<is_boost_multi_array<T>, bool>::type
-has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape)
+has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape, bool is_single_valued=true)
 {
     enum { rank = T::dimensionality };
     H5::DataSpace dataspace = ds.getSpace();
-    if (!dataspace.isSimple() || dataspace.getSimpleExtentNdims() != rank)
+    if (is_single_valued && has_rank<rank>(dataspace)) {
+        boost::array<hsize_t, rank> dim;
+        dataspace.getSimpleExtentDims(dim.data());
+        return std::equal(dim.begin(), dim.end(), shape);
+    }
+    else if (!is_single_valued && has_rank<rank+1>(dataspace)) {
+        boost::array<hsize_t, rank+1> dim;
+        dataspace.getSimpleExtentDims(dim.data());
+        return std::equal(dim.begin()+1, dim.end(), shape);
+    }
+    else
         return false;
-
-    boost::array<hsize_t, rank> dim;
-    dataspace.getSimpleExtentDims(dim.data());
-
-    return std::equal(dim.begin(), dim.end(), shape);
 }
 
 } // namespace H5xx

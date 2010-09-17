@@ -69,7 +69,7 @@ inline H5::Group open_group(
  *
  * path_string is split at every occurrence of '/'
  */
-inline H5::Group open_group(H5::CommonFG const& fg, const char* path_string)
+inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path_string)
 {
     std::deque<std::string> path;
     using namespace boost::algorithm;

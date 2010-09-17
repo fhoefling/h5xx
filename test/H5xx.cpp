@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 
     char const filename[] = "test_H5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
-    Group group = file.openGroup("/");
+    Group group = open_group(file, "/");
 
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
     attribute(group, "integral, scalar") = 1;   // store something of wrong type first
@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     // re-open file
     file.close();
     file.openFile(filename, H5F_ACC_RDONLY);
-    group = file.openGroup("/");
+    group = open_group(file, "/");
 
     // check has_type<>
     BOOST_CHECK(has_type<uint64_t>(group.openAttribute("integral, scalar")));
@@ -141,7 +141,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
 
     char const filename[] = "test_H5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
-    Group group = file.openGroup("/");
+    Group group = open_group(file, "/");
 
     //
     // create and write datasets
@@ -185,7 +185,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     file.flush(H5F_SCOPE_GLOBAL);
     file.close();
     file.openFile(filename, H5F_ACC_RDONLY);
-    group = file.openGroup("/");
+    group = open_group(file, "/");
 
     //
     // read datasets

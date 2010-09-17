@@ -380,9 +380,6 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
 
     boost::array<hsize_t, rank+1> dim;
     dataspace.getSimpleExtentDims(dim.data());
-    if (!std::equal(dim.begin()+1, dim.end(), data->shape())) {
-        throw std::runtime_error("HDF5 reader: invalid dataset extent");
-    }
 
     ssize_t const len = dim[0];
     if ((index >= len) || ((-index) > len)) {
@@ -396,12 +393,19 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
     std::fill(start.begin() + 1, start.end(), 0);
     std::fill(stride.begin(), stride.end(), 1);
     block[0] = 1;
-    std::copy(data->shape(), data->shape() + rank, block.begin() + 1);
+    std::copy(dim.begin() + 1, dim.end(), block.begin() + 1);
 
     dataspace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), block.data());
 
+    // resize result array if necessary, may allocate new memory
+    if (!std::equal(dim.begin() + 1, dim.end(), data->shape())) {
+        boost::array<size_t, rank> shape;
+        std::copy(dim.begin() + 1, dim.end(), shape.begin());
+        data->resize(shape); // or: *data = T(shape);
+    }
+
     // memory dataspace
-    H5::DataSpace mem_dataspace(rank, block.begin() + 1);
+    H5::DataSpace mem_dataspace(rank, dim.begin() + 1);
 
     try {
         H5XX_NO_AUTO_PRINT(H5::Exception);

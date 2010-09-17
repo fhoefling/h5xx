@@ -218,7 +218,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     BOOST_CHECK(has_type<multi_array2>(multi_array_dataset));
     BOOST_CHECK(has_extent<multi_array2>(multi_array_dataset, multi_array_value.shape(), false));
     BOOST_CHECK(elements(multi_array_dataset) == 2 * 3 * 4);
-    multi_array2 multi_array_value_(boost::extents[3][4]);
+    multi_array2 multi_array_value_;
     read(multi_array_dataset, &multi_array_value_, 0);
     multi_array_value[1][2] = 2;
     BOOST_CHECK(multi_array_value_ == multi_array_value);

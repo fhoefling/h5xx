@@ -301,6 +301,112 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
     return read<value_type, rank>(dataset, data->data(), index);
 }
 
+//
+// chunks of vector containers holding scalars
+//
+// pass length of vector as third parameter
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, boost::is_fundamental<typename T::value_type>
+    >, H5::DataSet>::type
+create_dataset(
+    H5::Group const& group
+  , std::string const& name
+  , typename T::size_type size
+  , hsize_t max_size=H5S_UNLIMITED)
+{
+    typedef typename T::value_type value_type;
+    hsize_t shape[1] = { size };
+    return create_dataset<value_type, 1>(group, name, shape, max_size);
+}
+
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, boost::is_fundamental<typename T::value_type>
+    > >::type
+write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+{
+    typedef typename T::value_type value_type;
+    // FIXME assert data.size() corresponds to dataspace extents
+    return write<value_type, 1>(dataset, data.data(), index);
+}
+
+/** read chunk of vector container with scalar data, resize/reshape result array if necessary */
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, boost::is_fundamental<typename T::value_type>
+    >, hsize_t>::type
+read(H5::DataSet const& dataset, T* data, ssize_t index)
+{
+    typedef typename T::value_type value_type;
+
+    // determine extent of data space and resize result vector (if necessary)
+    H5::DataSpace dataspace(dataset.getSpace());
+    if (!has_rank<2>(dataspace)) {
+        throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
+    }
+    hsize_t dim[2];
+    dataspace.getSimpleExtentDims(dim);
+    data->resize(dim[1]);
+
+    return read<value_type, 1>(dataset, data->data(), index);
+}
+
+//
+// chunks of vector containers holding fixed-size arrays
+//
+// pass length of vector as third parameter
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, is_boost_array<typename T::value_type>
+    >, H5::DataSet>::type
+create_dataset(
+    H5::Group const& group
+  , std::string const& name
+  , typename T::size_type size
+  , hsize_t max_size=H5S_UNLIMITED)
+{
+    typedef typename T::value_type array_type;
+    typedef typename array_type::value_type value_type;
+    hsize_t shape[2] = { size, array_type::static_size };
+    return create_dataset<value_type, 2>(group, name, shape, max_size);
+}
+
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, is_boost_array<typename T::value_type>
+    > >::type
+write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+{
+    typedef typename T::value_type array_type;
+    typedef typename array_type::value_type value_type;
+    // FIXME assert data.size() corresponds to dataspace extents
+    // raw data are laid out contiguously
+    return write<value_type, 2>(dataset, data.front().data(), index);
+}
+
+/** read chunk of vector container with array data, resize/reshape result array if necessary */
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, is_boost_array<typename T::value_type>
+    >, hsize_t>::type
+read(H5::DataSet const& dataset, T* data, ssize_t index)
+{
+    typedef typename T::value_type array_type;
+    typedef typename array_type::value_type value_type;
+
+    // determine extent of data space and resize result vector (if necessary)
+    H5::DataSpace dataspace(dataset.getSpace());
+    if (!has_rank<3>(dataspace)) {
+        throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
+    }
+    hsize_t dim[3];
+    dataspace.getSimpleExtentDims(dim);
+    data->resize(dim[1]);
+
+    return read<value_type, 2>(dataset, data->front().data(), index);
+}
+
 /**
  * helper functions for convenience
  *

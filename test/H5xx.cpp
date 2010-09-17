@@ -149,11 +149,11 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
 
     // scalar type
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
-    H5xx::make_dataset_writer(group, "uint", &uint_value)();
+    make_dataset_writer(group, "uint", &uint_value)();
     // overwrite data set
     DataSet uint_dataset = create_dataset<uint64_t>(group, "uint");
-    H5xx::write(uint_dataset, uint_value);
-    H5xx::write(uint_dataset, uint_value + 1);
+    write(uint_dataset, uint_value);
+    write(uint_dataset, uint_value + 1);
 
     // array type
     typedef boost::array<double, 3> array_type;
@@ -161,8 +161,8 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     array_type array_value2 = {{ -1, sqrt(3), -3 }};
     DataSet array_dataset
         = create_dataset<array_type>(group, "array", 2);  // fixed size
-    H5xx::write(array_dataset, array_value, 0);           // write entry #0
-    H5xx::write(array_dataset, array_value2, 1);          // write entry #1
+    write(array_dataset, array_value, 0);           // write entry #0
+    write(array_dataset, array_value2, 1);          // write entry #1
 
     // multi-array type
     typedef boost::multi_array<int, 2> multi_array2;
@@ -175,11 +175,29 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     multi_array_value.assign(data2, data2 + 3 * 4);
     DataSet multi_array_dataset
         = create_dataset<multi_array2>(group, "multi_array", multi_array_value.shape());
-    H5xx::write(multi_array_dataset, multi_array_value);    // append
+    write(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 1;
-    H5xx::write(multi_array_dataset, multi_array_value);    // append
+    write(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 2;
-    H5xx::write(multi_array_dataset, multi_array_value, 0);  // overwrite first entry
+    write(multi_array_dataset, multi_array_value, 0);  // overwrite first entry
+
+    // vector of scalars
+    std::vector<int> int_vector_value(data2, data2 + 3 * 4);
+    DataSet int_vector_dataset
+            = create_dataset<std::vector<int> >(group, "int_vector", int_vector_value.size());
+    write(int_vector_dataset, int_vector_value);
+
+    // vector of arrays
+    std::vector<array_type> array_vector_value;
+    array_vector_value.push_back(array_value);
+    array_vector_value.push_back(array_value2);
+    DataSet array_vector_dataset
+            = create_dataset<std::vector<array_type> >(group, "array_vector", array_vector_value.size());
+    write(array_vector_dataset, array_vector_value);
+    // write vector of wrong size
+    array_vector_value.push_back(array_value2);
+    BOOST_CHECK_THROW(write(array_vector_dataset, array_vector_value), std::runtime_error);
+    array_vector_value.pop_back();
 
     // re-open file
     file.flush(H5F_SCOPE_GLOBAL);
@@ -231,6 +249,28 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     read(multi_array_dataset, &multi_array_value_, 1);
     multi_array_value[1][2] = 1;
     BOOST_CHECK(multi_array_value_ == multi_array_value);
+
+    // vector of scalars
+    int_vector_dataset = group.openDataSet("int_vector");
+    std::vector<int> int_vector_value_;
+    read(int_vector_dataset, &int_vector_value_, 0);
+    BOOST_CHECK(int_vector_value_.size() == int_vector_value.size());
+    BOOST_CHECK(std::equal(
+        int_vector_value_.begin()
+      , int_vector_value_.end()
+      , int_vector_value.begin()
+    ));
+
+    // vector of arrays
+    array_vector_dataset = group.openDataSet("array_vector");
+    std::vector<array_type> array_vector_value_;
+    read(array_vector_dataset, &array_vector_value_, 0);
+    BOOST_CHECK(array_vector_value_.size() == array_vector_value.size());
+    BOOST_CHECK(std::equal(
+        array_vector_value_.begin()
+      , array_vector_value_.end()
+      , array_vector_value.begin()
+    ));
 
     // remove file
 #ifndef NDEBUG

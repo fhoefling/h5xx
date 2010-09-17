@@ -115,24 +115,33 @@ has_type(H5::AbstractDs const& ds)
 }
 
 /**
+ * check if data space is scalar
+ */
+inline bool is_scalar(H5::DataSpace const& dataspace)
+{
+    return dataspace.getSimpleExtentType() == H5S_SCALAR;
+}
+
+/**
  * check data space of abstract dataset (dataset or attribute)
  */
 inline bool has_scalar_space(H5::AbstractDs const& ds)
 {
-    return ds.getSpace().getSimpleExtentType() == H5S_SCALAR;
+    return is_scalar(ds.getSpace());
 }
 
-inline bool has_simple_space(H5::AbstractDs const& ds)
-{
-    return ds.getSpace().isSimple();
-}
-
+/**
+ * check rank of data space
+ */
 template <hsize_t rank>
 bool has_rank(H5::DataSpace const& ds)
 {
     return ds.isSimple() && ds.getSimpleExtentNdims() == rank;
 }
 
+/**
+ * check data space rank of abstract dataset (dataset or attribute)
+ */
 template <hsize_t rank>
 bool has_rank(H5::AbstractDs const& ds)
 {
@@ -140,16 +149,15 @@ bool has_rank(H5::AbstractDs const& ds)
 }
 
 /**
- * check data space extent of abstract dataset (dataset or attribute)
+ * check data space extent
  *
  * the bool parameter needs to be false for datasets which contain
  * multiple values (enumerated by the first dimension)
  */
 template <typename T>
 typename boost::enable_if<is_boost_array<T>, bool>::type
-has_extent(H5::AbstractDs const& ds, bool is_single_valued=true)
+has_extent(H5::DataSpace const& dataspace, bool is_single_valued=true)
 {
-    H5::DataSpace dataspace = ds.getSpace();
     if (is_single_valued && has_rank<1>(dataspace)) {
         hsize_t dim[1];
         dataspace.getSimpleExtentDims(dim);
@@ -166,10 +174,9 @@ has_extent(H5::AbstractDs const& ds, bool is_single_valued=true)
 
 template <typename T>
 typename boost::enable_if<is_boost_multi_array<T>, bool>::type
-has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape, bool is_single_valued=true)
+has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape, bool is_single_valued=true)
 {
     enum { rank = T::dimensionality };
-    H5::DataSpace dataspace = ds.getSpace();
     if (is_single_valued && has_rank<rank>(dataspace)) {
         boost::array<hsize_t, rank> dim;
         dataspace.getSimpleExtentDims(dim.data());
@@ -182,6 +189,37 @@ has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape, bool is
     }
     else
         return false;
+}
+
+/**
+ * check data space extent of an H5::DataSet or H5::Attribute
+ */
+template <typename T>
+bool has_extent(H5::AbstractDs const& ds, bool is_single_valued=true)
+{
+    return has_extent<T>(ds.getSpace(), is_single_valued);
+}
+
+template <typename T>
+bool has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape, bool is_single_valued=true)
+{
+    return has_extent<T>(ds.getSpace(), shape, is_single_valued);
+}
+
+/**
+ * return total number of elements of a dataspace
+ */
+inline hsize_t elements(H5::DataSpace const& dataspace)
+{
+    return dataspace.getSimpleExtentNpoints();
+}
+
+/**
+ * return total number of data elements in a dataset or attribute
+ */
+inline hsize_t elements(H5::AbstractDs const& ds)
+{
+    return elements(ds.getSpace());
 }
 
 } // namespace H5xx

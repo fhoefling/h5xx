@@ -419,14 +419,6 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
 }
 
 /**
- * return first dimension of dataset
- */
-inline hsize_t elements(H5::DataSet ds)
-{
-    return ds.getSpace().getSimpleExtentNpoints();
-}
-
-/**
  * helper functions for convenience
  *
  * we pass the data via pointer to make it transparent for the client code

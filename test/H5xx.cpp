@@ -237,3 +237,56 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     unlink(filename);
 #endif
 }
+
+BOOST_AUTO_TEST_CASE( test_H5xx_group )
+{
+    using namespace H5;
+    using namespace H5xx;
+
+    char const filename[] = "test_H5xx.hdf5";
+    H5File file(filename, H5F_ACC_TRUNC);
+
+    BOOST_CHECK_NO_THROW(open_group(file, "/"));
+    BOOST_CHECK_NO_THROW(open_group(file, ""));
+
+    Group group = open_group(file, "/");
+    BOOST_CHECK_NO_THROW(open_group(group, "/"));
+    BOOST_CHECK_NO_THROW(open_group(group, ""));
+
+    // create a hierarchy with attributes
+    attribute(open_group(file, "/"), "level") = 0;
+    attribute(open_group(file, "/one"), "level") = 1;
+    attribute(open_group(file, "/one/two"), "level") = 2;
+    attribute(open_group(file, "/one/two/three"), "level") = 3;
+
+    group = open_group(file, "one");
+    BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(attribute(group, "level").as<int>() == 1);
+
+    open_group(group, "branch");        // create branch in '/one'
+    BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(group.getNumObjs() == 2);
+
+    group = open_group(group, "two/three/");
+    BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(attribute(group, "level").as<int>() == 3);
+
+    group = open_group(file, "one/two");
+    BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(attribute(group, "level").as<int>() == 2);
+
+    group = open_group(group, "three");
+    BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(attribute(group, "level").as<int>() == 3);
+
+    group = open_group(group, "three");          // create new group
+    BOOST_CHECK(group.getNumAttrs() == 0);
+    BOOST_CHECK_THROW(attribute(group, "level").as<int>(), AttributeIException);
+
+    file.close();
+
+    // remove file
+#ifndef NDEBUG
+//     unlink(filename);
+#endif
+}

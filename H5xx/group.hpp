@@ -24,28 +24,65 @@
 #define H5E_auto_t_vers 2
 #include <H5Cpp.h>
 
-#include <H5xx/attribute.hpp>
+#include <boost/algorithm/string.hpp>
+#include <H5xx/exception.hpp>
+
+#include <string>
+#include <deque>
 
 namespace H5xx
 {
 
 /**
- * HDF5 group
+ * open or create HDF5 group walking down the tree along path
+ * path is given as range of iterators
  */
-class group : public H5::Group
+template <typename string_iterator>
+inline H5::Group open_group(
+    H5::CommonFG const& fg
+  , string_iterator path_begin
+  , string_iterator path_end
+)
 {
-public:
-    group() {}
-    group(H5::Group const& node) : H5::Group(node) {}
-
-    /**
-     * returns existing or creates attribute
-     */
-    attribute operator[](char const* name) const
-    {
-        return attribute(*this, name);
+    H5::Group group;
+    // open root if fg is a file
+    if (typeid(fg) == typeid(H5::H5File)) {
+        group = fg.openGroup("/");
+    } else {
+        group = dynamic_cast<H5::Group const&>(fg);
     }
-};
+    for (string_iterator it = path_begin; it != path_end; ++it) {
+        // open or create group at each level
+        try {
+            H5XX_NO_AUTO_PRINT(H5::GroupIException);
+            group = group.openGroup(*it);
+        }
+        catch (H5::GroupIException const&) {
+            group = group.createGroup(*it);
+        }
+    }
+    return group;
+}
+
+/**
+ * open or create HDF5 group walking down the tree along path
+ *
+ * path_string is split at every occurrence of '/'
+ */
+inline H5::Group open_group(H5::CommonFG const& fg, const char* path_string)
+{
+    std::deque<std::string> path;
+    using namespace boost::algorithm;
+    split(path, path_string, is_any_of("/"));
+    // drop empty string if path starts or ends with '/'
+    if (!path.empty() && path.front() == "") {
+        path.pop_front();
+    }
+    if (!path.empty() && path.back() == "") {
+        path.pop_back();
+    }
+    return open_group(fg, path.begin(), path.end());
+}
 
 } // namespace H5xx
 

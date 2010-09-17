@@ -136,9 +136,8 @@ attribute::as()
     catch (H5::AttributeIException const&) {
         throw;
     }
-    H5::DataSpace ds(attr.getSpace());
-    if (ds.getSimpleExtentType() != H5S_SCALAR) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not scalar");
+    if (!has_type<T>(attr) || !has_scalar_space(attr)) {
+        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
     }
     T value;
     attr.read(ctype<T>(), &value);
@@ -153,14 +152,13 @@ typename boost::enable_if<boost::is_same<T, std::string>, attribute&>::type
 attribute::operator=(T const& value)
 {
     H5::StrType tid(H5::PredType::C_S1, value.size());
-    H5::Attribute attr;
     // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         m_node->removeAttr(m_name);
     }
     catch (H5::AttributeIException const&) {}
-    attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
+    H5::Attribute attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     attr.write(tid, value.data());
     return *this;
 }
@@ -180,9 +178,8 @@ attribute::as()
     catch (H5::AttributeIException const&) {
         throw;
     }
-    H5::DataSpace ds(attr.getSpace());
-    if (ds.getSimpleExtentType() != H5S_SCALAR) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not scalar");
+    if (!has_type<T>(attr) || !has_scalar_space(attr)) {
+        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
     }
     // determine string length first and allocate space
     size_t len = attr.getDataType().getSize();
@@ -199,14 +196,13 @@ typename boost::enable_if<boost::is_same<T, char const*>, attribute&>::type
 attribute::operator=(T value)
 {
     H5::StrType tid(H5::PredType::C_S1, strlen(value));
-    H5::Attribute attr;
     // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         m_node->removeAttr(m_name);
     }
     catch (H5::AttributeIException const&) {}
-    attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
+    H5::Attribute attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
     attr.write(tid, value);
     return *this;
 }
@@ -221,8 +217,6 @@ attribute::operator=(T const& value)
     typedef typename T::value_type value_type;
     enum { size = T::static_size };
 
-    hsize_t dim[1] = { size };
-    H5::DataSpace ds(1, dim);
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
@@ -234,6 +228,8 @@ attribute::operator=(T const& value)
         }
     }
     catch (H5::AttributeIException const&) {
+        hsize_t dim[1] = { size };
+        H5::DataSpace ds(1, dim);
         attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
     }
     attr.write(ctype<value_type>(), value.data());
@@ -257,14 +253,13 @@ attribute::operator=(T const& value)
         max_len = std::max(max_len, strlen(value[i]) + 1);  // include terminating NULL character
     }
     H5::StrType tid(H5::PredType::C_S1, max_len);
-    H5::Attribute attr;
     // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         m_node->removeAttr(m_name);
     }
     catch (H5::AttributeIException const&) {}
-    attr = m_node->createAttribute(m_name, tid, ds);
+    H5::Attribute attr = m_node->createAttribute(m_name, tid, ds);
     std::vector<char> data(max_len * size);
     for (size_t i = 0; i < size; ++i) {
         strncpy(data.data() + i * max_len, value[i], max_len);
@@ -292,17 +287,8 @@ attribute::as()
         throw;
     }
 
-    H5::DataSpace ds(attr.getSpace());
-    if (!ds.isSimple()) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not simple");
-    }
-    if (ds.getSimpleExtentNdims() != 1) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not one-dimensional");
-    }
-    hsize_t dim[1];
-    ds.getSimpleExtentDims(dim);
-    if (dim[0] != size) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace does not match array size");
+    if (!has_type<T>(attr) || !has_extent<T>(attr)) {
+        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
     }
 
     boost::array<value_type, size> value;
@@ -318,11 +304,8 @@ typename boost::enable_if<is_boost_multi_array<T>, attribute&>::type
 attribute::operator=(T const& value)
 {
     typedef typename T::element value_type;
-    enum { dimension = T::dimensionality };
+    enum { rank = T::dimensionality };
 
-    hsize_t dim[dimension];
-    std::copy(value.shape(), value.shape() + dimension, dim);
-    H5::DataSpace ds(dimension, dim);
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
@@ -334,6 +317,9 @@ attribute::operator=(T const& value)
         }
     }
     catch (H5::AttributeIException const&) {
+        hsize_t dim[rank];
+        std::copy(value.shape(), value.shape() + rank, dim);
+        H5::DataSpace ds(rank, dim);
         attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
     }
     attr.write(ctype<value_type>(), value.data());
@@ -348,7 +334,7 @@ typename boost::enable_if<is_boost_multi_array<T>, T>::type
 attribute::as()
 {
     typedef typename T::element value_type;
-    enum { dimension = T::dimensionality };
+    enum { rank = T::dimensionality };
 
     H5::Attribute attr;
     try {
@@ -360,17 +346,15 @@ attribute::as()
     }
 
     H5::DataSpace ds(attr.getSpace());
-    if (!ds.isSimple()) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not simple");
+    if (!has_type<T>(attr) || !has_rank<rank>(attr)) {
+        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
     }
-    if (ds.getSimpleExtentNdims() != dimension) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace dimensionality mismatch");
-    }
-    hsize_t dim[dimension];
+
+    hsize_t dim[rank];
     ds.getSimpleExtentDims(dim);
-    boost::array<size_t, dimension> shape;
-    std::copy(dim, dim + dimension, shape.begin());
-    boost::multi_array<value_type, dimension> value(shape);
+    boost::array<size_t, rank> shape;
+    std::copy(dim, dim + rank, shape.begin());
+    boost::multi_array<value_type, rank> value(shape);
     attr.read(ctype<value_type>(), value.data());
     return value;
 }
@@ -384,19 +368,19 @@ attribute::operator=(T const& value)
 {
     typedef typename T::value_type value_type;
 
-    hsize_t dim[1] = { value.size() };
-    H5::DataSpace ds(1, dim);
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         attr = m_node->openAttribute(m_name);
-        if (!has_type<T>(attr)) {
+        if (!has_type<T>(attr) || elements(attr) != value.size()) {
             // recreate attribute with proper type
             m_node->removeAttr(m_name);
             throw H5::AttributeIException();
         }
     }
     catch (H5::AttributeIException const&) {
+        hsize_t dim[1] = { value.size() };
+        H5::DataSpace ds(1, dim);
         attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
     }
     attr.write(ctype<value_type>(), value.data());
@@ -405,6 +389,8 @@ attribute::operator=(T const& value)
 
 /**
  * read vector type attribute
+ *
+ * read data of possibly higher rank into 1D std::vector
  */
 template <typename T>
 typename boost::enable_if<is_vector<T>, T>::type
@@ -422,15 +408,10 @@ attribute::as()
     }
 
     H5::DataSpace ds(attr.getSpace());
-    if (!ds.isSimple()) {
-        throw H5::AttributeIException("H5xx::attribute::as", "attribute dataspace is not simple");
+    if (!has_type<T>(attr) || !ds.isSimple()) {
+        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
     }
-    std::vector<hsize_t> dim(ds.getSimpleExtentNdims());
-    ds.getSimpleExtentDims(dim.data());
-    size_t size = 1;
-    for (size_t i = 0; i < dim.size(); ++i) {
-        size *= dim[i];
-    }
+    size_t size = ds.getSimpleExtentNpoints();
     std::vector<value_type> value(size);
     attr.read(ctype<value_type>(), value.data());
     return value;

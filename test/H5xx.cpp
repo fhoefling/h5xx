@@ -205,14 +205,26 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     // array type dataset
     array_dataset = group.openDataSet("array");
     BOOST_CHECK(has_type<array_type>(array_dataset));
-//     BOOST_CHECK(has_extent<array_type>(array_dataset));
+    BOOST_CHECK(has_extent<array_type>(array_dataset, false));
     BOOST_CHECK(elements(array_dataset) == 2 * 3);
+    array_type array_value_;
+    read(array_dataset, &array_value_, 0);
+    BOOST_CHECK(array_value_ == array_value);
+    read(array_dataset, &array_value_, 1);
+    BOOST_CHECK(array_value_ == array_value2);
 
     // multi-array type dataset
     multi_array_dataset = group.openDataSet("multi_array");
     BOOST_CHECK(has_type<multi_array2>(multi_array_dataset));
-//     BOOST_CHECK(has_extent<multi_array2>(multi_array_dataset, multi_array_value.shape()));
+    BOOST_CHECK(has_extent<multi_array2>(multi_array_dataset, multi_array_value.shape(), false));
     BOOST_CHECK(elements(multi_array_dataset) == 2 * 3 * 4);
+    multi_array2 multi_array_value_(boost::extents[3][4]);
+    read(multi_array_dataset, &multi_array_value_, 0);
+    multi_array_value[1][2] = 2;
+    BOOST_CHECK(multi_array_value_ == multi_array_value);
+    read(multi_array_dataset, &multi_array_value_, 1);
+    multi_array_value[1][2] = 1;
+    BOOST_CHECK(multi_array_value_ == multi_array_value);
 
     // remove file
 #ifndef NDEBUG

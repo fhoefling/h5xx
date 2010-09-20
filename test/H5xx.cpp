@@ -26,7 +26,7 @@
 
 #include <halmd/numeric/blas/fixed_vector.hpp>
 
-BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
+BOOST_AUTO_TEST_CASE( H5xx_attribute )
 {
     using namespace H5;
 
@@ -138,6 +138,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 }
 
 // BOOST_CHECK doesn't like more than one template parameter :-(
+// so we define these wrappers here
 template <typename T>
 inline bool has_extent_one_extra(H5::DataSet const& dataset)
 {
@@ -150,7 +151,7 @@ inline bool has_extent_one_extra(H5::DataSet const& dataset, size_t const* shape
     return H5::has_extent<T, 1>(dataset, shape);
 }
 
-BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
+BOOST_AUTO_TEST_CASE( H5xx_dataset )
 {
     using namespace H5;
 
@@ -296,7 +297,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
 #endif
 }
 
-BOOST_AUTO_TEST_CASE( test_H5xx_group )
+BOOST_AUTO_TEST_CASE( H5xx_group )
 {
     using namespace H5;
 

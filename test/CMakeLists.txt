@@ -6,6 +6,12 @@ target_link_libraries(test_H5xx
   ${HDF5_CPP_LIBRARY}
   ${HDF5_LIBRARY}
 )
-add_test(H5xx
-  test_H5xx
+add_test(H5xx_attribute
+  test_H5xx --run_test=H5xx_attribute
+)
+add_test(H5xx_dataset
+  test_H5xx --run_test=H5xx_dataset
+)
+add_test(H5xx_group
+  test_H5xx --run_test=H5xx_group
 )

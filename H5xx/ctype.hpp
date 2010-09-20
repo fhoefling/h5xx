@@ -24,7 +24,7 @@
 #define H5E_auto_t_vers 2
 #include <H5Cpp.h>
 
-namespace H5xx
+namespace H5
 {
 
 /*
@@ -222,6 +222,6 @@ inline hsize_t elements(H5::AbstractDs const& ds)
     return elements(ds.getSpace());
 }
 
-} // namespace H5xx
+} // namespace H5
 
 #endif /* ! HALMD_UTIL_H5XX_CTYPE_HPP */

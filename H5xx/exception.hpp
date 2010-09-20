@@ -24,7 +24,7 @@
 #define H5E_auto_t_vers 2
 #include <H5Cpp.h>
 
-namespace H5xx
+namespace H5
 {
 
 template <typename Exception>
@@ -47,8 +47,8 @@ private:
     void* client_data;
 };
 
-#define H5XX_NO_AUTO_PRINT(exception) H5xx::no_autoprint<exception> __no_autoprint;
+#define H5XX_NO_AUTO_PRINT(exception) H5::no_autoprint<exception> __no_autoprint;
 
-} // namespace H5xx
+} // namespace H5
 
 #endif /* ! HALMD_UTIL_H5XX_EXCEPTION_HPP */

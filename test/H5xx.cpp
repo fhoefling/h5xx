@@ -27,7 +27,6 @@
 BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 {
     using namespace H5;
-    using namespace H5xx;
 
     char const filename[] = "test_H5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
@@ -136,7 +135,6 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
 {
     using namespace H5;
-    using namespace H5xx;
 
     char const filename[] = "test_H5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
@@ -280,7 +278,6 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
 BOOST_AUTO_TEST_CASE( test_H5xx_group )
 {
     using namespace H5;
-    using namespace H5xx;
 
     char const filename[] = "test_H5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);

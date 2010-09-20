@@ -27,7 +27,7 @@
 #include <string>
 #include <vector>
 
-namespace H5xx
+namespace H5
 {
 
 /**
@@ -48,6 +48,6 @@ inline std::string path(H5::IdComponent const& id)
     return name_.data();
 }
 
-} // namespace H5xx
+} // namespace H5
 
 #endif /* ! HALMD_UTIL_H5XX_UTIL_HPP */

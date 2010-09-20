@@ -30,7 +30,7 @@
 #include <string>
 #include <deque>
 
-namespace H5xx
+namespace H5
 {
 
 /**
@@ -84,6 +84,6 @@ inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path_stri
     return open_group(fg, path.begin(), path.end());
 }
 
-} // namespace H5xx
+} // namespace H5
 
 #endif /* ! HALMD_UTIL_H5XX_GROUP_HPP */

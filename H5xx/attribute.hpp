@@ -35,7 +35,7 @@
 #include <H5xx/exception.hpp>
 #include <H5xx/util.hpp>
 
-namespace H5xx
+namespace H5
 {
 
 /**
@@ -137,7 +137,7 @@ attribute::as()
         throw;
     }
     if (!has_type<T>(attr) || !has_scalar_space(attr)) {
-        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
+        throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     T value;
     attr.read(ctype<T>(), &value);
@@ -179,7 +179,7 @@ attribute::as()
         throw;
     }
     if (!has_type<T>(attr) || !has_scalar_space(attr)) {
-        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
+        throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     // determine string length first and allocate space
     size_t len = attr.getDataType().getSize();
@@ -288,7 +288,7 @@ attribute::as()
     }
 
     if (!has_type<T>(attr) || !has_extent<T>(attr)) {
-        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
+        throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
 
     boost::array<value_type, size> value;
@@ -347,7 +347,7 @@ attribute::as()
 
     H5::DataSpace ds(attr.getSpace());
     if (!has_type<T>(attr) || !has_rank<rank>(attr)) {
-        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
+        throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
 
     hsize_t dim[rank];
@@ -409,7 +409,7 @@ attribute::as()
 
     H5::DataSpace ds(attr.getSpace());
     if (!has_type<T>(attr) || !ds.isSimple()) {
-        throw H5::AttributeIException("H5xx::attribute::as", "incompatible dataspace");
+        throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     size_t size = ds.getSimpleExtentNpoints();
     std::vector<value_type> value(size);
@@ -417,6 +417,6 @@ attribute::as()
     return value;
 }
 
-} // namespace H5xx
+} // namespace H5
 
 #endif /* ! HALMD_UTIL_H5XX_ATTRIBUTE_HPP */

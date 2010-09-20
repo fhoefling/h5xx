@@ -1,6 +1,6 @@
 /* HDF5 C++ extensions
  *
- * Copyright © 2008-2009  Peter Colberg and Felix Höfling
+ * Copyright © 2008-2010  Peter Colberg and Felix Höfling
  *
  * This file is part of HALMD.
  *
@@ -23,6 +23,10 @@
 
 #define H5E_auto_t_vers 2
 #include <H5Cpp.h>
+
+#include <boost/array.hpp>
+#include <boost/multi_array.hpp>
+#include <boost/type_traits.hpp>
 
 namespace H5
 {
@@ -51,17 +55,11 @@ MAKE_CTYPE(uint64_t, UINT64);
 
 #undef MAKE_CTYPE
 
-template <typename T>
-struct is_boost_array : public boost::false_type {};
+template <typename T, typename U=typename T::value_type, size_t size=T::static_size>
+struct is_boost_array : public boost::is_base_of<boost::array<U, size>, T> {};
 
-template <typename T, size_t size>
-struct is_boost_array<boost::array<T, size> >: public boost::true_type {};
-
-template <typename T>
-struct is_boost_multi_array : public boost::false_type {};
-
-template <typename T, size_t dimension>
-struct is_boost_multi_array<boost::multi_array<T, dimension> >: public boost::true_type {};
+template <typename T, typename U=typename T::element, size_t rank=T::dimensionality>
+struct is_boost_multi_array : public boost::is_base_of<boost::multi_array<U, rank>, T> {};
 
 template <typename T>
 struct is_vector : public boost::false_type {};

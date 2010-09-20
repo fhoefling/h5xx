@@ -24,6 +24,8 @@
 #include <H5Cpp.h>
 #include <H5xx.hpp>
 
+#include <halmd/numeric/blas/fixed_vector.hpp>
+
 BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 {
     using namespace H5;
@@ -52,10 +54,13 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
     attribute(group, "string, scalar") = std::string(cstring_array[1]);
     attribute(group, "char [], array") = cstring_array;
 
-    typedef boost::array<double, 5> double_array_type;
-    double_array_type value_array = {{
-        1., sqrt(2.), 2., sqrt(3.), 3.
-    }};
+    // use derived class instead of boost::array
+    typedef halmd::fixed_vector<double, 5> double_array_type;
+    double_array_type value_array;
+    double double_values[] = {
+       1., sqrt(2.), 2., sqrt(3.), 3.
+    };
+    std::copy(double_values, double_values + value_array.size(), value_array.data());
     attribute(group, "double, array") = value_array;
 
     typedef std::vector<double> double_vector_type;

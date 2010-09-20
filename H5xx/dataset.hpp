@@ -97,6 +97,9 @@ write(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
         LOG_DEBUG("write to dataset " << path(dataset) << " at " << index);
     }
     H5::DataSpace dataspace(dataset.getSpace());
+    if (!has_type<T>(dataset) || !has_rank<rank+1>(dataspace)) {
+        throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
+    }
 
     // select hyperslab of multi_array chunk
     boost::array<hsize_t, rank+1> dim, count, start, stride, block;
@@ -233,6 +236,10 @@ write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
+    if (!has_extent<T, 1>(dataset))
+    {
+        throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
+    }
     return write<value_type, rank>(dataset, data.data(), index);
 }
 
@@ -272,6 +279,10 @@ write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
+    if (!has_extent<T, 1>(dataset, data.shape()))
+    {
+        throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
+    }
     return write<value_type, rank>(dataset, data.data(), index);
 }
 
@@ -327,7 +338,16 @@ typename boost::enable_if<boost::mpl::and_<
 write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
-    // FIXME assert data.size() corresponds to dataspace extents
+
+    // assert data.size() corresponds to dataspace extents
+    if (has_rank<2>(dataset)) {
+        hsize_t dim[2];
+        dataset.getSpace().getSimpleExtentDims(dim);
+        if (data.size() != dim[1]) {
+            throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
+        }
+    }
+
     return write<value_type, 1>(dataset, data.data(), index);
 }
 
@@ -380,7 +400,16 @@ write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
-    // FIXME assert data.size() corresponds to dataspace extents
+
+    // assert data.size() corresponds to dataspace extents
+    if (has_rank<3>(dataset)) {
+        hsize_t dim[3];
+        dataset.getSpace().getSimpleExtentDims(dim);
+        if (data.size() != dim[1]) {
+            throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
+        }
+    }
+
     // raw data are laid out contiguously
     return write<value_type, 2>(dataset, data.front().data(), index);
 }
@@ -404,6 +433,7 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
     dataspace.getSimpleExtentDims(dim);
     data->resize(dim[1]);
 
+    // raw data are laid out contiguously
     return read<value_type, 2>(dataset, data->front().data(), index);
 }
 

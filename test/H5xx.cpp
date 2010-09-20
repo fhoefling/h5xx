@@ -137,6 +137,19 @@ BOOST_AUTO_TEST_CASE( test_H5xx_attribute )
 #endif
 }
 
+// BOOST_CHECK doesn't like more than one template parameter :-(
+template <typename T>
+inline bool has_extent_one_extra(H5::DataSet const& dataset)
+{
+    return H5::has_extent<T, 1>(dataset);
+}
+
+template <typename T>
+inline bool has_extent_one_extra(H5::DataSet const& dataset, size_t const* shape)
+{
+    return H5::has_extent<T, 1>(dataset, shape);
+}
+
 BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
 {
     using namespace H5;
@@ -201,6 +214,9 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     BOOST_CHECK_THROW(write(array_vector_dataset, array_vector_value), std::runtime_error);
     array_vector_value.pop_back();
 
+    // write to dataset of wrong type and size
+    BOOST_CHECK_THROW(write(int_vector_dataset, array_vector_value), std::runtime_error);
+
     // re-open file
     file.flush(H5F_SCOPE_GLOBAL);
     file.close();
@@ -231,7 +247,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     // array type dataset
     array_dataset = group.openDataSet("array");
     BOOST_CHECK(has_type<array_type>(array_dataset));
-    BOOST_CHECK(has_extent<array_type>(array_dataset, false));
+    BOOST_CHECK(has_extent_one_extra<array_type>(array_dataset));
     BOOST_CHECK(elements(array_dataset) == 2 * 3);
     array_type array_value_;
     read(array_dataset, &array_value_, 0);
@@ -242,7 +258,7 @@ BOOST_AUTO_TEST_CASE( test_H5xx_dataset )
     // multi-array type dataset
     multi_array_dataset = group.openDataSet("multi_array");
     BOOST_CHECK(has_type<multi_array2>(multi_array_dataset));
-    BOOST_CHECK(has_extent<multi_array2>(multi_array_dataset, multi_array_value.shape(), false));
+    BOOST_CHECK(has_extent_one_extra<multi_array2>(multi_array_dataset, multi_array_value.shape()));
     BOOST_CHECK(elements(multi_array_dataset) == 2 * 3 * 4);
     multi_array2 multi_array_value_;
     read(multi_array_dataset, &multi_array_value_, 0);

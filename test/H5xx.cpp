@@ -195,13 +195,13 @@ BOOST_AUTO_TEST_CASE( H5xx_dataset )
     multi_array_value[1][2] = 1;
     write(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 2;
-    write(multi_array_dataset, multi_array_value, 0);  // overwrite first entry
+    make_dataset_write_at(multi_array_dataset, &multi_array_value)(0);  // overwrite first entry
 
     // vector of scalars
     std::vector<int> int_vector_value(data2, data2 + 3 * 4);
     DataSet int_vector_dataset
             = create_dataset<std::vector<int> >(group, "int_vector", int_vector_value.size());
-    write(int_vector_dataset, int_vector_value);
+    make_dataset_writer(int_vector_dataset, &int_vector_value)();
 
     // vector of arrays
     std::vector<array_type> array_vector_value;

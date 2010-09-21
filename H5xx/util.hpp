@@ -24,8 +24,9 @@
 #define H5E_auto_t_vers 2
 #include <H5Cpp.h>
 
+#include <boost/algorithm/string.hpp>
 #include <string>
-#include <vector>
+#include <list>
 
 namespace H5
 {
@@ -46,6 +47,28 @@ inline std::string path(H5::IdComponent const& id)
         throw H5::IdComponentException("H5Iget_name", "failed to get name");
     }
     return name_.data();
+}
+
+/**
+ * split path_string on '/' and return list of group names,
+ * empty names are suppressed
+ */
+inline std::list<std::string> split_path(std::string const& path_string)
+{
+    using namespace std;
+    using namespace boost::algorithm;
+
+    list<string> groups;
+    split(groups, path_string, is_any_of("/"));  // equal('/')
+    // drop empty strings (if path starts or ends with '/')
+    for (list<string>::iterator s=groups.begin(); s != groups.end(); ++s) {
+        if (*s == "") {
+            groups.erase(s);
+            --s;
+        }
+    }
+
+    return groups;
 }
 
 } // namespace H5

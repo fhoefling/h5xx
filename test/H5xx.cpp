@@ -341,10 +341,33 @@ BOOST_AUTO_TEST_CASE( H5xx_group )
     BOOST_CHECK(group.getNumAttrs() == 0);
     BOOST_CHECK_THROW(attribute(group, "level").as<int>(), AttributeIException);
 
+    // test H5::path
+    BOOST_CHECK(path(open_group(file, "/")) == "/");
+    BOOST_CHECK(path(open_group(file, "one/two/three")) == "/one/two/three");
+    // note on previous check: semantics of open_group seems to be somewhat too lazy
+
     file.close();
 
     // remove file
 #ifndef NDEBUG
-//     unlink(filename);
+    unlink(filename);
 #endif
+
+    // test H5::split_path separately
+    std::vector<std::string> names(3);
+    names[0] = "one";
+    names[1] = "two";
+    names[2] = "three";
+
+    std::list<std::string> path = split_path("/one/two/three/");
+    BOOST_CHECK(path.size() == 3);
+    BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
+
+    path = split_path("one/two/three");
+    BOOST_CHECK(path.size() == 3);
+    BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
+
+    path = split_path("//one///two//three");
+    BOOST_CHECK(path.size() == 3);
+    BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
 }

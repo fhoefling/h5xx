@@ -24,11 +24,8 @@
 #define H5E_auto_t_vers 2
 #include <H5Cpp.h>
 
-#include <boost/algorithm/string.hpp>
 #include <H5xx/exception.hpp>
-
-#include <string>
-#include <deque>
+#include <H5xx/util.hpp>
 
 namespace H5
 {
@@ -71,16 +68,7 @@ inline H5::Group open_group(
  */
 inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path_string)
 {
-    std::deque<std::string> path;
-    using namespace boost::algorithm;
-    split(path, path_string, is_any_of("/"));
-    // drop empty string if path starts or ends with '/'
-    if (!path.empty() && path.front() == "") {
-        path.pop_front();
-    }
-    if (!path.empty() && path.back() == "") {
-        path.pop_back();
-    }
+    std::list<std::string> path = split_path(path_string);
     return open_group(fg, path.begin(), path.end());
 }
 

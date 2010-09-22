@@ -91,10 +91,10 @@ typename boost::enable_if<boost::is_fundamental<T> >::type
 write(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
 {
     if (index == H5S_UNLIMITED) {
-        LOG_DEBUG("append to dataset " << path(dataset));
+        LOG_TRACE("append to dataset " << path(dataset));
     }
     else {
-        LOG_DEBUG("write to dataset " << path(dataset) << " at " << index);
+        LOG_TRACE("write to dataset " << path(dataset) << " at " << index);
     }
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_type<T>(dataset) || !has_rank<rank+1>(dataspace)) {
@@ -143,7 +143,7 @@ template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
 read(H5::DataSet const& dataset, T* data, ssize_t index)
 {
-    LOG_DEBUG("read from dataset " << path(dataset) << " at " << index);
+    LOG_TRACE("read from dataset " << path(dataset) << " at " << index);
 
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_type<T>(dataset) || !has_rank<rank+1>(dataspace)) {

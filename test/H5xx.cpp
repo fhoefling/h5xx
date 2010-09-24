@@ -21,7 +21,6 @@
 #include <boost/test/unit_test.hpp>
 
 #include <unistd.h>
-#include <H5Cpp.h>
 #include <H5xx.hpp>
 
 #include <halmd/numeric/blas/fixed_vector.hpp>

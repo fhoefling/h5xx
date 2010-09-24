@@ -1,5 +1,4 @@
-/* HDF5 C++ extensions
- *
+/*
  * Copyright © 2008-2009  Peter Colberg
  *
  * This file is part of HALMD.
@@ -18,36 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HALMD_UTIL_H5XX_EXCEPTION_HPP
-#define HALMD_UTIL_H5XX_EXCEPTION_HPP
+#ifndef H5XX_H5_HPP
+#define H5XX_H5_HPP
 
-#include <H5xx/hdf5.hpp>
+#define H5E_auto_t_vers 2
+#include <H5Cpp.h>
 
-namespace H5
-{
-
-template <typename Exception>
-class no_autoprint : public Exception
-{
-public:
-    no_autoprint()
-    {
-        Exception::getAutoPrint(func, &client_data);
-        Exception::dontPrint();
-    }
-
-    ~no_autoprint()
-    {
-        Exception::setAutoPrint(func, client_data);
-    }
-
-private:
-    H5E_auto_t func;
-    void* client_data;
-};
-
-#define H5XX_NO_AUTO_PRINT(exception) H5::no_autoprint<exception> __no_autoprint;
-
-} // namespace H5
-
-#endif /* ! HALMD_UTIL_H5XX_EXCEPTION_HPP */
+#endif /* ! H5XX_H5_HPP */

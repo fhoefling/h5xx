@@ -21,12 +21,11 @@
 #ifndef HALMD_UTIL_H5XX_UTIL_HPP
 #define HALMD_UTIL_H5XX_UTIL_HPP
 
-#define H5E_auto_t_vers 2
-#include <H5Cpp.h>
-
 #include <boost/algorithm/string.hpp>
 #include <string>
 #include <list>
+
+#include <H5xx/hdf5.hpp>
 
 namespace H5
 {

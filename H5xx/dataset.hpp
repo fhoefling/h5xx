@@ -21,9 +21,6 @@
 #ifndef HALMD_UTIL_H5XX_DATASET_HPP
 #define HALMD_UTIL_H5XX_DATASET_HPP
 
-#define H5E_auto_t_vers 2
-#include <H5Cpp.h>
-
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
 #include <boost/function.hpp>
@@ -36,7 +33,7 @@
 
 #include <H5xx/attribute.hpp>
 #include <H5xx/util.hpp>
-#include <halmd/io/logger.hpp>
+#include <halmd/io/logger.hpp> //< FIXME must not be used outside of HALMD
 
 namespace H5
 {

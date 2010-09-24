@@ -21,12 +21,11 @@
 #ifndef HALMD_UTIL_H5XX_CTYPE_HPP
 #define HALMD_UTIL_H5XX_CTYPE_HPP
 
-#define H5E_auto_t_vers 2
-#include <H5Cpp.h>
-
 #include <boost/array.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits.hpp>
+
+#include <H5xx/hdf5.hpp>
 
 namespace H5
 {

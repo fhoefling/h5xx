@@ -21,9 +21,6 @@
 #ifndef HALMD_UTIL_H5XX_ATTRIBUTE_HPP
 #define HALMD_UTIL_H5XX_ATTRIBUTE_HPP
 
-#define H5E_auto_t_vers 2
-#include <H5Cpp.h>
-
 #include <boost/array.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>

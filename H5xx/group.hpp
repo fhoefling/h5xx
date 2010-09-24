@@ -21,9 +21,6 @@
 #ifndef HALMD_UTIL_H5XX_GROUP_HPP
 #define HALMD_UTIL_H5XX_GROUP_HPP
 
-#define H5E_auto_t_vers 2
-#include <H5Cpp.h>
-
 #include <H5xx/exception.hpp>
 #include <H5xx/util.hpp>
 

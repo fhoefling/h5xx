@@ -60,11 +60,12 @@ inline std::list<std::string> split_path(std::string const& path_string)
     list<string> groups;
     split(groups, path_string, is_any_of("/"));  // equal('/')
     // drop empty strings (if path starts or ends with '/')
-    for (list<string>::iterator s=groups.begin(); s != groups.end(); ++s) {
+    for (list<string>::iterator s=groups.begin(); s != groups.end(); ) {
         if (*s == "") {
-            groups.erase(s);
-            --s;
+            groups.erase(s++);
         }
+        else
+            ++s;
     }
 
     return groups;

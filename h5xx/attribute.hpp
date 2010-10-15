@@ -112,9 +112,9 @@ attribute::operator=(T const& value)
         }
     }
     catch (H5::AttributeIException const&) {
-        attr = m_node->createAttribute(m_name, ctype<T>(), H5S_SCALAR);
+        attr = m_node->createAttribute(m_name, ctype<T>::hid(), H5S_SCALAR);
     }
-    attr.write(ctype<T>(), &value);
+    attr.write(ctype<T>::hid(), &value);
     return *this;
 }
 
@@ -137,7 +137,7 @@ attribute::as()
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     T value;
-    attr.read(ctype<T>(), &value);
+    attr.read(ctype<T>::hid(), &value);
     return value;
 }
 
@@ -227,9 +227,9 @@ attribute::operator=(T const& value)
     catch (H5::AttributeIException const&) {
         hsize_t dim[1] = { size };
         H5::DataSpace ds(1, dim);
-        attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
+        attr = m_node->createAttribute(m_name, ctype<value_type>::hid(), ds);
     }
-    attr.write(ctype<value_type>(), value.data());
+    attr.write(ctype<value_type>::hid(), value.data());
     return *this;
 }
 
@@ -289,7 +289,7 @@ attribute::as()
     }
 
     boost::array<value_type, size> value;
-    attr.read(ctype<value_type>(), value.data());
+    attr.read(ctype<value_type>::hid(), value.data());
     return value;
 }
 
@@ -317,9 +317,9 @@ attribute::operator=(T const& value)
         hsize_t dim[rank];
         std::copy(value.shape(), value.shape() + rank, dim);
         H5::DataSpace ds(rank, dim);
-        attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
+        attr = m_node->createAttribute(m_name, ctype<value_type>::hid(), ds);
     }
-    attr.write(ctype<value_type>(), value.data());
+    attr.write(ctype<value_type>::hid(), value.data());
     return *this;
 }
 
@@ -352,7 +352,7 @@ attribute::as()
     boost::array<size_t, rank> shape;
     std::copy(dim, dim + rank, shape.begin());
     boost::multi_array<value_type, rank> value(shape);
-    attr.read(ctype<value_type>(), value.data());
+    attr.read(ctype<value_type>::hid(), value.data());
     return value;
 }
 
@@ -378,9 +378,9 @@ attribute::operator=(T const& value)
     catch (H5::AttributeIException const&) {
         hsize_t dim[1] = { value.size() };
         H5::DataSpace ds(1, dim);
-        attr = m_node->createAttribute(m_name, ctype<value_type>(), ds);
+        attr = m_node->createAttribute(m_name, ctype<value_type>::hid(), ds);
     }
-    attr.write(ctype<value_type>(), value.data());
+    attr.write(ctype<value_type>::hid(), value.data());
     return *this;
 }
 
@@ -410,7 +410,7 @@ attribute::as()
     }
     size_t size = ds.getSimpleExtentNpoints();
     std::vector<value_type> value(size);
-    attr.read(ctype<value_type>(), value.data());
+    attr.read(ctype<value_type>::hid(), value.data());
     return value;
 }
 

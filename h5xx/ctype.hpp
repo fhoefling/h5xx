@@ -21,35 +21,49 @@
 #ifndef H5XX_CTYPE_HPP
 #define H5XX_CTYPE_HPP
 
-#include <h5xx/hdf5.hpp>
+#include <h5xx/hdf5_compat.hpp>
 
-namespace H5
+namespace h5xx
+{
+namespace detail
 {
 
 /*
- * fundamental type to HDF5 native data type translation
+ * Translate C/C++ type to HDF5 native data type.
  */
 template <typename T>
 struct ctype;
 
-#define MAKE_CTYPE(CTYPE, H5TYPE) \
-template <> struct ctype<CTYPE> \
-{ operator H5::PredType const& () { return H5::PredType::NATIVE_##H5TYPE;} }
+#define H5XX_MAKE_CTYPE(T, H5T)         \
+    template <>                         \
+    struct ctype<T>                     \
+    {                                   \
+        static hid_t const& hid()       \
+        {                               \
+            return H5T;                 \
+        }                               \
+    }                                   \
 
-MAKE_CTYPE(float, FLOAT);
-MAKE_CTYPE(double, DOUBLE);
-MAKE_CTYPE(long double, LDOUBLE);
-MAKE_CTYPE(int8_t, INT8);
-MAKE_CTYPE(uint8_t, UINT8);
-MAKE_CTYPE(int16_t, INT16);
-MAKE_CTYPE(uint16_t, UINT16);
-MAKE_CTYPE(int32_t, INT32);
-MAKE_CTYPE(uint32_t, UINT32);
-MAKE_CTYPE(int64_t, INT64);
-MAKE_CTYPE(uint64_t, UINT64);
+H5XX_MAKE_CTYPE( char,                  H5T_NATIVE_CHAR );
+H5XX_MAKE_CTYPE( signed char,           H5T_NATIVE_SCHAR );
+H5XX_MAKE_CTYPE( unsigned char,         H5T_NATIVE_UCHAR );
+H5XX_MAKE_CTYPE( short,                 H5T_NATIVE_SHORT );
+H5XX_MAKE_CTYPE( unsigned short,        H5T_NATIVE_USHORT );
+H5XX_MAKE_CTYPE( int,                   H5T_NATIVE_INT );
+H5XX_MAKE_CTYPE( unsigned int,          H5T_NATIVE_UINT );
+H5XX_MAKE_CTYPE( long,                  H5T_NATIVE_LONG );
+H5XX_MAKE_CTYPE( unsigned long,         H5T_NATIVE_ULONG );
+H5XX_MAKE_CTYPE( long long,             H5T_NATIVE_LLONG );
+H5XX_MAKE_CTYPE( unsigned long long,    H5T_NATIVE_ULLONG );
+H5XX_MAKE_CTYPE( float,                 H5T_NATIVE_FLOAT );
+H5XX_MAKE_CTYPE( double,                H5T_NATIVE_DOUBLE );
+H5XX_MAKE_CTYPE( long double,           H5T_NATIVE_LDOUBLE );
+H5XX_MAKE_CTYPE( bool,                  H5T_NATIVE_HBOOL );
 
-#undef MAKE_CTYPE
+#undef H5XX_MAKE_CTYPE
 
-} // namespace H5
+} // namespace detail
+
+} // namespace h5xx
 
 #endif /* ! H5XX_CTYPE_HPP */

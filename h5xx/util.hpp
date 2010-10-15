@@ -33,6 +33,8 @@
 namespace H5
 {
 
+using h5xx::detail::ctype; // FIXME HDF5 C++ to C transition
+
 /**
  * returns absolute path of an HDF5 object within file
  *
@@ -93,7 +95,7 @@ template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, bool>::type
 has_type(H5::AbstractDs const& ds)
 {
-    return ds.getDataType() == ctype<T>();
+    return ds.getDataType() == ctype<T>::hid();
 }
 
 template <typename T>

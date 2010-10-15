@@ -17,19 +17,19 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#define BOOST_TEST_MODULE test_H5xx
+#define BOOST_TEST_MODULE test_h5xx
 #include <boost/test/unit_test.hpp>
 
 #include <unistd.h>
-#include <H5xx.hpp>
+#include <h5xx/h5xx.hpp>
 
 #include <halmd/numeric/blas/fixed_vector.hpp>
 
-BOOST_AUTO_TEST_CASE( H5xx_attribute )
+BOOST_AUTO_TEST_CASE( h5xx_attribute )
 {
     using namespace H5;
 
-    char const filename[] = "test_H5xx.hdf5";
+    char const filename[] = "test_h5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
     Group group = open_group(file, "/");
 
@@ -150,11 +150,11 @@ inline bool has_extent_one_extra(H5::DataSet const& dataset, size_t const* shape
     return H5::has_extent<T, 1>(dataset, shape);
 }
 
-BOOST_AUTO_TEST_CASE( H5xx_dataset )
+BOOST_AUTO_TEST_CASE( h5xx_dataset )
 {
     using namespace H5;
 
-    char const filename[] = "test_H5xx.hdf5";
+    char const filename[] = "test_h5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
     Group group = open_group(file, "/");
 
@@ -296,11 +296,11 @@ BOOST_AUTO_TEST_CASE( H5xx_dataset )
 #endif
 }
 
-BOOST_AUTO_TEST_CASE( H5xx_group )
+BOOST_AUTO_TEST_CASE( h5xx_group )
 {
     using namespace H5;
 
-    char const filename[] = "test_H5xx.hdf5";
+    char const filename[] = "test_h5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
 
     BOOST_CHECK_NO_THROW(open_group(file, "/"));

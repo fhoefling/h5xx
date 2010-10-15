@@ -18,20 +18,20 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HALMD_UTIL_H5XX_UTIL_HPP
-#define HALMD_UTIL_H5XX_UTIL_HPP
+#ifndef H5XX_UTIL_HPP
+#define H5XX_UTIL_HPP
 
 #include <boost/algorithm/string.hpp>
 #include <string>
 #include <list>
 
-#include <H5xx/hdf5.hpp>
+#include <h5xx/hdf5.hpp>
 
 namespace H5
 {
 
 /**
- * returns absolute path of a HDF5 object within file
+ * returns absolute path of an HDF5 object within file
  *
  * For attributes the path of the parent object is returned.
  */
@@ -73,4 +73,4 @@ inline std::list<std::string> split_path(std::string const& path_string)
 
 } // namespace H5
 
-#endif /* ! HALMD_UTIL_H5XX_UTIL_HPP */
+#endif /* ! H5XX_UTIL_HPP */

@@ -18,14 +18,14 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HALMD_UTIL_H5XX_CTYPE_HPP
-#define HALMD_UTIL_H5XX_CTYPE_HPP
+#ifndef H5XX_CTYPE_HPP
+#define H5XX_CTYPE_HPP
 
 #include <boost/array.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits.hpp>
 
-#include <H5xx/hdf5.hpp>
+#include <h5xx/hdf5.hpp>
 
 namespace H5
 {
@@ -239,4 +239,4 @@ inline hsize_t elements(H5::AbstractDs const& ds)
 
 } // namespace H5
 
-#endif /* ! HALMD_UTIL_H5XX_CTYPE_HPP */
+#endif /* ! H5XX_CTYPE_HPP */

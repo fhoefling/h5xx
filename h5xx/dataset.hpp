@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HALMD_UTIL_H5XX_DATASET_HPP
-#define HALMD_UTIL_H5XX_DATASET_HPP
+#ifndef H5XX_DATASET_HPP
+#define H5XX_DATASET_HPP
 
 #include <boost/array.hpp>
 #include <boost/bind.hpp>
@@ -31,8 +31,8 @@
 #include <boost/utility/enable_if.hpp>
 #include <vector>
 
-#include <H5xx/attribute.hpp>
-#include <H5xx/util.hpp>
+#include <h5xx/attribute.hpp>
+#include <h5xx/util.hpp>
 #include <halmd/io/logger.hpp> //< FIXME must not be used outside of HALMD
 
 namespace H5
@@ -469,4 +469,4 @@ boost::function<void (hsize_t)> make_dataset_write_at(
 }
 } // namespace H5
 
-#endif /* ! HALMD_UTIL_H5XX_DATASET_HPP */
+#endif /* ! H5XX_DATASET_HPP */

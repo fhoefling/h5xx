@@ -18,11 +18,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HALMD_UTIL_H5XX_GROUP_HPP
-#define HALMD_UTIL_H5XX_GROUP_HPP
+#ifndef H5XX_GROUP_HPP
+#define H5XX_GROUP_HPP
 
-#include <H5xx/exception.hpp>
-#include <H5xx/util.hpp>
+#include <h5xx/exception.hpp>
+#include <h5xx/util.hpp>
 
 namespace H5
 {
@@ -71,4 +71,4 @@ inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path_stri
 
 } // namespace H5
 
-#endif /* ! HALMD_UTIL_H5XX_GROUP_HPP */
+#endif /* ! H5XX_GROUP_HPP */

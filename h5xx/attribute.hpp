@@ -18,8 +18,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef HALMD_UTIL_H5XX_ATTRIBUTE_HPP
-#define HALMD_UTIL_H5XX_ATTRIBUTE_HPP
+#ifndef H5XX_ATTRIBUTE_HPP
+#define H5XX_ATTRIBUTE_HPP
 
 #include <boost/array.hpp>
 #include <boost/mpl/and.hpp>
@@ -28,9 +28,9 @@
 #include <boost/utility/enable_if.hpp>
 #include <vector>
 
-#include <H5xx/ctype.hpp>
-#include <H5xx/exception.hpp>
-#include <H5xx/util.hpp>
+#include <h5xx/ctype.hpp>
+#include <h5xx/exception.hpp>
+#include <h5xx/util.hpp>
 
 namespace H5
 {
@@ -416,4 +416,4 @@ attribute::as()
 
 } // namespace H5
 
-#endif /* ! HALMD_UTIL_H5XX_ATTRIBUTE_HPP */
+#endif /* ! H5XX_ATTRIBUTE_HPP */

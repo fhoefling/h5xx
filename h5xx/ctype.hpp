@@ -1,5 +1,4 @@
-/* HDF5 C++ extensions
- *
+/*
  * Copyright © 2008-2010  Peter Colberg and Felix Höfling
  *
  * This file is part of HALMD.
@@ -38,11 +37,11 @@ struct ctype;
     template <>                         \
     struct ctype<T>                     \
     {                                   \
-        static hid_t const& hid()       \
+        static hid_t hid()              \
         {                               \
-            return H5T;                 \
+            return H5Tcopy(H5T);        \
         }                               \
-    }                                   \
+    }
 
 H5XX_MAKE_CTYPE( char,                  H5T_NATIVE_CHAR );
 H5XX_MAKE_CTYPE( signed char,           H5T_NATIVE_SCHAR );

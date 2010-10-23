@@ -133,7 +133,7 @@ attribute::as()
     catch (H5::AttributeIException const&) {
         throw;
     }
-    if (!has_type<T>(attr) || !has_scalar_space(attr)) {
+    if (!has_scalar_space(attr)) {
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     T value;
@@ -175,7 +175,7 @@ attribute::as()
     catch (H5::AttributeIException const&) {
         throw;
     }
-    if (!has_type<T>(attr) || !has_scalar_space(attr)) {
+    if (!has_scalar_space(attr)) {
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     // determine string length first and allocate space
@@ -284,7 +284,7 @@ attribute::as()
         throw;
     }
 
-    if (!has_type<T>(attr) || !has_extent<T>(attr)) {
+    if (!has_extent<T>(attr)) {
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
 
@@ -343,7 +343,7 @@ attribute::as()
     }
 
     H5::DataSpace ds(attr.getSpace());
-    if (!has_type<T>(attr) || !has_rank<rank>(attr)) {
+    if (!has_rank<rank>(attr)) {
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
 
@@ -405,7 +405,7 @@ attribute::as()
     }
 
     H5::DataSpace ds(attr.getSpace());
-    if (!has_type<T>(attr) || !ds.isSimple()) {
+    if (!ds.isSimple()) {
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     size_t size = ds.getSimpleExtentNpoints();

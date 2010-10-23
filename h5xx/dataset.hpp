@@ -94,7 +94,7 @@ write(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
         LOG_TRACE("write to dataset " << path(dataset) << " at " << index);
     }
     H5::DataSpace dataspace(dataset.getSpace());
-    if (!has_type<T>(dataset) || !has_rank<rank+1>(dataspace)) {
+    if (!has_rank<rank+1>(dataspace)) {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
 
@@ -143,7 +143,7 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
     LOG_TRACE("read from dataset " << path(dataset) << " at " << index);
 
     H5::DataSpace dataspace(dataset.getSpace());
-    if (!has_type<T>(dataset) || !has_rank<rank+1>(dataspace)) {
+    if (!has_rank<rank+1>(dataspace)) {
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
     }
 

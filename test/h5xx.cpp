@@ -27,12 +27,9 @@
 
 BOOST_AUTO_TEST_CASE( h5xx_attribute )
 {
-    using namespace H5;
-    using namespace h5xx;
-
     char const filename[] = "test_h5xx.hdf5";
-    H5File file(filename, H5F_ACC_TRUNC);
-    Group group = open_group(file, "/");
+    H5::H5File file(filename, H5F_ACC_TRUNC);
+    H5::Group group = h5xx::open_group(file, "/");
 
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
     h5xx::write_attribute(group, "integral, scalar", 1);   // store something of wrong type first
@@ -87,30 +84,30 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     // re-open file
     file.close();
     file.openFile(filename, H5F_ACC_RDONLY);
-    group = open_group(file, "/");
+    group = h5xx::open_group(file, "/");
 
-    // check has_type<>
-    BOOST_CHECK(has_type<uint64_t>(group.openAttribute("integral, scalar")));
-    BOOST_CHECK(has_type<long double>(group.openAttribute("long double, scalar")));
-    BOOST_CHECK(has_type<double>(group.openAttribute("double, scalar")));
-    BOOST_CHECK(has_type<char const*>(group.openAttribute("char [], scalar")));
-    BOOST_CHECK(has_type<std::string>(group.openAttribute("string, scalar")));
-    BOOST_CHECK(has_type<string_array_type>(group.openAttribute("char [], array")));
-    BOOST_CHECK(has_type<double_array_type>(group.openAttribute("double, array")));
-    BOOST_CHECK(has_type<double_vector_type>(group.openAttribute("double, std::vector")));
-    BOOST_CHECK(has_type<multi_array3>(group.openAttribute("int, multi_array")));
+    // check h5xx::has_type<>
+    BOOST_CHECK(h5xx::has_type<uint64_t>(group.openAttribute("integral, scalar")));
+    BOOST_CHECK(h5xx::has_type<long double>(group.openAttribute("long double, scalar")));
+    BOOST_CHECK(h5xx::has_type<double>(group.openAttribute("double, scalar")));
+    BOOST_CHECK(h5xx::has_type<char const*>(group.openAttribute("char [], scalar")));
+    BOOST_CHECK(h5xx::has_type<std::string>(group.openAttribute("string, scalar")));
+    BOOST_CHECK(h5xx::has_type<string_array_type>(group.openAttribute("char [], array")));
+    BOOST_CHECK(h5xx::has_type<double_array_type>(group.openAttribute("double, array")));
+    BOOST_CHECK(h5xx::has_type<double_vector_type>(group.openAttribute("double, std::vector")));
+    BOOST_CHECK(h5xx::has_type<multi_array3>(group.openAttribute("int, multi_array")));
 
-    // check has_scalar_space()
-    BOOST_CHECK(has_scalar_space(group.openAttribute("integral, scalar")));
-    BOOST_CHECK(has_scalar_space(group.openAttribute("long double, scalar")));
-    BOOST_CHECK(has_scalar_space(group.openAttribute("double, scalar")));
-    BOOST_CHECK(has_scalar_space(group.openAttribute("char [], scalar")));
-    BOOST_CHECK(has_scalar_space(group.openAttribute("string, scalar")));
+    // check h5xx::has_scalar_space()
+    BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("integral, scalar")));
+    BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("long double, scalar")));
+    BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("double, scalar")));
+    BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("char [], scalar")));
+    BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("string, scalar")));
 
-    // check has_extent<>
-    BOOST_CHECK(has_extent<string_array_type>(group.openAttribute("char [], array")));
-    BOOST_CHECK(has_extent<double_array_type>(group.openAttribute("double, array")));
-    BOOST_CHECK(has_extent<multi_array3>(group.openAttribute("int, multi_array"),
+    // check h5xx::has_extent<>
+    BOOST_CHECK(h5xx::has_extent<string_array_type>(group.openAttribute("char [], array")));
+    BOOST_CHECK(h5xx::has_extent<double_array_type>(group.openAttribute("double, array")));
+    BOOST_CHECK(h5xx::has_extent<multi_array3>(group.openAttribute("int, multi_array"),
                 multi_array_value.shape()));
 
     // read attributes
@@ -153,12 +150,9 @@ inline bool has_extent_one_extra(H5::DataSet const& dataset, size_t const* shape
 
 BOOST_AUTO_TEST_CASE( h5xx_dataset )
 {
-    using namespace H5;
-    using namespace h5xx;
-
     char const filename[] = "test_h5xx.hdf5";
-    H5File file(filename, H5F_ACC_TRUNC);
-    Group group = open_group(file, "/");
+    H5::H5File file(filename, H5F_ACC_TRUNC);
+    H5::Group group = h5xx::open_group(file, "/");
 
     //
     // create and write datasets
@@ -166,20 +160,20 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
     // scalar type
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
-    make_dataset_writer(group, "uint", &uint_value)();
+    h5xx::make_dataset_writer(group, "uint", &uint_value)();
     // overwrite data set
-    DataSet uint_dataset = create_dataset<uint64_t>(group, "uint");
-    write(uint_dataset, uint_value);
-    write(uint_dataset, uint_value + 1);
+    H5::DataSet uint_dataset = h5xx::create_dataset<uint64_t>(group, "uint");
+    h5xx::write(uint_dataset, uint_value);
+    h5xx::write(uint_dataset, uint_value + 1);
 
     // array type
     typedef boost::array<double, 3> array_type;
     array_type array_value = {{ 1, sqrt(2), 2 }};
     array_type array_value2 = {{ -1, sqrt(3), -3 }};
-    DataSet array_dataset
-        = create_dataset<array_type>(group, "array", 2);  // fixed size
-    write(array_dataset, array_value, 0);           // write entry #0
-    write(array_dataset, array_value2, 1);          // write entry #1
+    H5::DataSet array_dataset
+        = h5xx::create_dataset<array_type>(group, "array", 2);  // fixed size
+    h5xx::write(array_dataset, array_value, 0);           // write entry #0
+    h5xx::write(array_dataset, array_value2, 1);          // write entry #1
 
     // multi-array type
     typedef boost::multi_array<int, 2> multi_array2;
@@ -190,40 +184,40 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     };
     multi_array2 multi_array_value(boost::extents[3][4]);
     multi_array_value.assign(data2, data2 + 3 * 4);
-    DataSet multi_array_dataset
-        = create_dataset<multi_array2>(group, "multi_array", multi_array_value.shape());
-    write(multi_array_dataset, multi_array_value);    // append
+    H5::DataSet multi_array_dataset
+        = h5xx::create_dataset<multi_array2>(group, "multi_array", multi_array_value.shape());
+    h5xx::write(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 1;
-    write(multi_array_dataset, multi_array_value);    // append
+    h5xx::write(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 2;
-    make_dataset_write_at(multi_array_dataset, &multi_array_value)(0);  // overwrite first entry
+    h5xx::make_dataset_write_at(multi_array_dataset, &multi_array_value)(0);  // overwrite first entry
 
     // vector of scalars
     std::vector<int> int_vector_value(data2, data2 + 3 * 4);
-    DataSet int_vector_dataset
-            = create_dataset<std::vector<int> >(group, "int_vector", int_vector_value.size());
-    make_dataset_writer(int_vector_dataset, &int_vector_value)();
+    H5::DataSet int_vector_dataset
+            = h5xx::create_dataset<std::vector<int> >(group, "int_vector", int_vector_value.size());
+    h5xx::make_dataset_writer(int_vector_dataset, &int_vector_value)();
 
     // vector of arrays
     std::vector<array_type> array_vector_value;
     array_vector_value.push_back(array_value);
     array_vector_value.push_back(array_value2);
-    DataSet array_vector_dataset
-            = create_dataset<std::vector<array_type> >(group, "array_vector", array_vector_value.size());
-    write(array_vector_dataset, array_vector_value);
+    H5::DataSet array_vector_dataset
+            = h5xx::create_dataset<std::vector<array_type> >(group, "array_vector", array_vector_value.size());
+    h5xx::write(array_vector_dataset, array_vector_value);
     // write vector of wrong size
     array_vector_value.push_back(array_value2);
-    BOOST_CHECK_THROW(write(array_vector_dataset, array_vector_value), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::write(array_vector_dataset, array_vector_value), std::runtime_error);
     array_vector_value.pop_back();
 
     // write to dataset of wrong type and size
-    BOOST_CHECK_THROW(write(int_vector_dataset, array_vector_value), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::write(int_vector_dataset, array_vector_value), std::runtime_error);
 
     // re-open file
     file.flush(H5F_SCOPE_GLOBAL);
     file.close();
     file.openFile(filename, H5F_ACC_RDONLY);
-    group = open_group(file, "/");
+    group = h5xx::open_group(file, "/");
 
     //
     // read datasets
@@ -231,49 +225,49 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
     // scalar type dataset
     uint_dataset = group.openDataSet("uint");
-    BOOST_CHECK(has_type<uint64_t>(uint_dataset));
-    BOOST_CHECK(elements(uint_dataset) == 2);
+    BOOST_CHECK(h5xx::has_type<uint64_t>(uint_dataset));
+    BOOST_CHECK(h5xx::elements(uint_dataset) == 2);
 
     uint64_t uint_value_;
-    read(uint_dataset, &uint_value_, 0);
+    h5xx::read(uint_dataset, &uint_value_, 0);
     BOOST_CHECK(uint_value_ == uint_value);
-    read(uint_dataset, &uint_value_, 1);
+    h5xx::read(uint_dataset, &uint_value_, 1);
     BOOST_CHECK(uint_value_ == uint_value + 1);
-    read(uint_dataset, &uint_value_, -1);
+    h5xx::read(uint_dataset, &uint_value_, -1);
     BOOST_CHECK(uint_value_ == uint_value + 1);
-    read(uint_dataset, &uint_value_, -2);
+    h5xx::read(uint_dataset, &uint_value_, -2);
     BOOST_CHECK(uint_value_ == uint_value);
-    BOOST_CHECK_THROW(read(uint_dataset, &uint_value_, 2), std::runtime_error);
-    BOOST_CHECK_THROW(read(uint_dataset, &uint_value_, -3), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::read(uint_dataset, &uint_value_, 2), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::read(uint_dataset, &uint_value_, -3), std::runtime_error);
 
     // array type dataset
     array_dataset = group.openDataSet("array");
-    BOOST_CHECK(has_type<array_type>(array_dataset));
+    BOOST_CHECK(h5xx::has_type<array_type>(array_dataset));
     BOOST_CHECK(has_extent_one_extra<array_type>(array_dataset));
-    BOOST_CHECK(elements(array_dataset) == 2 * 3);
+    BOOST_CHECK(h5xx::elements(array_dataset) == 2 * 3);
     array_type array_value_;
-    read(array_dataset, &array_value_, 0);
+    h5xx::read(array_dataset, &array_value_, 0);
     BOOST_CHECK(array_value_ == array_value);
-    read(array_dataset, &array_value_, 1);
+    h5xx::read(array_dataset, &array_value_, 1);
     BOOST_CHECK(array_value_ == array_value2);
 
     // multi-array type dataset
     multi_array_dataset = group.openDataSet("multi_array");
-    BOOST_CHECK(has_type<multi_array2>(multi_array_dataset));
+    BOOST_CHECK(h5xx::has_type<multi_array2>(multi_array_dataset));
     BOOST_CHECK(has_extent_one_extra<multi_array2>(multi_array_dataset, multi_array_value.shape()));
-    BOOST_CHECK(elements(multi_array_dataset) == 2 * 3 * 4);
+    BOOST_CHECK(h5xx::elements(multi_array_dataset) == 2 * 3 * 4);
     multi_array2 multi_array_value_;
-    read(multi_array_dataset, &multi_array_value_, 0);
+    h5xx::read(multi_array_dataset, &multi_array_value_, 0);
     multi_array_value[1][2] = 2;
     BOOST_CHECK(multi_array_value_ == multi_array_value);
-    read(multi_array_dataset, &multi_array_value_, 1);
+    h5xx::read(multi_array_dataset, &multi_array_value_, 1);
     multi_array_value[1][2] = 1;
     BOOST_CHECK(multi_array_value_ == multi_array_value);
 
     // vector of scalars
     int_vector_dataset = group.openDataSet("int_vector");
     std::vector<int> int_vector_value_;
-    read(int_vector_dataset, &int_vector_value_, 0);
+    h5xx::read(int_vector_dataset, &int_vector_value_, 0);
     BOOST_CHECK(int_vector_value_.size() == int_vector_value.size());
     BOOST_CHECK(std::equal(
         int_vector_value_.begin()
@@ -284,7 +278,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     // vector of arrays
     array_vector_dataset = group.openDataSet("array_vector");
     std::vector<array_type> array_vector_value_;
-    read(array_vector_dataset, &array_vector_value_, 0);
+    h5xx::read(array_vector_dataset, &array_vector_value_, 0);
     BOOST_CHECK(array_vector_value_.size() == array_vector_value.size());
     BOOST_CHECK(std::equal(
         array_vector_value_.begin()
@@ -300,53 +294,50 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
 BOOST_AUTO_TEST_CASE( h5xx_group )
 {
-    using namespace H5;
-    using namespace h5xx;
-
     char const filename[] = "test_h5xx.hdf5";
-    H5File file(filename, H5F_ACC_TRUNC);
+    H5::H5File file(filename, H5F_ACC_TRUNC);
 
-    BOOST_CHECK_NO_THROW(open_group(file, "/"));
-    BOOST_CHECK_NO_THROW(open_group(file, ""));
+    BOOST_CHECK_NO_THROW(h5xx::open_group(file, "/"));
+    BOOST_CHECK_NO_THROW(h5xx::open_group(file, ""));
 
-    Group group = open_group(file, "/");
-    BOOST_CHECK_NO_THROW(open_group(group, "/"));
-    BOOST_CHECK_NO_THROW(open_group(group, ""));
+    H5::Group group = h5xx::open_group(file, "/");
+    BOOST_CHECK_NO_THROW(h5xx::open_group(group, "/"));
+    BOOST_CHECK_NO_THROW(h5xx::open_group(group, ""));
 
     // create a hierarchy with attributes
-    h5xx::write_attribute(open_group(file, "/"), "level", 0);
-    h5xx::write_attribute(open_group(file, "/one"), "level", 1);
-    h5xx::write_attribute(open_group(file, "/one/two"), "level", 2);
-    h5xx::write_attribute(open_group(file, "/one/two/three"), "level", 3);
+    h5xx::write_attribute(h5xx::open_group(file, "/"), "level", 0);
+    h5xx::write_attribute(h5xx::open_group(file, "/one"), "level", 1);
+    h5xx::write_attribute(h5xx::open_group(file, "/one/two"), "level", 2);
+    h5xx::write_attribute(h5xx::open_group(file, "/one/two/three"), "level", 3);
 
-    group = open_group(file, "one");
+    group = h5xx::open_group(file, "one");
     BOOST_CHECK(group.getNumAttrs() == 1);
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 1);
 
-    open_group(group, "branch");        // create branch in '/one'
+    h5xx::open_group(group, "branch");        // create branch in '/one'
     BOOST_CHECK(group.getNumAttrs() == 1);
     BOOST_CHECK(group.getNumObjs() == 2);
 
-    group = open_group(group, "two/three/");
+    group = h5xx::open_group(group, "two/three/");
     BOOST_CHECK(group.getNumAttrs() == 1);
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
 
-    group = open_group(file, "one/two");
+    group = h5xx::open_group(file, "one/two");
     BOOST_CHECK(group.getNumAttrs() == 1);
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 2);
 
-    group = open_group(group, "three");
+    group = h5xx::open_group(group, "three");
     BOOST_CHECK(group.getNumAttrs() == 1);
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
 
-    group = open_group(group, "three");          // create new group
+    group = h5xx::open_group(group, "three");          // create new group
     BOOST_CHECK(group.getNumAttrs() == 0);
-    BOOST_CHECK_THROW(h5xx::read_attribute<int>(group, "level"), AttributeIException);
+    BOOST_CHECK_THROW(h5xx::read_attribute<int>(group, "level"), H5::AttributeIException);
 
-    // test H5::path
-    BOOST_CHECK(path(open_group(file, "/")) == "/");
-    BOOST_CHECK(path(open_group(file, "one/two/three")) == "/one/two/three");
-    // note on previous check: semantics of open_group seems to be somewhat too lazy
+    // test h5xx::path
+    BOOST_CHECK(h5xx::path(h5xx::open_group(file, "/")) == "/");
+    BOOST_CHECK(h5xx::path(h5xx::open_group(file, "one/two/three")) == "/one/two/three");
+    // note on previous check: semantics of h5xx::open_group seems to be somewhat too lazy
 
     file.close();
 
@@ -355,21 +346,21 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
     unlink(filename);
 #endif
 
-    // test H5::split_path separately
+    // test h5xx::split_path separately
     std::vector<std::string> names(3);
     names[0] = "one";
     names[1] = "two";
     names[2] = "three";
 
-    std::list<std::string> path = split_path("/one/two/three/");
+    std::list<std::string> path = h5xx::split_path("/one/two/three/");
     BOOST_CHECK(path.size() == 3);
     BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
 
-    path = split_path("one/two/three");
+    path = h5xx::split_path("one/two/three");
     BOOST_CHECK(path.size() == 3);
     BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
 
-    path = split_path("//one///two//three");
+    path = h5xx::split_path("//one///two//three");
     BOOST_CHECK(path.size() == 3);
     BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
 }

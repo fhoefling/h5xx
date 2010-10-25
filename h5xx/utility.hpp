@@ -29,7 +29,7 @@
 
 #include <h5xx/ctype.hpp>
 
-namespace H5
+namespace h5xx
 {
 
 using h5xx::detail::ctype; // FIXME HDF5 C++ to C transition
@@ -258,6 +258,6 @@ inline hsize_t elements(H5::AbstractDs const& ds)
     return elements(ds.getSpace());
 }
 
-} // namespace H5
+} // namespace h5xx
 
 #endif /* ! H5XX_UTILITY_HPP */

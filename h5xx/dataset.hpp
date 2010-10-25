@@ -35,7 +35,7 @@
 #include <h5xx/utility.hpp>
 #include <halmd/io/logger.hpp> //< FIXME must not be used outside of HALMD
 
-namespace H5
+namespace h5xx
 {
 
 enum { compression_level = 6 };
@@ -467,6 +467,6 @@ boost::function<void (hsize_t)> make_dataset_write_at(
     H5::DataSet dataset = create_dataset<T>(group, name);
     return make_dataset_write_at(dataset, data);
 }
-} // namespace H5
+} // namespace h5xx
 
 #endif /* ! H5XX_DATASET_HPP */

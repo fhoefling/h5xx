@@ -28,6 +28,7 @@
 BOOST_AUTO_TEST_CASE( h5xx_attribute )
 {
     using namespace H5;
+    using namespace h5xx;
 
     char const filename[] = "test_h5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
@@ -141,18 +142,19 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
 template <typename T>
 inline bool has_extent_one_extra(H5::DataSet const& dataset)
 {
-    return H5::has_extent<T, 1>(dataset);
+    return h5xx::has_extent<T, 1>(dataset);
 }
 
 template <typename T>
 inline bool has_extent_one_extra(H5::DataSet const& dataset, size_t const* shape)
 {
-    return H5::has_extent<T, 1>(dataset, shape);
+    return h5xx::has_extent<T, 1>(dataset, shape);
 }
 
 BOOST_AUTO_TEST_CASE( h5xx_dataset )
 {
     using namespace H5;
+    using namespace h5xx;
 
     char const filename[] = "test_h5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);
@@ -299,6 +301,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 BOOST_AUTO_TEST_CASE( h5xx_group )
 {
     using namespace H5;
+    using namespace h5xx;
 
     char const filename[] = "test_h5xx.hdf5";
     H5File file(filename, H5F_ACC_TRUNC);

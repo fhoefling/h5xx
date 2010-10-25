@@ -24,7 +24,7 @@
 #include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
 
-namespace H5
+namespace h5xx
 {
 
 /**
@@ -69,6 +69,6 @@ inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path_stri
     return open_group(fg, path.begin(), path.end());
 }
 
-} // namespace H5
+} // namespace h5xx
 
 #endif /* ! H5XX_GROUP_HPP */

@@ -32,7 +32,7 @@
 #include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
 
-namespace H5
+namespace h5xx
 {
 
 /**
@@ -414,6 +414,6 @@ attribute::as()
     return value;
 }
 
-} // namespace H5
+} // namespace h5xx
 
 #endif /* ! H5XX_ATTRIBUTE_HPP */

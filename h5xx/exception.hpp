@@ -23,22 +23,22 @@
 
 #include <h5xx/hdf5_compat.hpp>
 
-namespace H5
+namespace h5xx
 {
 
 template <typename Exception>
-class no_autoprint : public Exception
+class no_autoprint : public H5::Exception
 {
 public:
     no_autoprint()
     {
-        Exception::getAutoPrint(func, &client_data);
-        Exception::dontPrint();
+        H5::Exception::getAutoPrint(func, &client_data);
+        H5::Exception::dontPrint();
     }
 
     ~no_autoprint()
     {
-        Exception::setAutoPrint(func, client_data);
+        H5::Exception::setAutoPrint(func, client_data);
     }
 
 private:
@@ -46,8 +46,8 @@ private:
     void* client_data;
 };
 
-#define H5XX_NO_AUTO_PRINT(exception) H5::no_autoprint<exception> __no_autoprint;
+#define H5XX_NO_AUTO_PRINT(exception) h5xx::no_autoprint<exception> __no_autoprint;
 
-} // namespace H5
+} // namespace h5xx
 
 #endif /* ! H5XX_EXCEPTION_HPP */

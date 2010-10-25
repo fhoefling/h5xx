@@ -26,6 +26,6 @@
 #include <h5xx/dataset.hpp>
 #include <h5xx/exception.hpp>
 #include <h5xx/group.hpp>
-#include <h5xx/util.hpp>
+#include <h5xx/utility.hpp>
 
 #endif /* ! H5XX_HPP */

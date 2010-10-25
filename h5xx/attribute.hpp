@@ -30,7 +30,7 @@
 
 #include <h5xx/ctype.hpp>
 #include <h5xx/exception.hpp>
-#include <h5xx/util.hpp>
+#include <h5xx/utility.hpp>
 
 namespace H5
 {

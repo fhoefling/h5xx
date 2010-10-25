@@ -22,7 +22,7 @@
 #define H5XX_GROUP_HPP
 
 #include <h5xx/exception.hpp>
-#include <h5xx/util.hpp>
+#include <h5xx/utility.hpp>
 
 namespace H5
 {

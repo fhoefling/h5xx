@@ -32,7 +32,7 @@
 #include <vector>
 
 #include <h5xx/attribute.hpp>
-#include <h5xx/util.hpp>
+#include <h5xx/utility.hpp>
 #include <halmd/io/logger.hpp> //< FIXME must not be used outside of HALMD
 
 namespace H5

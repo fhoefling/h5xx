@@ -21,7 +21,7 @@
 #ifndef H5XX_EXCEPTION_HPP
 #define H5XX_EXCEPTION_HPP
 
-#include <h5xx/hdf5.hpp>
+#include <h5xx/hdf5_compat.hpp>
 
 namespace H5
 {

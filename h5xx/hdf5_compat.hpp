@@ -60,4 +60,9 @@
 # define H5XX_USE_16_API
 #endif
 
+/**
+ * HDF5 C++ API (to be deprecated in HALMD)
+ */
+#include <H5Cpp.h>
+
 #endif /* ! H5XX_COMPAT_HPP */

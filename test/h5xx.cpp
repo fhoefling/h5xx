@@ -35,24 +35,24 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     Group group = open_group(file, "/");
 
     uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
-    attribute(group, "integral, scalar") = 1;   // store something of wrong type first
-    attribute(group, "integral, scalar") = uint_value;  // overwrite value
+    h5xx::write_attribute(group, "integral, scalar", 1);   // store something of wrong type first
+    h5xx::write_attribute(group, "integral, scalar", uint_value);  // overwrite value
 
     // long double is supported by the HDF5 library,
     // but neither by h5dump nor pytables ...
     long double ldouble_value = sqrtl(2.);
-    attribute(group, "long double, scalar") = 2;   // store something of wrong type first
-    attribute(group, "long double, scalar") = ldouble_value;
-    attribute(group, "double, scalar") = static_cast<double>(ldouble_value);
+    h5xx::write_attribute(group, "long double, scalar", 2);   // store something of wrong type first
+    h5xx::write_attribute(group, "long double, scalar", ldouble_value);
+    h5xx::write_attribute(group, "double, scalar", static_cast<double>(ldouble_value));
 
     boost::array<char const*, 3> cstring_array = {{
         "HALMD", "HAL's MD package",
         "Highly accelerated large-scale molecular dynamics simulation package"
     }};
     typedef boost::array<std::string, 3> string_array_type;
-    attribute(group, "char [], scalar") = cstring_array[1];
-    attribute(group, "string, scalar") = std::string(cstring_array[1]);
-    attribute(group, "char [], array") = cstring_array;
+    h5xx::write_attribute(group, "char [], scalar", cstring_array[1]);
+    h5xx::write_attribute(group, "string, scalar", std::string(cstring_array[1]));
+    h5xx::write_attribute(group, "char [], array", cstring_array);
 
     // use derived class instead of boost::array
     typedef halmd::fixed_vector<double, 5> double_array_type;
@@ -61,14 +61,14 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
        1., sqrt(2.), 2., sqrt(3.), 3.
     };
     std::copy(double_values, double_values + value_array.size(), value_array.data());
-    attribute(group, "double, array") = value_array;
+    h5xx::write_attribute(group, "double, array", value_array);
 
     typedef std::vector<double> double_vector_type;
     double_vector_type value_vector(value_array.size());
     std::copy(value_array.begin(), value_array.end(), value_vector.begin());
-    attribute(group, "double, std::vector") = value_vector;
+    h5xx::write_attribute(group, "double, std::vector", value_vector);
     value_vector.resize(4);
-    attribute(group, "double, std::vector") = value_vector;     // overwrite with different size
+    h5xx::write_attribute(group, "double, std::vector", value_vector);     // overwrite with different size
 
     typedef boost::multi_array<int, 3> multi_array3;
     int data3[] = {
@@ -82,7 +82,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     };
     multi_array3 multi_array_value(boost::extents[2][3][4]);
     multi_array_value.assign(data3, data3 + 2 * 3 * 4);
-    attribute(group, "int, multi_array") = multi_array_value;
+    h5xx::write_attribute(group, "int, multi_array", multi_array_value);
 
     // re-open file
     file.close();
@@ -114,20 +114,20 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
                 multi_array_value.shape()));
 
     // read attributes
-    BOOST_CHECK(attribute(group, "integral, scalar").as<uint64_t>() == uint_value);
-    BOOST_CHECK(attribute(group, "long double, scalar").as<long double>() == ldouble_value);
-    BOOST_CHECK(attribute(group, "double, scalar").as<double>()
+    BOOST_CHECK(h5xx::read_attribute<uint64_t>(group, "integral, scalar") == uint_value);
+    BOOST_CHECK(h5xx::read_attribute<long double>(group, "long double, scalar") == ldouble_value);
+    BOOST_CHECK(h5xx::read_attribute<double>(group, "double, scalar")
                 == static_cast<double>(ldouble_value));
-    BOOST_CHECK(attribute(group, "char [], scalar").as<std::string>() == cstring_array[1]);
-    BOOST_CHECK(attribute(group, "string, scalar").as<std::string>() == cstring_array[1]);
+    BOOST_CHECK(h5xx::read_attribute<std::string>(group, "char [], scalar") == cstring_array[1]);
+    BOOST_CHECK(h5xx::read_attribute<std::string>(group, "string, scalar") == cstring_array[1]);
     // read support for fixed-size string array is missing
-//     BOOST_CHECK(attribute(group, "char [], array").as<const char*>() == cstring_array);
-    BOOST_CHECK(attribute(group, "double, array").as<double_array_type>() == value_array);
-    value_vector = attribute(group, "double, array").as<double_vector_type>();
+//     BOOST_CHECK(h5xx::read_attribute<const char*>(group, "char [], array") == cstring_array);
+    BOOST_CHECK(h5xx::read_attribute<double_array_type>(group, "double, array") == value_array);
+    value_vector = h5xx::read_attribute<double_vector_type>(group, "double, array");
     BOOST_CHECK(equal(value_vector.begin(), value_vector.end(), value_array.begin()));
-    BOOST_CHECK(attribute(group, "int, multi_array").as<multi_array3>() == multi_array_value);
+    BOOST_CHECK(h5xx::read_attribute<multi_array3>(group, "int, multi_array") == multi_array_value);
     // read multi_array as linear vector
-    std::vector<int> int_vector = attribute(group, "int, multi_array").as<std::vector<int> >();
+    std::vector<int> int_vector = h5xx::read_attribute<std::vector<int> >(group, "int, multi_array");
     BOOST_CHECK(int_vector.size() == multi_array_value.num_elements());
     BOOST_CHECK(equal(int_vector.begin(), int_vector.end(), multi_array_value.data()));
 
@@ -314,14 +314,14 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
     BOOST_CHECK_NO_THROW(open_group(group, ""));
 
     // create a hierarchy with attributes
-    attribute(open_group(file, "/"), "level") = 0;
-    attribute(open_group(file, "/one"), "level") = 1;
-    attribute(open_group(file, "/one/two"), "level") = 2;
-    attribute(open_group(file, "/one/two/three"), "level") = 3;
+    h5xx::write_attribute(open_group(file, "/"), "level", 0);
+    h5xx::write_attribute(open_group(file, "/one"), "level", 1);
+    h5xx::write_attribute(open_group(file, "/one/two"), "level", 2);
+    h5xx::write_attribute(open_group(file, "/one/two/three"), "level", 3);
 
     group = open_group(file, "one");
     BOOST_CHECK(group.getNumAttrs() == 1);
-    BOOST_CHECK(attribute(group, "level").as<int>() == 1);
+    BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 1);
 
     open_group(group, "branch");        // create branch in '/one'
     BOOST_CHECK(group.getNumAttrs() == 1);
@@ -329,19 +329,19 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
 
     group = open_group(group, "two/three/");
     BOOST_CHECK(group.getNumAttrs() == 1);
-    BOOST_CHECK(attribute(group, "level").as<int>() == 3);
+    BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
 
     group = open_group(file, "one/two");
     BOOST_CHECK(group.getNumAttrs() == 1);
-    BOOST_CHECK(attribute(group, "level").as<int>() == 2);
+    BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 2);
 
     group = open_group(group, "three");
     BOOST_CHECK(group.getNumAttrs() == 1);
-    BOOST_CHECK(attribute(group, "level").as<int>() == 3);
+    BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
 
     group = open_group(group, "three");          // create new group
     BOOST_CHECK(group.getNumAttrs() == 0);
-    BOOST_CHECK_THROW(attribute(group, "level").as<int>(), AttributeIException);
+    BOOST_CHECK_THROW(h5xx::read_attribute<int>(group, "level"), AttributeIException);
 
     // test H5::path
     BOOST_CHECK(path(open_group(file, "/")) == "/");

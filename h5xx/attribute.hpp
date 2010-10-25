@@ -35,87 +35,27 @@
 namespace h5xx
 {
 
-/**
- * HDF5 attribute
- */
-class attribute
-{
-public:
-    attribute(H5::H5Object const& node, std::string const& name)
-        : m_node(&node), m_name(name) {}
-
-    template <typename T>
-    typename boost::enable_if<boost::is_fundamental<T>, attribute&>::type
-    operator=(T const& value);
-    template <typename T>
-    typename boost::enable_if<boost::is_fundamental<T>, T>::type
-    as();
-
-    template <typename T>
-    typename boost::enable_if<boost::is_same<T, std::string>, attribute&>::type
-    operator=(T const& value);
-    template <typename T>
-    typename boost::enable_if<boost::is_same<T, std::string>, T>::type
-    as();
-
-    template <typename T>
-    typename boost::enable_if<boost::is_same<T, char const*>, attribute&>::type
-    operator=(T value);
-
-    template <typename T>
-    typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_fundamental<typename T::value_type> >, attribute&>::type
-    operator=(T const& value);
-    template <typename T>
-    typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_fundamental<typename T::value_type> >, T>::type
-    as();
-
-    template <typename T>
-    typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_same<typename T::value_type, char const*> >, attribute&>::type
-    operator=(T const& value);
-
-    template <typename T>
-    typename boost::enable_if<is_boost_multi_array<T>, attribute&>::type
-    operator=(T const& value);
-    template <typename T>
-    typename boost::enable_if<is_boost_multi_array<T>, T>::type
-    as();
-
-    template <typename T>
-    typename boost::enable_if<is_vector<T>, attribute&>::type
-    operator=(T const& value);
-    template <typename T>
-    typename boost::enable_if<is_vector<T>, T>::type
-    as();
-
-private:
-    /** object which attribute belongs to */
-    H5::H5Object const* m_node;
-    /** attribute name */
-    std::string m_name;
-};
-
 /*
  * create and write fundamental type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, attribute&>::type
-attribute::operator=(T const& value)
+typename boost::enable_if<boost::is_fundamental<T>, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
         if (!has_type<T>(attr) || !has_scalar_space(attr)) {
             // recreate attribute with proper type
-            m_node->removeAttr(m_name);
+            object.removeAttr(name);
             throw H5::AttributeIException();
         }
     }
     catch (H5::AttributeIException const&) {
-        attr = m_node->createAttribute(m_name, ctype<T>::hid(), H5S_SCALAR);
+        attr = object.createAttribute(name, ctype<T>::hid(), H5S_SCALAR);
     }
     attr.write(ctype<T>::hid(), &value);
-    return *this;
 }
 
 /**
@@ -123,12 +63,12 @@ attribute::operator=(T const& value)
  */
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, T>::type
-attribute::as()
+read_attribute(H5::H5Object const& object, std::string const& name)
 {
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
     }
     catch (H5::AttributeIException const&) {
         throw;
@@ -145,19 +85,18 @@ attribute::as()
  * create and write string attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_same<T, std::string>, attribute&>::type
-attribute::operator=(T const& value)
+typename boost::enable_if<boost::is_same<T, std::string>, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     H5::StrType tid(H5::PredType::C_S1, value.size());
     // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        m_node->removeAttr(m_name);
+        object.removeAttr(name);
     }
     catch (H5::AttributeIException const&) {}
-    H5::Attribute attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
+    H5::Attribute attr = object.createAttribute(name, tid, H5S_SCALAR);
     attr.write(tid, value.data());
-    return *this;
 }
 
 /**
@@ -165,12 +104,12 @@ attribute::operator=(T const& value)
  */
 template <typename T>
 typename boost::enable_if<boost::is_same<T, std::string>, T>::type
-attribute::as()
+read_attribute(H5::H5Object const& object, std::string const& name)
 {
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
     }
     catch (H5::AttributeIException const&) {
         throw;
@@ -189,27 +128,26 @@ attribute::as()
  * create and write C string attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_same<T, char const*>, attribute&>::type
-attribute::operator=(T value)
+typename boost::enable_if<boost::is_same<T, char const*>, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T value)
 {
     H5::StrType tid(H5::PredType::C_S1, strlen(value));
     // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        m_node->removeAttr(m_name);
+        object.removeAttr(name);
     }
     catch (H5::AttributeIException const&) {}
-    H5::Attribute attr = m_node->createAttribute(m_name, tid, H5S_SCALAR);
+    H5::Attribute attr = object.createAttribute(name, tid, H5S_SCALAR);
     attr.write(tid, value);
-    return *this;
 }
 
 /*
  * create and write fixed-size array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_fundamental<typename T::value_type> >, attribute&>::type
-attribute::operator=(T const& value)
+typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
     enum { size = T::static_size };
@@ -217,28 +155,27 @@ attribute::operator=(T const& value)
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
         if (!has_type<T>(attr) || !has_extent<T>(attr)) {
             // recreate attribute with proper type and size
-            m_node->removeAttr(m_name);
+            object.removeAttr(name);
             throw H5::AttributeIException();
         }
     }
     catch (H5::AttributeIException const&) {
         hsize_t dim[1] = { size };
         H5::DataSpace ds(1, dim);
-        attr = m_node->createAttribute(m_name, ctype<value_type>::hid(), ds);
+        attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
     }
     attr.write(ctype<value_type>::hid(), value.data());
-    return *this;
 }
 
 /*
  * create and write fixed-size C string array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_same<typename T::value_type, char const*> >, attribute&>::type
-attribute::operator=(T const& value)
+typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_same<typename T::value_type, char const*> >, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
     enum { size = T::static_size };
@@ -253,16 +190,15 @@ attribute::operator=(T const& value)
     // remove attribute if it exists
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        m_node->removeAttr(m_name);
+        object.removeAttr(name);
     }
     catch (H5::AttributeIException const&) {}
-    H5::Attribute attr = m_node->createAttribute(m_name, tid, ds);
+    H5::Attribute attr = object.createAttribute(name, tid, ds);
     std::vector<char> data(max_len * size);
     for (size_t i = 0; i < size; ++i) {
         strncpy(data.data() + i * max_len, value[i], max_len);
     }
     attr.write(tid, data.data());
-    return *this;
 }
 
 /**
@@ -270,7 +206,7 @@ attribute::operator=(T const& value)
  */
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_fundamental<typename T::value_type> >, T>::type
-attribute::as()
+read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::value_type value_type;
     enum { size = T::static_size };
@@ -278,7 +214,7 @@ attribute::as()
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
     }
     catch (H5::AttributeIException const&) {
         throw;
@@ -297,8 +233,8 @@ attribute::as()
  * create and write multi-dimensional array type attribute
  */
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, attribute&>::type
-attribute::operator=(T const& value)
+typename boost::enable_if<is_boost_multi_array<T>, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -306,10 +242,10 @@ attribute::operator=(T const& value)
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
         if (!has_type<T>(attr) || !has_extent<T>(attr, value.shape())) {
             // recreate attribute with proper type and size
-            m_node->removeAttr(m_name);
+            object.removeAttr(name);
             throw H5::AttributeIException();
         }
     }
@@ -317,10 +253,9 @@ attribute::operator=(T const& value)
         hsize_t dim[rank];
         std::copy(value.shape(), value.shape() + rank, dim);
         H5::DataSpace ds(rank, dim);
-        attr = m_node->createAttribute(m_name, ctype<value_type>::hid(), ds);
+        attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
     }
     attr.write(ctype<value_type>::hid(), value.data());
-    return *this;
 }
 
 /**
@@ -328,7 +263,7 @@ attribute::operator=(T const& value)
  */
 template <typename T>
 typename boost::enable_if<is_boost_multi_array<T>, T>::type
-attribute::as()
+read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -336,7 +271,7 @@ attribute::as()
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
     }
     catch (H5::AttributeIException const&) {
         throw;
@@ -360,28 +295,27 @@ attribute::as()
  * create and write vector type attribute
  */
 template <typename T>
-typename boost::enable_if<is_vector<T>, attribute&>::type
-attribute::operator=(T const& value)
+typename boost::enable_if<is_vector<T>, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
 
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
         if (!has_type<T>(attr) || elements(attr) != value.size()) {
             // recreate attribute with proper type
-            m_node->removeAttr(m_name);
+            object.removeAttr(name);
             throw H5::AttributeIException();
         }
     }
     catch (H5::AttributeIException const&) {
         hsize_t dim[1] = { value.size() };
         H5::DataSpace ds(1, dim);
-        attr = m_node->createAttribute(m_name, ctype<value_type>::hid(), ds);
+        attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
     }
     attr.write(ctype<value_type>::hid(), value.data());
-    return *this;
 }
 
 /**
@@ -391,14 +325,14 @@ attribute::operator=(T const& value)
  */
 template <typename T>
 typename boost::enable_if<is_vector<T>, T>::type
-attribute::as()
+read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::value_type value_type;
 
     H5::Attribute attr;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = m_node->openAttribute(m_name);
+        attr = object.openAttribute(name);
     }
     catch (H5::AttributeIException const&) {
         throw;

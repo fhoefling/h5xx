@@ -24,6 +24,7 @@
 #include <h5xx/h5xx.hpp>
 
 #include <halmd/numeric/blas/fixed_vector.hpp>
+#include <halmd/io/utility/hdf5.hpp>
 
 BOOST_AUTO_TEST_CASE( h5xx_attribute )
 {

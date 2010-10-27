@@ -23,7 +23,8 @@
 #include <boost/algorithm/string.hpp>
 #include <boost/array.hpp>
 #include <boost/multi_array.hpp>
-#include <boost/type_traits.hpp>
+#include <boost/type_traits/is_fundamental.hpp>
+#include <boost/type_traits/is_same.hpp>
 #include <string>
 #include <list>
 
@@ -75,17 +76,44 @@ inline std::list<std::string> split_path(std::string const& path_string)
     return groups;
 }
 
-template <typename T, typename U=typename T::value_type, size_t size=T::static_size>
-struct is_boost_array : public boost::is_base_of<boost::array<U, size>, T> {};
+/**
+ * Data type is a fixed-size RandomAccessCollection
+ *
+ * http://www.boost.org/doc/libs/release/libs/utility/Collection.html
+ */
+template <typename T>
+struct is_array
+  : boost::false_type {};
 
-template <typename T, typename U=typename T::element, size_t rank=T::dimensionality>
-struct is_boost_multi_array : public boost::is_base_of<boost::multi_array<U, rank>, T> {};
+template <typename T, size_t size>
+struct is_array<boost::array<T, size> >
+  : boost::true_type {};
+
+/**
+ * Data type is a MultiArray
+ *
+ * http://www.boost.org/doc/libs/release/libs/multi_array/doc/reference.html#MultiArray
+ */
+template <typename T>
+struct is_multi_array
+  : boost::false_type {};
+
+template <typename T, size_t size>
+struct is_multi_array<boost::multi_array<T, size> >
+  : boost::true_type {};
+
+/**
+ * Data type is a Random Access Container
+ *
+ * http://www.sgi.com/tech/stl/RandomAccessContainer.html
+ */
+template <typename T>
+struct is_vector
+  : boost::false_type {};
 
 template <typename T>
-struct is_vector : public boost::false_type {};
-
-template <typename T>
-struct is_vector<std::vector<T> >: public boost::true_type {};
+struct is_vector<std::vector<T> >
+  : boost::true_type {};
 
 /**
  * check data type of abstract dataset (dataset or attribute)
@@ -119,14 +147,14 @@ has_type(H5::AbstractDs const& ds)
 }
 
 template <typename T>
-typename boost::enable_if<is_boost_array<T>, bool>::type
+typename boost::enable_if<is_array<T>, bool>::type
 has_type(H5::AbstractDs const& ds)
 {
     return has_type<typename T::value_type>(ds);
 }
 
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, bool>::type
+typename boost::enable_if<is_multi_array<T>, bool>::type
 has_type(H5::AbstractDs const& ds)
 {
     return has_type<typename T::element>(ds);
@@ -174,7 +202,7 @@ bool has_rank(H5::AbstractDs const& ds)
  * and 2 multi-valued datasets of std::vector.
  */
 template <typename T, hsize_t extra_rank>
-typename boost::enable_if<is_boost_array<T>, bool>::type
+typename boost::enable_if<is_array<T>, bool>::type
 has_extent(H5::DataSpace const& dataspace)
 {
     // check extent of last dimension
@@ -188,7 +216,7 @@ has_extent(H5::DataSpace const& dataspace)
 }
 
 template <typename T, hsize_t extra_rank>
-typename boost::enable_if<is_boost_multi_array<T>, bool>::type
+typename boost::enable_if<is_multi_array<T>, bool>::type
 has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape)
 {
     enum { rank = T::dimensionality };
@@ -202,14 +230,14 @@ has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape)
 }
 
 template <typename T>
-typename boost::enable_if<is_boost_array<T>, bool>::type
+typename boost::enable_if<is_array<T>, bool>::type
 has_extent(H5::DataSpace const& dataspace)
 {
     return has_extent<T, 0>(dataspace);
 }
 
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, bool>::type
+typename boost::enable_if<is_multi_array<T>, bool>::type
 has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape)
 {
     return has_extent<T, 0>(dataspace);

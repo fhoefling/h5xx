@@ -212,7 +212,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 //
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
-        is_boost_array<T>, boost::is_fundamental<typename T::value_type>
+        is_array<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
     H5::Group const& group
@@ -227,7 +227,7 @@ create_dataset(
 
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
-        is_boost_array<T>, boost::is_fundamental<typename T::value_type>
+        is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
@@ -242,7 +242,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
 
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
-        is_boost_array<T>, boost::is_fundamental<typename T::value_type>
+        is_array<T>, boost::is_fundamental<typename T::value_type>
     >, hsize_t>::type
 read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
@@ -255,7 +255,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 // chunks of multi-arrays of fixed rank
 //
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, H5::DataSet>::type
+typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
 create_dataset(
     H5::Group const& group
   , std::string const& name
@@ -271,7 +271,7 @@ create_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, void>::type
+typename boost::enable_if<is_multi_array<T>, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::element value_type;
@@ -285,7 +285,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
 
 /** read chunk of multi_array data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, hsize_t>::type
+typename boost::enable_if<is_multi_array<T>, hsize_t>::type
 read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::element value_type;
@@ -375,7 +375,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 // pass length of vector as third parameter
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
-        is_vector<T>, is_boost_array<typename T::value_type>
+        is_vector<T>, is_array<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
     H5::Group const& group
@@ -391,7 +391,7 @@ create_dataset(
 
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
-        is_vector<T>, is_boost_array<typename T::value_type>
+        is_vector<T>, is_array<typename T::value_type>
     >, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
@@ -414,7 +414,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
 /** read chunk of vector container with array data, resize/reshape result array if necessary */
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
-        is_vector<T>, is_boost_array<typename T::value_type>
+        is_vector<T>, is_array<typename T::value_type>
     >, hsize_t>::type
 read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {

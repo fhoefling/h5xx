@@ -146,7 +146,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T value)
  * create and write fixed-size array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
@@ -174,7 +174,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * create and write fixed-size C string array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_same<typename T::value_type, char const*> >, void>::type
+typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_same<typename T::value_type, char const*> >, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
@@ -205,7 +205,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read fixed-size array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_boost_array<T>, boost::is_fundamental<typename T::value_type> >, T>::type
+typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::value_type value_type;
@@ -233,7 +233,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
  * create and write multi-dimensional array type attribute
  */
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, void>::type
+typename boost::enable_if<is_multi_array<T>, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::element value_type;
@@ -262,7 +262,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read multi-dimensional array type attribute
  */
 template <typename T>
-typename boost::enable_if<is_boost_multi_array<T>, T>::type
+typename boost::enable_if<is_multi_array<T>, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::element value_type;

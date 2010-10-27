@@ -64,9 +64,9 @@ create_dataset(
     max_dim[0] = max_size;
     chunk_dim[0] = 1;
 
-    H5::DataSpace dataspace(dim.size(), dim.data(), max_dim.data());
+    H5::DataSpace dataspace(dim.size(), &dim.front(), &max_dim.front());
     H5::DSetCreatPropList cparms;
-    cparms.setChunk(chunk_dim.size(), chunk_dim.data());
+    cparms.setChunk(chunk_dim.size(), &chunk_dim.front());
     cparms.setDeflate(compression_level);    // enable GZIP compression
 
     // remove dataset if it exists
@@ -100,7 +100,7 @@ write_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIM
 
     // select hyperslab of multi_array chunk
     boost::array<hsize_t, rank+1> dim, count, start, stride, block;
-    dataspace.getSimpleExtentDims(dim.data());
+    dataspace.getSimpleExtentDims(&dim.front());
     std::fill(count.begin(), count.end(), 1);
     start[0] = dim[0];
     std::fill(start.begin() + 1, start.end(), 0);
@@ -111,10 +111,10 @@ write_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIM
     if (index == H5S_UNLIMITED) {
         // extend dataspace to append another chunk
         dim[0]++;
-        dataspace.setExtentSimple(dim.size(), dim.data());
+        dataspace.setExtentSimple(dim.size(), &dim.front());
         try {
             H5XX_NO_AUTO_PRINT(H5::DataSetIException);
-            dataset.extend(dim.data());
+            dataset.extend(&dim.front());
         }
         catch (H5::DataSetIException const&) {
             throw std::runtime_error("HDF5 writer: fixed-size dataset cannot be extended");
@@ -123,7 +123,7 @@ write_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIM
     else {
         start[0] = index;
     }
-    dataspace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), block.data());
+    dataspace.selectHyperslab(H5S_SELECT_SET, &count.front(), &start.front(), &stride.front(), &block.front());
 
     // memory dataspace
     H5::DataSpace mem_dataspace(rank, block.begin() + 1);
@@ -148,7 +148,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     }
 
     boost::array<hsize_t, rank+1> dim;
-    dataspace.getSimpleExtentDims(dim.data());
+    dataspace.getSimpleExtentDims(&dim.front());
 
     ssize_t const len = dim[0];
     if ((index >= len) || ((-index) > len)) {
@@ -164,7 +164,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     block = dim;
     block[0] = 1;
 
-    dataspace.selectHyperslab(H5S_SELECT_SET, count.data(), start.data(), stride.data(), block.data());
+    dataspace.selectHyperslab(H5S_SELECT_SET, &count.front(), &start.front(), &stride.front(), &block.front());
 
     // memory dataspace
     H5::DataSpace mem_dataspace(rank, dim.begin() + 1);
@@ -237,7 +237,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, data.data(), index);
+    write_dataset<value_type, rank>(dataset, &data.front(), index);
 }
 
 template <typename T>
@@ -248,7 +248,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    return read_dataset<value_type, rank>(dataset, data->data(), index);
+    return read_dataset<value_type, rank>(dataset, &data->front(), index);
 }
 
 //
@@ -267,7 +267,7 @@ create_dataset(
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return create_dataset<value_type, rank>(group, name, shape_.data(), max_size);
+    return create_dataset<value_type, rank>(group, name, &shape_.front(), max_size);
 }
 
 template <typename T>
@@ -280,7 +280,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, data.data(), index);
+    write_dataset<value_type, rank>(dataset, data.origin(), index);
 }
 
 /** read chunk of multi_array data, resize/reshape result array if necessary */
@@ -297,7 +297,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
     }
     boost::array<hsize_t, rank+1> dim;
-    dataspace.getSimpleExtentDims(dim.data());
+    dataspace.getSimpleExtentDims(&dim.front());
 
     // resize result array if necessary, may allocate new memory
     if (!std::equal(dim.begin() + 1, dim.end(), data->shape())) {
@@ -306,7 +306,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
         data->resize(shape);
     }
 
-    return read_dataset<value_type, rank>(dataset, data->data(), index);
+    return read_dataset<value_type, rank>(dataset, data->origin(), index);
 }
 
 //
@@ -345,7 +345,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
         }
     }
 
-    write_dataset<value_type, 1>(dataset, data.data(), index);
+    write_dataset<value_type, 1>(dataset, &data.front(), index);
 }
 
 /** read chunk of vector container with scalar data, resize/reshape result array if necessary */
@@ -366,7 +366,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     dataspace.getSimpleExtentDims(dim);
     data->resize(dim[1]);
 
-    return read_dataset<value_type, 1>(dataset, data->data(), index);
+    return read_dataset<value_type, 1>(dataset, &data->front(), index);
 }
 
 //
@@ -408,7 +408,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
     }
 
     // raw data are laid out contiguously
-    write_dataset<value_type, 2>(dataset, data.front().data(), index);
+    write_dataset<value_type, 2>(dataset, &data.front().front(), index);
 }
 
 /** read chunk of vector container with array data, resize/reshape result array if necessary */
@@ -431,7 +431,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     data->resize(dim[1]);
 
     // raw data are laid out contiguously
-    return read_dataset<value_type, 2>(dataset, data->front().data(), index);
+    return read_dataset<value_type, 2>(dataset, &data->front().front(), index);
 }
 
 /**

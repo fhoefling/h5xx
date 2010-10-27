@@ -57,7 +57,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     double double_values[] = {
        1., sqrt(2.), 2., sqrt(3.), 3.
     };
-    std::copy(double_values, double_values + value_array.size(), value_array.data());
+    std::copy(double_values, double_values + value_array.size(), value_array.begin());
     h5xx::write_attribute(group, "double, array", value_array);
 
     typedef std::vector<double> double_vector_type;
@@ -126,7 +126,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     // read multi_array as linear vector
     std::vector<int> int_vector = h5xx::read_attribute<std::vector<int> >(group, "int, multi_array");
     BOOST_CHECK(int_vector.size() == multi_array_value.num_elements());
-    BOOST_CHECK(equal(int_vector.begin(), int_vector.end(), multi_array_value.data()));
+    BOOST_CHECK(equal(int_vector.begin(), int_vector.end(), multi_array_value.origin()));
 
     // remove file
 #ifndef NDEBUG

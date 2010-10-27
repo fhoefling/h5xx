@@ -85,7 +85,7 @@ create_dataset(
 // size and shape are taken from the dataset
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
+write_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
 {
     if (index == H5S_UNLIMITED) {
         LOG_TRACE("append to dataset " << path(dataset));
@@ -138,7 +138,7 @@ write(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
 // size and shape are taken from the dataset
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
-read(H5::DataSet const& dataset, T* data, ssize_t index)
+read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     LOG_TRACE("read from dataset " << path(dataset) << " at " << index);
 
@@ -195,16 +195,16 @@ create_dataset(
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
-    write<T, 0>(dataset, &data, index);
+    write_dataset<T, 0>(dataset, &data, index);
 }
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
-read(H5::DataSet const& dataset, T* data, ssize_t index)
+read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
-    return read<T, 0>(dataset, data, index);
+    return read_dataset<T, 0>(dataset, data, index);
 }
 
 //
@@ -229,7 +229,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_boost_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
@@ -237,18 +237,18 @@ write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write<value_type, rank>(dataset, data.data(), index);
+    write_dataset<value_type, rank>(dataset, data.data(), index);
 }
 
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_boost_array<T>, boost::is_fundamental<typename T::value_type>
     >, hsize_t>::type
-read(H5::DataSet const& dataset, T* data, ssize_t index)
+read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    return read<value_type, rank>(dataset, data->data(), index);
+    return read_dataset<value_type, rank>(dataset, data->data(), index);
 }
 
 //
@@ -272,7 +272,7 @@ create_dataset(
 
 template <typename T>
 typename boost::enable_if<is_boost_multi_array<T>, void>::type
-write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -280,13 +280,13 @@ write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write<value_type, rank>(dataset, data.data(), index);
+    write_dataset<value_type, rank>(dataset, data.data(), index);
 }
 
 /** read chunk of multi_array data, resize/reshape result array if necessary */
 template <typename T>
 typename boost::enable_if<is_boost_multi_array<T>, hsize_t>::type
-read(H5::DataSet const& dataset, T* data, ssize_t index)
+read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -306,7 +306,7 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
         data->resize(shape);
     }
 
-    return read<value_type, rank>(dataset, data->data(), index);
+    return read_dataset<value_type, rank>(dataset, data->data(), index);
 }
 
 //
@@ -332,7 +332,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
 
@@ -345,7 +345,7 @@ write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
         }
     }
 
-    write<value_type, 1>(dataset, data.data(), index);
+    write_dataset<value_type, 1>(dataset, data.data(), index);
 }
 
 /** read chunk of vector container with scalar data, resize/reshape result array if necessary */
@@ -353,7 +353,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, hsize_t>::type
-read(H5::DataSet const& dataset, T* data, ssize_t index)
+read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::value_type value_type;
 
@@ -366,7 +366,7 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
     dataspace.getSimpleExtentDims(dim);
     data->resize(dim[1]);
 
-    return read<value_type, 1>(dataset, data->data(), index);
+    return read_dataset<value_type, 1>(dataset, data->data(), index);
 }
 
 //
@@ -393,7 +393,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_boost_array<typename T::value_type>
     >, void>::type
-write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
@@ -408,7 +408,7 @@ write(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
     }
 
     // raw data are laid out contiguously
-    write<value_type, 2>(dataset, data.front().data(), index);
+    write_dataset<value_type, 2>(dataset, data.front().data(), index);
 }
 
 /** read chunk of vector container with array data, resize/reshape result array if necessary */
@@ -416,7 +416,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_boost_array<typename T::value_type>
     >, hsize_t>::type
-read(H5::DataSet const& dataset, T* data, ssize_t index)
+read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
@@ -431,7 +431,7 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
     data->resize(dim[1]);
 
     // raw data are laid out contiguously
-    return read<value_type, 2>(dataset, data->front().data(), index);
+    return read_dataset<value_type, 2>(dataset, data->front().data(), index);
 }
 
 /**
@@ -443,13 +443,13 @@ read(H5::DataSet const& dataset, T* data, ssize_t index)
 template <typename T>
 boost::function<void ()> make_dataset_writer(H5::DataSet const& dataset, T const* data)
 {
-    return boost::bind(&write<T>, dataset, boost::cref(*data), H5S_UNLIMITED);
+    return boost::bind(&write_dataset<T>, dataset, boost::cref(*data), H5S_UNLIMITED);
 }
 
 template <typename T>
 boost::function<void (hsize_t)> make_dataset_write_at(H5::DataSet const& dataset, T const* data)
 {
-    return boost::bind(&write<T>, dataset, boost::cref(*data), _1);
+    return boost::bind(&write_dataset<T>, dataset, boost::cref(*data), _1);
 }
 
 template <typename T>

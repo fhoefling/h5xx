@@ -163,8 +163,8 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     h5xx::make_dataset_writer(group, "uint", &uint_value)();
     // overwrite data set
     H5::DataSet uint_dataset = h5xx::create_dataset<uint64_t>(group, "uint");
-    h5xx::write(uint_dataset, uint_value);
-    h5xx::write(uint_dataset, uint_value + 1);
+    h5xx::write_dataset(uint_dataset, uint_value);
+    h5xx::write_dataset(uint_dataset, uint_value + 1);
 
     // array type
     typedef boost::array<double, 3> array_type;
@@ -172,8 +172,8 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     array_type array_value2 = {{ -1, sqrt(3), -3 }};
     H5::DataSet array_dataset
         = h5xx::create_dataset<array_type>(group, "array", 2);  // fixed size
-    h5xx::write(array_dataset, array_value, 0);           // write entry #0
-    h5xx::write(array_dataset, array_value2, 1);          // write entry #1
+    h5xx::write_dataset(array_dataset, array_value, 0);           // write entry #0
+    h5xx::write_dataset(array_dataset, array_value2, 1);          // write entry #1
 
     // multi-array type
     typedef boost::multi_array<int, 2> multi_array2;
@@ -186,9 +186,9 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     multi_array_value.assign(data2, data2 + 3 * 4);
     H5::DataSet multi_array_dataset
         = h5xx::create_dataset<multi_array2>(group, "multi_array", multi_array_value.shape());
-    h5xx::write(multi_array_dataset, multi_array_value);    // append
+    h5xx::write_dataset(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 1;
-    h5xx::write(multi_array_dataset, multi_array_value);    // append
+    h5xx::write_dataset(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 2;
     h5xx::make_dataset_write_at(multi_array_dataset, &multi_array_value)(0);  // overwrite first entry
 
@@ -204,14 +204,14 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     array_vector_value.push_back(array_value2);
     H5::DataSet array_vector_dataset
             = h5xx::create_dataset<std::vector<array_type> >(group, "array_vector", array_vector_value.size());
-    h5xx::write(array_vector_dataset, array_vector_value);
+    h5xx::write_dataset(array_vector_dataset, array_vector_value);
     // write vector of wrong size
     array_vector_value.push_back(array_value2);
-    BOOST_CHECK_THROW(h5xx::write(array_vector_dataset, array_vector_value), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::write_dataset(array_vector_dataset, array_vector_value), std::runtime_error);
     array_vector_value.pop_back();
 
     // write to dataset of wrong type and size
-    BOOST_CHECK_THROW(h5xx::write(int_vector_dataset, array_vector_value), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::write_dataset(int_vector_dataset, array_vector_value), std::runtime_error);
 
     // re-open file
     file.flush(H5F_SCOPE_GLOBAL);
@@ -229,16 +229,16 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     BOOST_CHECK(h5xx::elements(uint_dataset) == 2);
 
     uint64_t uint_value_;
-    h5xx::read(uint_dataset, &uint_value_, 0);
+    h5xx::read_dataset(uint_dataset, &uint_value_, 0);
     BOOST_CHECK(uint_value_ == uint_value);
-    h5xx::read(uint_dataset, &uint_value_, 1);
+    h5xx::read_dataset(uint_dataset, &uint_value_, 1);
     BOOST_CHECK(uint_value_ == uint_value + 1);
-    h5xx::read(uint_dataset, &uint_value_, -1);
+    h5xx::read_dataset(uint_dataset, &uint_value_, -1);
     BOOST_CHECK(uint_value_ == uint_value + 1);
-    h5xx::read(uint_dataset, &uint_value_, -2);
+    h5xx::read_dataset(uint_dataset, &uint_value_, -2);
     BOOST_CHECK(uint_value_ == uint_value);
-    BOOST_CHECK_THROW(h5xx::read(uint_dataset, &uint_value_, 2), std::runtime_error);
-    BOOST_CHECK_THROW(h5xx::read(uint_dataset, &uint_value_, -3), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::read_dataset(uint_dataset, &uint_value_, 2), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::read_dataset(uint_dataset, &uint_value_, -3), std::runtime_error);
 
     // array type dataset
     array_dataset = group.openDataSet("array");
@@ -246,9 +246,9 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     BOOST_CHECK(has_extent_one_extra<array_type>(array_dataset));
     BOOST_CHECK(h5xx::elements(array_dataset) == 2 * 3);
     array_type array_value_;
-    h5xx::read(array_dataset, &array_value_, 0);
+    h5xx::read_dataset(array_dataset, &array_value_, 0);
     BOOST_CHECK(array_value_ == array_value);
-    h5xx::read(array_dataset, &array_value_, 1);
+    h5xx::read_dataset(array_dataset, &array_value_, 1);
     BOOST_CHECK(array_value_ == array_value2);
 
     // multi-array type dataset
@@ -257,17 +257,17 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     BOOST_CHECK(has_extent_one_extra<multi_array2>(multi_array_dataset, multi_array_value.shape()));
     BOOST_CHECK(h5xx::elements(multi_array_dataset) == 2 * 3 * 4);
     multi_array2 multi_array_value_;
-    h5xx::read(multi_array_dataset, &multi_array_value_, 0);
+    h5xx::read_dataset(multi_array_dataset, &multi_array_value_, 0);
     multi_array_value[1][2] = 2;
     BOOST_CHECK(multi_array_value_ == multi_array_value);
-    h5xx::read(multi_array_dataset, &multi_array_value_, 1);
+    h5xx::read_dataset(multi_array_dataset, &multi_array_value_, 1);
     multi_array_value[1][2] = 1;
     BOOST_CHECK(multi_array_value_ == multi_array_value);
 
     // vector of scalars
     int_vector_dataset = group.openDataSet("int_vector");
     std::vector<int> int_vector_value_;
-    h5xx::read(int_vector_dataset, &int_vector_value_, 0);
+    h5xx::read_dataset(int_vector_dataset, &int_vector_value_, 0);
     BOOST_CHECK(int_vector_value_.size() == int_vector_value.size());
     BOOST_CHECK(std::equal(
         int_vector_value_.begin()
@@ -278,7 +278,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     // vector of arrays
     array_vector_dataset = group.openDataSet("array_vector");
     std::vector<array_type> array_vector_value_;
-    h5xx::read(array_vector_dataset, &array_vector_value_, 0);
+    h5xx::read_dataset(array_vector_dataset, &array_vector_value_, 0);
     BOOST_CHECK(array_vector_value_.size() == array_vector_value.size());
     BOOST_CHECK(std::equal(
         array_vector_value_.begin()

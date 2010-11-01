@@ -58,8 +58,8 @@ create_dataset(
     // file dataspace holding max_size multi_array chunks of fixed rank
     boost::array<hsize_t, rank+1> dim, max_dim, chunk_dim;
     std::copy(shape, shape + rank, dim.begin() + 1);
-    max_dim = dim;
-    chunk_dim = dim;
+    std::copy(shape, shape + rank, max_dim.begin() + 1);
+    std::copy(shape, shape + rank, chunk_dim.begin() + 1);
     dim[0] = (max_size == H5S_UNLIMITED) ? 0 : max_size;
     max_dim[0] = max_size;
     chunk_dim[0] = 1;

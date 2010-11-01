@@ -32,7 +32,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     H5::H5File file(filename, H5F_ACC_TRUNC);
     H5::Group group = h5xx::open_group(file, "/");
 
-    uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
+    uint64_t uint_value = 9223372036854775783LLU;  // largest prime below 2^63
     h5xx::write_attribute(group, "integral, scalar", 1);   // store something of wrong type first
     h5xx::write_attribute(group, "integral, scalar", uint_value);  // overwrite value
 
@@ -160,7 +160,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     //
 
     // scalar type
-    uint64_t uint_value = 9223372036854775783;  // largest prime below 2^63
+    uint64_t uint_value = 9223372036854775783LLU;  // largest prime below 2^63
     h5xx::make_dataset_writer(group, "uint", &uint_value)();
     // overwrite data set
     H5::DataSet uint_dataset = h5xx::create_dataset<uint64_t>(group, "uint");

@@ -21,6 +21,7 @@
 #ifndef H5XX_ATTRIBUTE_HPP
 #define H5XX_ATTRIBUTE_HPP
 
+#include <boost/any.hpp>
 #include <boost/array.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>
@@ -29,6 +30,7 @@
 #include <vector>
 
 #include <h5xx/ctype.hpp>
+#include <h5xx/error.hpp>
 #include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
 
@@ -346,6 +348,41 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     std::vector<value_type> value(size);
     attr.read(ctype<value_type>::hid(), &value.front());
     return value;
+}
+
+/**
+ * determine whether attribute exists in file/group/dataset
+ */
+inline bool exists_attribute(H5::H5Object const& object, std::string const& name)
+{
+#ifdef H5XX_USE_16_API
+    hid_t hid;
+    H5E_BEGIN_TRY {
+        hid = H5Aopen_name(object.getId(), name.c_str());
+        if (hid > 0) {
+            H5Aclose(hid);
+        }
+    } H5E_END_TRY
+    return (hid > 0);
+#else
+    htri_t tri = H5Aexists(object.getId(), name.c_str());
+    if (tri < 0) {
+        throw error("failed to determine whether attribute \"" + name + "\" exists");
+    }
+    return (tri > 0);
+#endif
+}
+
+/**
+ * returns attribute value as boost::any if exists, or empty boost::any otherwise
+ */
+template <typename T>
+boost::any read_attribute_if_exists(H5::H5Object const& object, std::string const& name)
+{
+    if (exists_attribute(object, name)) {
+        return read_attribute<T>(object, name);
+    }
+    return boost::any();
 }
 
 } // namespace h5xx

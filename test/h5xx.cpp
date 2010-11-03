@@ -313,7 +313,9 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
 
     group = h5xx::open_group(file, "one");
     BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(h5xx::exists_attribute(group, "level"));
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 1);
+    BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 1);
 
     h5xx::open_group(group, "branch");        // create branch in '/one'
     BOOST_CHECK(group.getNumAttrs() == 1);
@@ -321,19 +323,27 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
 
     group = h5xx::open_group(group, "two/three/");
     BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(h5xx::exists_attribute(group, "level"));
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
+    BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 3);
 
     group = h5xx::open_group(file, "one/two");
     BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(h5xx::exists_attribute(group, "level"));
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 2);
+    BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 2);
 
     group = h5xx::open_group(group, "three");
     BOOST_CHECK(group.getNumAttrs() == 1);
+    BOOST_CHECK(h5xx::exists_attribute(group, "level"));
     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
+    BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 3);
 
     group = h5xx::open_group(group, "three");          // create new group
     BOOST_CHECK(group.getNumAttrs() == 0);
+    BOOST_CHECK(!h5xx::exists_attribute(group, "level"));
     BOOST_CHECK_THROW(h5xx::read_attribute<int>(group, "level"), H5::AttributeIException);
+    BOOST_CHECK(h5xx::read_attribute_if_exists<int>(group, "level").empty());
 
     // test h5xx::path
     BOOST_CHECK(h5xx::path(h5xx::open_group(file, "/")) == "/");

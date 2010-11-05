@@ -26,7 +26,6 @@
 //  - HDF5 1.8.x compiled using --disable-deprecate-symbols
 //  - HDF5 1.8.x compiled using --with-default-api-version=v18
 //  - HDF5 1.8.x compiled using --with-default-api-version=v16
-//  - HDF5 1.6.x
 //
 // In this compatibility header file, we define a common HDF5 C API
 // for all of the above versions, with the intent to minimize use
@@ -52,13 +51,6 @@
 #define H5Gopen_vers     2
 
 #include <hdf5.h>
-
-/**
- * backwards compatibility with HDF 1.6.x
- */
-#if (H5_VERS_MAJOR == 1 && H5_VERS_MINOR == 6)
-# define H5XX_USE_16_API
-#endif
 
 /**
  * HDF5 C++ API (to be deprecated in HALMD)

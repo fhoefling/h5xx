@@ -355,22 +355,11 @@ read_attribute(H5::H5Object const& object, std::string const& name)
  */
 inline bool exists_attribute(H5::H5Object const& object, std::string const& name)
 {
-#ifdef H5XX_USE_16_API
-    hid_t hid;
-    H5E_BEGIN_TRY {
-        hid = H5Aopen_name(object.getId(), name.c_str());
-        if (hid > 0) {
-            H5Aclose(hid);
-        }
-    } H5E_END_TRY
-    return (hid > 0);
-#else
     htri_t tri = H5Aexists(object.getId(), name.c_str());
     if (tri < 0) {
         throw error("failed to determine whether attribute \"" + name + "\" exists");
     }
     return (tri > 0);
-#endif
 }
 
 /**

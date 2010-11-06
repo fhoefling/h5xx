@@ -20,8 +20,6 @@
 #ifndef H5XX_GROUP_HPP
 #define H5XX_GROUP_HPP
 
-#include <boost/algorithm/string/join.hpp> // FIXME deprecated
-
 #include <h5xx/error.hpp>
 #include <h5xx/property.hpp>
 
@@ -49,22 +47,6 @@ inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path)
     }
     return H5::Group(group_id);
 }
-
-// FIXME deprecated
-template <typename string_iterator>
-H5::Group open_group(
-    H5::CommonFG const& fg
-  , string_iterator path_begin
-  , string_iterator path_end
-)
-{
-    std::string path = boost::algorithm::join(std::vector<std::string>(path_begin, path_end), "/");
-    if (path.empty()) {
-        return open_group(fg, "/");
-    }
-    return open_group(fg, path);
-}
-
 
 } // namespace h5xx
 

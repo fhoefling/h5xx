@@ -1,5 +1,4 @@
-/* HDF5 C++ extensions
- *
+/*
  * Copyright © 2008-2010  Peter Colberg and Felix Höfling
  *
  * This file is part of HALMD.
@@ -21,53 +20,51 @@
 #ifndef H5XX_GROUP_HPP
 #define H5XX_GROUP_HPP
 
-#include <h5xx/exception.hpp>
-#include <h5xx/utility.hpp>
+#include <boost/algorithm/string/join.hpp> // FIXME deprecated
+
+#include <h5xx/error.hpp>
+#include <h5xx/property.hpp>
 
 namespace h5xx
 {
 
 /**
- * open or create HDF5 group walking down the tree along path
- * path is given as range of iterators
+ * open or create HDF5 group
+ *
+ * This function creates missing intermediate groups.
  */
+inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path)
+{
+    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
+    hid_t group_id;
+    H5E_BEGIN_TRY {
+        group_id = H5Gopen(loc.getId(), path.c_str(), H5P_DEFAULT);
+    } H5E_END_TRY
+    if (group_id < 0) {
+        H5::PropList pl = create_intermediate_group_property();
+        group_id = H5Gcreate(loc.getId(), path.c_str(), pl.getId(), H5P_DEFAULT, H5P_DEFAULT);
+    }
+    if (group_id < 0) {
+        throw error("failed to create group \"" + path + "\"");
+    }
+    return H5::Group(group_id);
+}
+
+// FIXME deprecated
 template <typename string_iterator>
-inline H5::Group open_group(
+H5::Group open_group(
     H5::CommonFG const& fg
   , string_iterator path_begin
   , string_iterator path_end
 )
 {
-    H5::Group group;
-    // open root if fg is a file
-    if (typeid(fg) == typeid(H5::H5File)) {
-        group = fg.openGroup("/");
-    } else {
-        group = dynamic_cast<H5::Group const&>(fg);
+    std::string path = boost::algorithm::join(std::vector<std::string>(path_begin, path_end), "/");
+    if (path.empty()) {
+        return open_group(fg, "/");
     }
-    for (string_iterator it = path_begin; it != path_end; ++it) {
-        // open or create group at each level
-        try {
-            H5XX_NO_AUTO_PRINT(H5::GroupIException);
-            group = group.openGroup(*it);
-        }
-        catch (H5::GroupIException const&) {
-            group = group.createGroup(*it);
-        }
-    }
-    return group;
+    return open_group(fg, path);
 }
 
-/**
- * open or create HDF5 group walking down the tree along path
- *
- * path_string is split at every occurrence of '/'
- */
-inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path_string)
-{
-    std::list<std::string> path = split_path(path_string);
-    return open_group(fg, path.begin(), path.end());
-}
 
 } // namespace h5xx
 

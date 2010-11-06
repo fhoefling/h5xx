@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010  Peter Colberg
+ * Copyright © 2008-2010  Peter Colberg and Felix Höfling
  *
  * This file is part of HALMD.
  *
@@ -17,35 +17,31 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef H5XX_ERROR_HPP
-#define H5XX_ERROR_HPP
+#ifndef H5XX_PROPERTY_HPP
+#define H5XX_PROPERTY_HPP
 
-#include <stdexcept>
+#include <h5xx/error.hpp>
+#include <h5xx/hdf5_compat.hpp>
 
 namespace h5xx
 {
 
 /**
- * h5xx wrapper error
+ * Create link creation property list and set create intermediate group property.
  */
-class error
-  : virtual public std::exception
+inline H5::PropList create_intermediate_group_property()
 {
-public:
-    error(std::string const& desc)
-        : desc_(desc) {}
-
-    virtual ~error() throw() {}
-
-    char const* what() const throw()
-    {
-        return desc_.c_str();
+    hid_t pl = H5Pcreate(H5P_LINK_CREATE);
+    if (pl < 0) {
+        throw error("failed to create link creation property list");
     }
-
-private:
-    std::string desc_;
-};
+    herr_t err = H5Pset_create_intermediate_group(pl, 1);
+    if (err < 0) {
+        throw error("failed to set group intermediate creation property");
+    }
+    return H5::PropList(pl);
+}
 
 } // namespace h5xx
 
-#endif /* ! H5XX_ERROR_HPP */
+#endif /* ! H5XX_PROPERTY_HPP */

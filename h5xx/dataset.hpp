@@ -1,5 +1,4 @@
-/* HDF5 C++ extensions
- *
+/*
  * Copyright © 2008-2010  Peter Colberg and Felix Höfling
  *
  * This file is part of HALMD.
@@ -32,6 +31,7 @@
 #include <vector>
 
 #include <h5xx/attribute.hpp>
+#include <h5xx/property.hpp>
 #include <h5xx/utility.hpp>
 #include <halmd/io/logger.hpp> //< FIXME must not be used outside of HALMD
 
@@ -41,19 +41,22 @@ namespace h5xx
 enum { compression_level = 6 };
 
 /**
- * create dataset 'name' in given group with given size
+ * create dataset 'name' in given group/file with given size
+ *
+ * This function creates missing intermediate groups.
  */
 // generic case: some fundamental type and a shape of arbitrary rank
 // first argument could be H5::CommonFG if the LOG_DEBUG line would be omitted
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_dataset(
-    H5::Group const& group
+    H5::CommonFG const& fg
   , std::string const& name
   , hsize_t const* shape
   , hsize_t max_size=H5S_UNLIMITED)
 {
-    LOG_DEBUG("create dataset '" << name << "' in " << path(group));
+    H5::IdComponent const& loc = dynamic_cast<H5::IdComponent const&>(fg);
+    LOG_DEBUG("create dataset '" << name << "' in " << path(loc));
 
     // file dataspace holding max_size multi_array chunks of fixed rank
     boost::array<hsize_t, rank+1> dim, max_dim, chunk_dim;
@@ -70,12 +73,19 @@ create_dataset(
     cparms.setDeflate(compression_level);    // enable GZIP compression
 
     // remove dataset if it exists
-    try {
-        H5XX_NO_AUTO_PRINT(H5::GroupIException);
-        group.unlink(name);
+    H5E_BEGIN_TRY {
+        H5Ldelete(loc.getId(), name.c_str(), H5P_DEFAULT);
+    } H5E_END_TRY
+
+    H5::PropList pl = create_intermediate_group_property();
+    hid_t dataset_id = H5Dcreate(
+        loc.getId(), name.c_str(), ctype<T>::hid(), dataspace.getId()
+      , pl.getId(), cparms.getId(), H5P_DEFAULT
+    );
+    if (dataset_id < 0) {
+        throw error("failed to create dataset \"" + name + "\"");
     }
-    catch (H5::GroupIException const&) {}
-    return group.createDataSet(name, ctype<T>::hid(), dataspace, cparms);
+    return H5::DataSet(dataset_id);
 }
 
 /**
@@ -186,11 +196,11 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_dataset(
-    H5::Group const& group
+    H5::CommonFG const& fg
   , std::string const& name
   , hsize_t max_size=H5S_UNLIMITED)
 {
-    return create_dataset<T, 0>(group, name, NULL, max_size);
+    return create_dataset<T, 0>(fg, name, NULL, max_size);
 }
 
 template <typename T>
@@ -215,14 +225,14 @@ typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
-    H5::Group const& group
+    H5::CommonFG const& fg
   , std::string const& name
   , hsize_t max_size=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
     hsize_t shape[1] = { T::static_size };
-    return create_dataset<value_type, rank>(group, name, shape, max_size);
+    return create_dataset<value_type, rank>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -257,7 +267,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
 create_dataset(
-    H5::Group const& group
+    H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type const* shape
   , hsize_t max_size=H5S_UNLIMITED)
@@ -267,7 +277,7 @@ create_dataset(
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return create_dataset<value_type, rank>(group, name, &shape_.front(), max_size);
+    return create_dataset<value_type, rank>(fg, name, &shape_.front(), max_size);
 }
 
 template <typename T>
@@ -318,14 +328,14 @@ typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
-    H5::Group const& group
+    H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type size
   , hsize_t max_size=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     hsize_t shape[1] = { size };
-    return create_dataset<value_type, 1>(group, name, shape, max_size);
+    return create_dataset<value_type, 1>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -378,7 +388,7 @@ typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
-    H5::Group const& group
+    H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type size
   , hsize_t max_size=H5S_UNLIMITED)
@@ -386,7 +396,7 @@ create_dataset(
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
     hsize_t shape[2] = { size, array_type::static_size };
-    return create_dataset<value_type, 2>(group, name, shape, max_size);
+    return create_dataset<value_type, 2>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -454,17 +464,17 @@ boost::function<void (hsize_t)> make_dataset_write_at(H5::DataSet const& dataset
 
 template <typename T>
 boost::function<void ()> make_dataset_writer(
-    H5::Group const& group, std::string const& name, T const* data)
+    H5::CommonFG const& fg, std::string const& name, T const* data)
 {
-    H5::DataSet dataset = create_dataset<T>(group, name);
+    H5::DataSet dataset = create_dataset<T>(fg, name);
     return make_dataset_writer(dataset, data);
 }
 
 template <typename T>
 boost::function<void (hsize_t)> make_dataset_write_at(
-    H5::Group const& group, std::string const& name, T const* data)
+    H5::CommonFG const& fg, std::string const& name, T const* data)
 {
-    H5::DataSet dataset = create_dataset<T>(group, name);
+    H5::DataSet dataset = create_dataset<T>(fg, name);
     return make_dataset_write_at(dataset, data);
 }
 } // namespace h5xx

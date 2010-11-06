@@ -299,11 +299,11 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
     H5::H5File file(filename, H5F_ACC_TRUNC);
 
     BOOST_CHECK_NO_THROW(h5xx::open_group(file, "/"));
-    BOOST_CHECK_NO_THROW(h5xx::open_group(file, ""));
+    BOOST_CHECK_THROW(h5xx::open_group(file, ""), h5xx::error);
 
     H5::Group group = h5xx::open_group(file, "/");
     BOOST_CHECK_NO_THROW(h5xx::open_group(group, "/"));
-    BOOST_CHECK_NO_THROW(h5xx::open_group(group, ""));
+    BOOST_CHECK_THROW(h5xx::open_group(group, ""), h5xx::error);
 
     // create a hierarchy with attributes
     h5xx::write_attribute(h5xx::open_group(file, "/"), "level", 0);

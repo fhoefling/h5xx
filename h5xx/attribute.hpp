@@ -317,7 +317,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
         H5::DataSpace ds(1, dim);
         attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
     }
-    attr.write(ctype<value_type>::hid(), &value.front());
+    attr.write(ctype<value_type>::hid(), &*value.begin());
 }
 
 /**
@@ -346,7 +346,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     }
     size_t size = ds.getSimpleExtentNpoints();
     std::vector<value_type> value(size);
-    attr.read(ctype<value_type>::hid(), &value.front());
+    attr.read(ctype<value_type>::hid(), &*value.begin());
     return value;
 }
 

@@ -355,7 +355,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
         }
     }
 
-    write_dataset<value_type, 1>(dataset, &data.front(), index);
+    write_dataset<value_type, 1>(dataset, &*data.begin(), index);
 }
 
 /** read chunk of vector container with scalar data, resize/reshape result array if necessary */
@@ -376,7 +376,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     dataspace.getSimpleExtentDims(dim);
     data->resize(dim[1]);
 
-    return read_dataset<value_type, 1>(dataset, &data->front(), index);
+    return read_dataset<value_type, 1>(dataset, &*data->begin(), index);
 }
 
 //

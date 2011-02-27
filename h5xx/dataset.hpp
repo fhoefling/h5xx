@@ -38,6 +38,22 @@
 namespace h5xx
 {
 
+/**
+ * determine whether dataset exists in file or group
+ */
+inline bool exists_dataset(H5::CommonFG const& fg, std::string const& name)
+{
+    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
+    hid_t hid;
+    H5E_BEGIN_TRY {
+        hid = H5Dopen(loc.getId(), name.c_str(), H5P_DEFAULT);
+        if (hid > 0) {
+            H5Dclose(hid);
+        }
+    } H5E_END_TRY
+    return (hid > 0);
+}
+
 enum { compression_level = 6 };
 
 /**

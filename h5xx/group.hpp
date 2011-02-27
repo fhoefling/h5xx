@@ -27,6 +27,22 @@ namespace h5xx
 {
 
 /**
+ * determine whether group exists in file or group
+ */
+inline bool exists_group(H5::CommonFG const& fg, std::string const& name)
+{
+    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
+    hid_t hid;
+    H5E_BEGIN_TRY {
+        hid = H5Gopen(loc.getId(), name.c_str(), H5P_DEFAULT);
+        if (hid > 0) {
+            H5Gclose(hid);
+        }
+    } H5E_END_TRY
+    return (hid > 0);
+}
+
+/**
  * open or create HDF5 group
  *
  * This function creates missing intermediate groups.

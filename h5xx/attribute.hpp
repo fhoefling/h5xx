@@ -122,8 +122,8 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     // determine string length first and allocate space
     size_t len = attr.getDataType().getSize();
     std::vector<std::string::value_type> value(len);
-    attr.read(H5::StrType(H5::PredType::C_S1, len), value.data());
-    return std::string(value.data(), value.size());
+    attr.read(H5::StrType(H5::PredType::C_S1, len), &*value.begin());
+    return std::string(&*value.begin(), value.size());
 }
 
 /**

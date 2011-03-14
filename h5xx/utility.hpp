@@ -47,10 +47,10 @@ inline std::string path(H5::IdComponent const& id)
         throw H5::IdComponentException("H5Iget_name", "failed to get length of name");
     }
     std::vector<char> name_(size + 1); // includes NULL terminator
-    if (-1 == (H5Iget_name(id.getId(), name_.data(), name_.size()))) {
+    if (-1 == (H5Iget_name(id.getId(), &*name_.begin(), name_.size()))) {
         throw H5::IdComponentException("H5Iget_name", "failed to get name");
     }
-    return name_.data();
+    return &*name_.begin();
 }
 
 /**

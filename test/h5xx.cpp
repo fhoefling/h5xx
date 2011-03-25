@@ -20,6 +20,7 @@
 #define BOOST_TEST_MODULE test_h5xx
 #include <boost/test/unit_test.hpp>
 
+#include <cmath>
 #include <unistd.h>
 #include <h5xx/h5xx.hpp>
 
@@ -38,7 +39,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
 
     // long double is supported by the HDF5 library,
     // but neither by h5dump nor pytables ...
-    long double ldouble_value = sqrtl(2.);
+    long double ldouble_value = std::sqrt(2.L);
     h5xx::write_attribute(group, "long double, scalar", 2);   // store something of wrong type first
     h5xx::write_attribute(group, "long double, scalar", ldouble_value);
     h5xx::write_attribute(group, "double, scalar", static_cast<double>(ldouble_value));
@@ -56,7 +57,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     typedef halmd::fixed_vector<double, 5> double_array_type;
     double_array_type value_array;
     double double_values[] = {
-       1., sqrt(2.), 2., sqrt(3.), 3.
+       1., std::sqrt(2.), 2., std::sqrt(3.), 3.
     };
     std::copy(double_values, double_values + value_array.size(), value_array.begin());
     h5xx::write_attribute(group, "double, array", value_array);
@@ -169,8 +170,8 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
     // array type
     typedef boost::array<double, 3> array_type;
-    array_type array_value = {{ 1, sqrt(2), 2 }};
-    array_type array_value2 = {{ -1, sqrt(3), -3 }};
+    array_type array_value = {{ 1, std::sqrt(2.), 2 }};
+    array_type array_value2 = {{ -1, std::sqrt(3.), -3 }};
     H5::DataSet array_dataset
         = h5xx::create_dataset<array_type>(group, "array", 2);  // fixed size
     h5xx::write_dataset(array_dataset, array_value, 0);           // write entry #0

@@ -469,13 +469,23 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 template <typename T>
 boost::function<void ()> make_dataset_writer(H5::DataSet const& dataset, T const* data)
 {
-    return boost::bind(&write_dataset<T>, dataset, boost::cref(*data), H5S_UNLIMITED);
+    return boost::bind(
+        static_cast<void (*)(H5::DataSet const&, T const&, hsize_t)>(write_dataset<T>)
+      , dataset
+      , boost::cref(*data)
+      , H5S_UNLIMITED
+    );
 }
 
 template <typename T>
 boost::function<void (hsize_t)> make_dataset_write_at(H5::DataSet const& dataset, T const* data)
 {
-    return boost::bind(&write_dataset<T>, dataset, boost::cref(*data), _1);
+    return boost::bind(
+        static_cast<void (*)(H5::DataSet const&, T const&, hsize_t)>(write_dataset<T>)
+      , dataset
+      , boost::cref(*data)
+      , _1
+    );
 }
 
 template <typename T>

@@ -22,10 +22,8 @@
 
 #include <h5xx/hdf5_compat.hpp>
 
-namespace h5xx
-{
-namespace detail
-{
+namespace h5xx {
+namespace detail {
 
 /*
  * Translate C/C++ type to HDF5 native data type.
@@ -62,7 +60,6 @@ H5XX_MAKE_CTYPE( bool,                  H5T_NATIVE_HBOOL );
 #undef H5XX_MAKE_CTYPE
 
 } // namespace detail
-
 } // namespace h5xx
 
 #endif /* ! H5XX_CTYPE_HPP */

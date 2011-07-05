@@ -23,8 +23,7 @@
 
 #include <h5xx/hdf5_compat.hpp>
 
-namespace h5xx
-{
+namespace h5xx {
 
 template <typename Exception>
 class no_autoprint : public H5::Exception

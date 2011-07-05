@@ -23,8 +23,7 @@
 #include <h5xx/error.hpp>
 #include <h5xx/property.hpp>
 
-namespace h5xx
-{
+namespace h5xx {
 
 /**
  * determine whether group exists in file or group

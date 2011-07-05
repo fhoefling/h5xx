@@ -23,8 +23,7 @@
 #include <h5xx/error.hpp>
 #include <h5xx/hdf5_compat.hpp>
 
-namespace h5xx
-{
+namespace h5xx {
 
 /**
  * Create link creation property list and set create intermediate group property.

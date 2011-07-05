@@ -35,8 +35,7 @@
 #include <h5xx/utility.hpp>
 #include <halmd/io/logger.hpp> //< FIXME must not be used outside of HALMD
 
-namespace h5xx
-{
+namespace h5xx {
 
 /**
  * determine whether dataset exists in file or group
@@ -503,6 +502,7 @@ boost::function<void (hsize_t)> make_dataset_write_at(
     H5::DataSet dataset = create_dataset<T>(fg, name);
     return make_dataset_write_at(dataset, data);
 }
+
 } // namespace h5xx
 
 #endif /* ! H5XX_DATASET_HPP */

@@ -22,8 +22,7 @@
 
 #include <stdexcept>
 
-namespace h5xx
-{
+namespace h5xx {
 
 /**
  * h5xx wrapper error

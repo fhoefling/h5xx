@@ -30,8 +30,7 @@
 
 #include <h5xx/ctype.hpp>
 
-namespace h5xx
-{
+namespace h5xx {
 
 using h5xx::detail::ctype; // FIXME HDF5 C++ to C transition
 

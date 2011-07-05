@@ -34,8 +34,7 @@
 #include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
 
-namespace h5xx
-{
+namespace h5xx {
 
 /*
  * create and write fundamental type attribute

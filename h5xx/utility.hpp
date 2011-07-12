@@ -76,6 +76,16 @@ inline std::list<std::string> split_path(std::string const& path_string)
 }
 
 /**
+ * hard link HDF5 object into the given group with given name
+ */
+inline void link(H5::H5Object const& object, H5::Group const& group, std::string const& name)
+{
+    if (0 > H5Lcreate_hard(object.getId(), ".", group.getId(), name.c_str(), H5P_DEFAULT, H5P_DEFAULT)) {
+        throw error("failed to link object");
+    }
+}
+
+/**
  * Data type is a fixed-size RandomAccessCollection
  *
  * http://www.boost.org/doc/libs/release/libs/utility/Collection.html

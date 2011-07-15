@@ -12,6 +12,9 @@ add_test(h5xx_attribute
 add_test(h5xx_dataset
   test_h5xx --run_test=h5xx_dataset --log_level=test_suite
 )
+add_test(h5xx_unique_dataset
+  test_h5xx --run_test=h5xx_unique_dataset --log_level=test_suite
+)
 add_test(h5xx_group
   test_h5xx --run_test=h5xx_group --log_level=test_suite
 )

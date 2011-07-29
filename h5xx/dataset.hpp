@@ -33,7 +33,6 @@
 #include <h5xx/attribute.hpp>
 #include <h5xx/property.hpp>
 #include <h5xx/utility.hpp>
-#include <halmd/io/logger.hpp> //< FIXME must not be used outside of HALMD
 
 namespace h5xx {
 
@@ -61,7 +60,6 @@ enum { compression_level = 6 };
  * This function creates missing intermediate groups.
  */
 // generic case: some fundamental type and a shape of arbitrary rank
-// first argument could be H5::CommonFG if the LOG_DEBUG line would be omitted
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_dataset(
@@ -71,7 +69,6 @@ create_dataset(
   , hsize_t max_size=H5S_UNLIMITED)
 {
     H5::IdComponent const& loc = dynamic_cast<H5::IdComponent const&>(fg);
-    LOG_DEBUG("create dataset '" << name << "' in " << path(loc));
 
     // file dataspace holding max_size multi_array chunks of fixed rank
     boost::array<hsize_t, rank+1> dim, max_dim, chunk_dim;
@@ -110,7 +107,6 @@ create_dataset(
  * This function creates missing intermediate groups.
  */
 // generic case: some fundamental type and a shape of arbitrary rank
-// first argument could be H5::CommonFG if the LOG_DEBUG line would be omitted
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_unique_dataset(
@@ -119,7 +115,6 @@ create_unique_dataset(
   , hsize_t const* shape)
 {
     H5::IdComponent const& loc = dynamic_cast<H5::IdComponent const&>(fg);
-    LOG_DEBUG("create dataset '" << name << "' in " << path(loc));
 
     // file dataspace holding a single multi_array of fixed rank
     H5::DataSpace dataspace(rank, shape);
@@ -154,12 +149,6 @@ template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
 {
-    if (index == H5S_UNLIMITED) {
-        LOG_TRACE("append to dataset " << path(dataset));
-    }
-    else {
-        LOG_TRACE("write to dataset " << path(dataset) << " at " << index);
-    }
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank+1>(dataspace)) {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
@@ -207,7 +196,6 @@ template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_unique_dataset(H5::DataSet const& dataset, T const* data)
 {
-    LOG_TRACE("write to dataset " << path(dataset));
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank>(dataspace)) {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
@@ -230,8 +218,6 @@ template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
 read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
-    LOG_TRACE("read from dataset " << path(dataset) << " at " << index);
-
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank+1>(dataspace)) {
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
@@ -279,8 +265,6 @@ template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
 read_unique_dataset(H5::DataSet const& dataset, T* data)
 {
-    LOG_TRACE("read from dataset " << path(dataset));
-
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank>(dataspace)) {
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");

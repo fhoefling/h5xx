@@ -24,9 +24,6 @@
 #include <h5xx/h5xx.hpp>
 #include <unistd.h>
 
-#include <halmd/numeric/blas/fixed_vector.hpp>
-#include <halmd/io/utility/hdf5.hpp>
-
 BOOST_AUTO_TEST_CASE( h5xx_attribute )
 {
     char const filename[] = "test_h5xx.hdf5";
@@ -53,8 +50,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     h5xx::write_attribute(group, "string, scalar", std::string(cstring_array[1]));
     h5xx::write_attribute(group, "char [], array", cstring_array);
 
-    // use derived class instead of boost::array
-    typedef halmd::fixed_vector<double, 5> double_array_type;
+    typedef boost::array<double, 5> double_array_type;
     double_array_type value_array;
     double double_values[] = {
        1., std::sqrt(2.), 2., std::sqrt(3.), 3.

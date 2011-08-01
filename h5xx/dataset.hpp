@@ -21,11 +21,8 @@
 #define H5XX_DATASET_HPP
 
 #include <boost/array.hpp>
-#include <boost/bind.hpp>
-#include <boost/function.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>
-#include <boost/ref.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
 #include <vector>
@@ -766,65 +763,37 @@ read_unique_dataset(H5::DataSet const& dataset, T* data)
 }
 
 /**
- * helper functions for convenience
+ * Helper function to create a unique dataset on the fly and write to it.
  *
- * we pass the data via pointer to make it transparent for the client code
- * that we store a const reference
+ * Note that this function overloads the generic write_unique_dataset(H5::DataSet, T const&).
  */
 template <typename T>
-boost::function<void ()> make_dataset_writer(H5::DataSet const& dataset, T const* data)
-{
-    return boost::bind(
-        static_cast<void (*)(H5::DataSet const&, T const&, hsize_t)>(write_dataset<T>)
-      , dataset
-      , boost::cref(*data)
-      , H5S_UNLIMITED
-    );
-}
-
-template <typename T>
-boost::function<void (hsize_t)> make_dataset_write_at(H5::DataSet const& dataset, T const* data)
-{
-    return boost::bind(
-        static_cast<void (*)(H5::DataSet const&, T const&, hsize_t)>(write_dataset<T>)
-      , dataset
-      , boost::cref(*data)
-      , _1
-    );
-}
-
-template <typename T>
-boost::function<void ()> make_unique_dataset_writer(H5::DataSet const& dataset, T const* data)
-{
-    return boost::bind(
-        static_cast<void (*)(H5::DataSet const&, T const&)>(write_unique_dataset<T>)
-      , dataset
-      , boost::cref(*data)
-    );
-}
-
-template <typename T>
-boost::function<void ()> make_dataset_writer(
-    H5::CommonFG const& fg, std::string const& name, T const* data)
-{
-    H5::DataSet dataset = create_dataset<T>(fg, name);
-    return make_dataset_writer(dataset, data);
-}
-
-template <typename T>
-boost::function<void (hsize_t)> make_dataset_write_at(
-    H5::CommonFG const& fg, std::string const& name, T const* data)
-{
-    H5::DataSet dataset = create_dataset<T>(fg, name);
-    return make_dataset_write_at(dataset, data);
-}
-
-template <typename T>
-boost::function<void ()> make_unique_dataset_writer(
-    H5::CommonFG const& fg, std::string const& name, T const* data)
+void write_unique_dataset(H5::CommonFG const& fg, std::string const& name, T const& data)
 {
     H5::DataSet dataset = create_unique_dataset<T>(fg, name);
-    return make_unique_dataset_writer(dataset, data);
+    write_unique_dataset(dataset, data);
+}
+
+/**
+ * Helper function to open a unique dataset on the fly and read from it.
+ *
+ * Note that this function overloads the generic write_unique_dataset(H5::DataSet, T const&).
+ */
+template <typename T>
+void read_unique_dataset(H5::CommonFG const& fg, std::string const& name, T* data)
+{
+    H5E_BEGIN_TRY {
+        // open dataset in file or group
+        H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
+        hid_t hid = H5Dopen(loc.getId(), name.c_str(), H5P_DEFAULT);
+        if (hid > 0) {
+            read_unique_dataset(hid, data);
+            H5Dclose(hid);
+        }
+        else {
+            throw error("attempt to read non-existent dataset \"" + name + "\"");
+        }
+    } H5E_END_TRY
 }
 
 } // namespace h5xx

@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
     // scalar type
     uint64_t uint_value = 9223372036854775783LLU;  // largest prime below 2^63
-    h5xx::make_dataset_writer(group, "uint", &uint_value)();
+    h5xx::write_dataset(h5xx::create_dataset<uint64_t>(group, "uint"), uint_value); // use temporary H5::DataSet
     // overwrite data set
     H5::DataSet uint_dataset = h5xx::create_dataset<uint64_t>(group, "uint");
     h5xx::write_dataset(uint_dataset, uint_value);
@@ -188,13 +188,13 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     multi_array_value[1][2] = 1;
     h5xx::write_dataset(multi_array_dataset, multi_array_value);    // append
     multi_array_value[1][2] = 2;
-    h5xx::make_dataset_write_at(multi_array_dataset, &multi_array_value)(0);  // overwrite first entry
+    h5xx::write_dataset(multi_array_dataset, multi_array_value, 0);  // overwrite first entry
 
     // vector of scalars
     std::vector<int> int_vector_value(data2, data2 + 3 * 4);
     H5::DataSet int_vector_dataset
             = h5xx::create_dataset<std::vector<int> >(group, "int_vector", int_vector_value.size());
-    h5xx::make_dataset_writer(int_vector_dataset, &int_vector_value)();
+    h5xx::write_dataset(int_vector_dataset, int_vector_value);
 
     // vector of arrays
     std::vector<array_type> array_vector_value;
@@ -336,7 +336,7 @@ BOOST_AUTO_TEST_CASE( h5xx_unique_dataset )
 
     // scalar type
     uint64_t uint_value = 9223372036854775783LLU;  // largest prime below 2^63
-    h5xx::make_unique_dataset_writer(group, "uint", &uint_value)();
+    h5xx::write_unique_dataset(group, "uint", uint_value);
     // overwrite data set
     H5::DataSet uint_dataset = h5xx::create_unique_dataset<uint64_t>(group, "uint");
     h5xx::write_unique_dataset(uint_dataset, uint_value + 1);
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE( h5xx_unique_dataset )
     std::vector<int> int_vector_value(data2, data2 + 3 * 4);
     H5::DataSet int_vector_dataset
             = h5xx::create_unique_dataset<std::vector<int> >(group, "int_vector", int_vector_value.size());
-    h5xx::make_unique_dataset_writer(int_vector_dataset, &int_vector_value)();
+    h5xx::write_unique_dataset(int_vector_dataset, int_vector_value);
 
     // vector of arrays
     std::vector<array_type> array_vector_value;
@@ -403,6 +403,8 @@ BOOST_AUTO_TEST_CASE( h5xx_unique_dataset )
 
     uint64_t uint_value_;
     h5xx::read_unique_dataset(uint_dataset, &uint_value_);
+    BOOST_CHECK(uint_value_ == uint_value);
+    h5xx::read_unique_dataset(file, "uint", &uint_value_);
     BOOST_CHECK(uint_value_ == uint_value);
 
     // array type dataset
@@ -462,6 +464,7 @@ BOOST_AUTO_TEST_CASE( h5xx_unique_dataset )
     array_vector_dataset = group.openDataSet("array_vector");
     std::vector<array_type> array_vector_value_;
     h5xx::read_unique_dataset(array_vector_dataset, &array_vector_value_);
+    h5xx::read_unique_dataset(group, "array_vector", &array_vector_value_); // use helper function
     BOOST_CHECK(array_vector_value_.size() == array_vector_value.size());
     BOOST_CHECK(std::equal(
         array_vector_value_.begin()

@@ -33,6 +33,8 @@
 
 namespace h5xx {
 
+namespace detail {
+
 /**
  * Create dataset 'name' in given group/file. The dataset contains
  * a single entry only and should be written via write_dataset().
@@ -123,6 +125,8 @@ read_dataset(H5::DataSet const& dataset, T* data)
     }
 }
 
+} // namespace detail
+
 //
 // scalar/fundamental types
 //
@@ -132,21 +136,21 @@ create_dataset(
     H5::CommonFG const& fg
   , std::string const& name)
 {
-    return create_dataset<T, 0>(fg, name, NULL);
+    return detail::create_dataset<T, 0>(fg, name, NULL);
 }
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data)
 {
-    write_dataset<T, 0>(dataset, &data);
+    detail::write_dataset<T, 0>(dataset, &data);
 }
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
 read_dataset(H5::DataSet const& dataset, T& data)
 {
-    return read_dataset<T, 0>(dataset, &data);
+    return detail::read_dataset<T, 0>(dataset, &data);
 }
 
 //
@@ -163,7 +167,7 @@ create_dataset(
     typedef typename T::value_type value_type;
     enum { rank = 1 };
     hsize_t shape[1] = { T::static_size };
-    return create_dataset<value_type, rank>(fg, name, shape);
+    return detail::create_dataset<value_type, rank>(fg, name, shape);
 }
 
 template <typename T>
@@ -178,7 +182,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, &data.front());
+    detail::write_dataset<value_type, rank>(dataset, &data.front());
 }
 
 template <typename T>
@@ -189,7 +193,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    read_dataset<value_type, rank>(dataset, &data.front());
+    detail::read_dataset<value_type, rank>(dataset, &data.front());
 }
 
 //
@@ -207,7 +211,7 @@ create_dataset(
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return create_dataset<value_type, rank>(fg, name, &shape_.front());
+    return detail::create_dataset<value_type, rank>(fg, name, &shape_.front());
 }
 
 template <typename T>
@@ -220,7 +224,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, data.origin());
+    detail::write_dataset<value_type, rank>(dataset, data.origin());
 }
 
 /** read multi_array data, resize/reshape result array if necessary */
@@ -244,7 +248,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
         data.resize(dim);
     }
 
-    return read_dataset<value_type, rank>(dataset, data.origin());
+    return detail::read_dataset<value_type, rank>(dataset, data.origin());
 }
 
 //
@@ -262,7 +266,7 @@ create_dataset(
 {
     typedef typename T::value_type value_type;
     hsize_t shape[1] = { size };
-    return create_dataset<value_type, 1>(fg, name, shape);
+    return detail::create_dataset<value_type, 1>(fg, name, shape);
 }
 
 template <typename T>
@@ -282,7 +286,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
         }
     }
 
-    write_dataset<value_type, 1>(dataset, &*data.begin());
+    detail::write_dataset<value_type, 1>(dataset, &*data.begin());
 }
 
 /** read vector container with scalar data, resize/reshape result array if necessary */
@@ -303,7 +307,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
     dataspace.getSimpleExtentDims(&dim);
     data.resize(dim);
 
-    read_dataset<value_type, 1>(dataset, &*data.begin());
+    detail::read_dataset<value_type, 1>(dataset, &*data.begin());
 }
 
 //
@@ -322,7 +326,7 @@ create_dataset(
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
     hsize_t shape[2] = { size, array_type::static_size };
-    return create_dataset<value_type, 2>(fg, name, shape);
+    return detail::create_dataset<value_type, 2>(fg, name, shape);
 }
 
 template <typename T>
@@ -344,7 +348,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
     }
 
     // raw data are laid out contiguously
-    write_dataset<value_type, 2>(dataset, &data.front().front());
+    detail::write_dataset<value_type, 2>(dataset, &data.front().front());
 }
 
 /** read vector container with array data, resize/reshape result array if necessary */
@@ -367,7 +371,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
     data.resize(dim[0]);
 
     // raw data are laid out contiguously
-    read_dataset<value_type, 2>(dataset, &data.front().front());
+    detail::read_dataset<value_type, 2>(dataset, &data.front().front());
 }
 
 /**

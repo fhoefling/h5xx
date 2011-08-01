@@ -33,6 +33,8 @@
 
 namespace h5xx {
 
+namespace detail {
+
 /**
  * create chunked dataset 'name' in given group/file with given size
  *
@@ -173,6 +175,8 @@ read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     return index;
 }
 
+} // namespace detail
+
 //
 // chunks of scalars
 //
@@ -183,21 +187,21 @@ create_chunked_dataset(
   , std::string const& name
   , hsize_t max_size=H5S_UNLIMITED)
 {
-    return create_chunked_dataset<T, 0>(fg, name, NULL, max_size);
+    return detail::create_chunked_dataset<T, 0>(fg, name, NULL, max_size);
 }
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
-    write_chunked_dataset<T, 0>(dataset, &data, index);
+    detail::write_chunked_dataset<T, 0>(dataset, &data, index);
 }
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
 read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
-    return read_chunked_dataset<T, 0>(dataset, &data, index);
+    return detail::read_chunked_dataset<T, 0>(dataset, &data, index);
 }
 
 //
@@ -215,7 +219,7 @@ create_chunked_dataset(
     typedef typename T::value_type value_type;
     enum { rank = 1 };
     hsize_t shape[1] = { T::static_size };
-    return create_chunked_dataset<value_type, rank>(fg, name, shape, max_size);
+    return detail::create_chunked_dataset<value_type, rank>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -230,7 +234,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_chunked_dataset<value_type, rank>(dataset, &data.front(), index);
+    detail::write_chunked_dataset<value_type, rank>(dataset, &data.front(), index);
 }
 
 template <typename T>
@@ -241,7 +245,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    return read_chunked_dataset<value_type, rank>(dataset, &data.front(), index);
+    return detail::read_chunked_dataset<value_type, rank>(dataset, &data.front(), index);
 }
 
 //
@@ -260,7 +264,7 @@ create_chunked_dataset(
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return create_chunked_dataset<value_type, rank>(fg, name, &shape_.front(), max_size);
+    return detail::create_chunked_dataset<value_type, rank>(fg, name, &shape_.front(), max_size);
 }
 
 template <typename T>
@@ -273,7 +277,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_chunked_dataset<value_type, rank>(dataset, data.origin(), index);
+    detail::write_chunked_dataset<value_type, rank>(dataset, data.origin(), index);
 }
 
 /** read chunk of multi_array data, resize/reshape result array if necessary */
@@ -299,7 +303,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
         data.resize(shape);
     }
 
-    return read_chunked_dataset<value_type, rank>(dataset, data.origin(), index);
+    return detail::read_chunked_dataset<value_type, rank>(dataset, data.origin(), index);
 }
 
 //
@@ -318,7 +322,7 @@ create_chunked_dataset(
 {
     typedef typename T::value_type value_type;
     hsize_t shape[1] = { size };
-    return create_chunked_dataset<value_type, 1>(fg, name, shape, max_size);
+    return detail::create_chunked_dataset<value_type, 1>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -338,7 +342,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
         }
     }
 
-    write_chunked_dataset<value_type, 1>(dataset, &*data.begin(), index);
+    detail::write_chunked_dataset<value_type, 1>(dataset, &*data.begin(), index);
 }
 
 /** read chunk of vector container with scalar data, resize/reshape result array if necessary */
@@ -359,7 +363,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
     dataspace.getSimpleExtentDims(dim);
     data.resize(dim[1]);
 
-    return read_chunked_dataset<value_type, 1>(dataset, &*data.begin(), index);
+    return detail::read_chunked_dataset<value_type, 1>(dataset, &*data.begin(), index);
 }
 
 //
@@ -379,7 +383,7 @@ create_chunked_dataset(
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
     hsize_t shape[2] = { size, array_type::static_size };
-    return create_chunked_dataset<value_type, 2>(fg, name, shape, max_size);
+    return detail::create_chunked_dataset<value_type, 2>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -401,7 +405,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
     }
 
     // raw data are laid out contiguously
-    write_chunked_dataset<value_type, 2>(dataset, &data.front().front(), index);
+    detail::write_chunked_dataset<value_type, 2>(dataset, &data.front().front(), index);
 }
 
 /** read chunk of vector container with array data, resize/reshape result array if necessary */
@@ -424,7 +428,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
     data.resize(dim[1]);
 
     // raw data are laid out contiguously
-    return read_chunked_dataset<value_type, 2>(dataset, &data.front().front(), index);
+    return detail::read_chunked_dataset<value_type, 2>(dataset, &data.front().front(), index);
 }
 
 } // namespace h5xx

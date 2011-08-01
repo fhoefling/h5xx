@@ -34,22 +34,6 @@
 namespace h5xx {
 
 /**
- * determine whether dataset exists in file or group
- */
-inline bool exists_dataset(H5::CommonFG const& fg, std::string const& name)
-{
-    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
-    hid_t hid;
-    H5E_BEGIN_TRY {
-        hid = H5Dopen(loc.getId(), name.c_str(), H5P_DEFAULT);
-        if (hid > 0) {
-            H5Dclose(hid);
-        }
-    } H5E_END_TRY
-    return (hid > 0);
-}
-
-/**
  * Create dataset 'name' in given group/file. The dataset contains
  * a single entry only and should be written via write_dataset().
  *

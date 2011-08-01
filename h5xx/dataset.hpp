@@ -52,14 +52,14 @@ inline bool exists_dataset(H5::CommonFG const& fg, std::string const& name)
 enum { compression_level = 6 };
 
 /**
- * create dataset 'name' in given group/file with given size
+ * create chunked dataset 'name' in given group/file with given size
  *
  * This function creates missing intermediate groups.
  */
 // generic case: some fundamental type and a shape of arbitrary rank
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , hsize_t const* shape
@@ -138,13 +138,13 @@ create_unique_dataset(
 }
 
 /**
- * write data to dataset at given index, default argument appends dataset
+ * write data to chunked dataset at given index, default argument appends to dataset
  */
 // generic case: some fundamental type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
+write_chunked_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
 {
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank+1>(dataspace)) {
@@ -207,13 +207,13 @@ write_unique_dataset(H5::DataSet const& dataset, T const* data)
 }
 
 /**
- * read data from dataset at given index
+ * read data from chunked dataset at given index
  */
 // generic case: some (fundamental) type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
-read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
+read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank+1>(dataspace)) {
@@ -286,12 +286,12 @@ read_unique_dataset(H5::DataSet const& dataset, T* data)
 //
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , hsize_t max_size=H5S_UNLIMITED)
 {
-    return create_dataset<T, 0>(fg, name, NULL, max_size);
+    return create_chunked_dataset<T, 0>(fg, name, NULL, max_size);
 }
 
 template <typename T>
@@ -305,9 +305,9 @@ create_unique_dataset(
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
-    write_dataset<T, 0>(dataset, &data, index);
+    write_chunked_dataset<T, 0>(dataset, &data, index);
 }
 
 template <typename T>
@@ -319,9 +319,9 @@ write_unique_dataset(H5::DataSet const& dataset, T const& data)
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
-read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
+read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
-    return read_dataset<T, 0>(dataset, data, index);
+    return read_chunked_dataset<T, 0>(dataset, data, index);
 }
 
 template <typename T>
@@ -338,7 +338,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , hsize_t max_size=H5S_UNLIMITED)
@@ -346,7 +346,7 @@ create_dataset(
     typedef typename T::value_type value_type;
     enum { rank = 1 };
     hsize_t shape[1] = { T::static_size };
-    return create_dataset<value_type, rank>(fg, name, shape, max_size);
+    return create_chunked_dataset<value_type, rank>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -367,7 +367,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
@@ -375,7 +375,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, &data.front(), index);
+    write_chunked_dataset<value_type, rank>(dataset, &data.front(), index);
 }
 
 template <typename T>
@@ -397,11 +397,11 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, hsize_t>::type
-read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
+read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    return read_dataset<value_type, rank>(dataset, &data->front(), index);
+    return read_chunked_dataset<value_type, rank>(dataset, &data->front(), index);
 }
 
 template <typename T>
@@ -420,7 +420,7 @@ read_unique_dataset(H5::DataSet const& dataset, T* data)
 //
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type const* shape
@@ -431,7 +431,7 @@ create_dataset(
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return create_dataset<value_type, rank>(fg, name, &shape_.front(), max_size);
+    return create_chunked_dataset<value_type, rank>(fg, name, &shape_.front(), max_size);
 }
 
 template <typename T>
@@ -451,7 +451,7 @@ create_unique_dataset(
 
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -459,7 +459,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, data.origin(), index);
+    write_chunked_dataset<value_type, rank>(dataset, data.origin(), index);
 }
 
 template <typename T>
@@ -478,7 +478,7 @@ write_unique_dataset(H5::DataSet const& dataset, T const& data)
 /** read chunk of multi_array data, resize/reshape result array if necessary */
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, hsize_t>::type
-read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
+read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -498,7 +498,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
         data->resize(shape);
     }
 
-    return read_dataset<value_type, rank>(dataset, data->origin(), index);
+    return read_chunked_dataset<value_type, rank>(dataset, data->origin(), index);
 }
 
 template <typename T>
@@ -532,7 +532,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type size
@@ -540,7 +540,7 @@ create_dataset(
 {
     typedef typename T::value_type value_type;
     hsize_t shape[1] = { size };
-    return create_dataset<value_type, 1>(fg, name, shape, max_size);
+    return create_chunked_dataset<value_type, 1>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -561,7 +561,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
 
@@ -574,7 +574,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
         }
     }
 
-    write_dataset<value_type, 1>(dataset, &*data.begin(), index);
+    write_chunked_dataset<value_type, 1>(dataset, &*data.begin(), index);
 }
 
 template <typename T>
@@ -602,7 +602,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, hsize_t>::type
-read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
+read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::value_type value_type;
 
@@ -615,7 +615,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     dataspace.getSimpleExtentDims(dim);
     data->resize(dim[1]);
 
-    return read_dataset<value_type, 1>(dataset, &*data->begin(), index);
+    return read_chunked_dataset<value_type, 1>(dataset, &*data->begin(), index);
 }
 
 template <typename T>
@@ -646,7 +646,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type size
@@ -655,7 +655,7 @@ create_dataset(
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
     hsize_t shape[2] = { size, array_type::static_size };
-    return create_dataset<value_type, 2>(fg, name, shape, max_size);
+    return create_chunked_dataset<value_type, 2>(fg, name, shape, max_size);
 }
 
 template <typename T>
@@ -677,7 +677,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
@@ -692,7 +692,7 @@ write_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIM
     }
 
     // raw data are laid out contiguously
-    write_dataset<value_type, 2>(dataset, &data.front().front(), index);
+    write_chunked_dataset<value_type, 2>(dataset, &data.front().front(), index);
 }
 
 template <typename T>
@@ -722,7 +722,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, hsize_t>::type
-read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
+read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
@@ -737,7 +737,7 @@ read_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
     data->resize(dim[1]);
 
     // raw data are laid out contiguously
-    return read_dataset<value_type, 2>(dataset, &data->front().front(), index);
+    return read_chunked_dataset<value_type, 2>(dataset, &data->front().front(), index);
 }
 
 template <typename T>

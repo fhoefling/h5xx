@@ -227,16 +227,16 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
     BOOST_CHECK(h5xx::elements(uint_dataset) == 2);
 
     uint64_t uint_value_;
-    h5xx::read_chunked_dataset(uint_dataset, &uint_value_, 0);
+    h5xx::read_chunked_dataset(uint_dataset, uint_value_, 0);
     BOOST_CHECK(uint_value_ == uint_value);
-    h5xx::read_chunked_dataset(uint_dataset, &uint_value_, 1);
+    h5xx::read_chunked_dataset(uint_dataset, uint_value_, 1);
     BOOST_CHECK(uint_value_ == uint_value + 1);
-    h5xx::read_chunked_dataset(uint_dataset, &uint_value_, -1);
+    h5xx::read_chunked_dataset(uint_dataset, uint_value_, -1);
     BOOST_CHECK(uint_value_ == uint_value + 1);
-    h5xx::read_chunked_dataset(uint_dataset, &uint_value_, -2);
+    h5xx::read_chunked_dataset(uint_dataset, uint_value_, -2);
     BOOST_CHECK(uint_value_ == uint_value);
-    BOOST_CHECK_THROW(h5xx::read_chunked_dataset(uint_dataset, &uint_value_, 2), std::runtime_error);
-    BOOST_CHECK_THROW(h5xx::read_chunked_dataset(uint_dataset, &uint_value_, -3), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::read_chunked_dataset(uint_dataset, uint_value_, 2), std::runtime_error);
+    BOOST_CHECK_THROW(h5xx::read_chunked_dataset(uint_dataset, uint_value_, -3), std::runtime_error);
 
     // array type dataset
     array_dataset = group.openDataSet("array");
@@ -244,15 +244,15 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
     BOOST_CHECK(has_extent_one_extra<array_type>(array_dataset));
     BOOST_CHECK(h5xx::elements(array_dataset) == 2 * 3);
     array_type array_value_;
-    h5xx::read_chunked_dataset(array_dataset, &array_value_, 0);
+    h5xx::read_chunked_dataset(array_dataset, array_value_, 0);
     BOOST_CHECK(array_value_ == array_value);
-    h5xx::read_chunked_dataset(array_dataset, &array_value_, 1);
+    h5xx::read_chunked_dataset(array_dataset, array_value_, 1);
     BOOST_CHECK(array_value_ == array_value2);
 
     // read array type dataset as float
     typedef boost::array<float, 3> float_array_type;
     float_array_type float_array_value_;
-    h5xx::read_chunked_dataset(array_dataset, &float_array_value_, 0);
+    h5xx::read_chunked_dataset(array_dataset, float_array_value_, 0);
     for (unsigned i = 0; i < array_value.size(); ++i) {
         BOOST_CHECK(float_array_value_[i] == static_cast<float>(array_value[i]));
     }
@@ -263,17 +263,17 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
     BOOST_CHECK(has_extent_one_extra<multi_array2>(multi_array_dataset, multi_array_value.shape()));
     BOOST_CHECK(h5xx::elements(multi_array_dataset) == 2 * 3 * 4);
     multi_array2 multi_array_value_;
-    h5xx::read_chunked_dataset(multi_array_dataset, &multi_array_value_, 0);
+    h5xx::read_chunked_dataset(multi_array_dataset, multi_array_value_, 0);
     multi_array_value[1][2] = 2;
     BOOST_CHECK(multi_array_value_ == multi_array_value);
-    h5xx::read_chunked_dataset(multi_array_dataset, &multi_array_value_, 1);
+    h5xx::read_chunked_dataset(multi_array_dataset, multi_array_value_, 1);
     multi_array_value[1][2] = 1;
     BOOST_CHECK(multi_array_value_ == multi_array_value);
 
     // read multi-array type dataset as char (8 bit)
     typedef boost::multi_array<char, 2> char_multi_array2;
     char_multi_array2 char_multi_array_value_;
-    h5xx::read_chunked_dataset(multi_array_dataset, &char_multi_array_value_, 1);
+    h5xx::read_chunked_dataset(multi_array_dataset, char_multi_array_value_, 1);
     for (unsigned i = 0; i < multi_array_value.num_elements(); ++i) {
         BOOST_CHECK(char_multi_array_value_.data()[i] == static_cast<char>(multi_array_value.data()[i]));
     }
@@ -281,7 +281,7 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
     // vector of scalars
     int_vector_dataset = group.openDataSet("int_vector");
     std::vector<int> int_vector_value_;
-    h5xx::read_chunked_dataset(int_vector_dataset, &int_vector_value_, 0);
+    h5xx::read_chunked_dataset(int_vector_dataset, int_vector_value_, 0);
     BOOST_CHECK(int_vector_value_.size() == int_vector_value.size());
     BOOST_CHECK(std::equal(
         int_vector_value_.begin()
@@ -291,7 +291,7 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
 
     // read vector of int scalars as short integers
     std::vector<short int> short_vector_value_;
-    h5xx::read_chunked_dataset(int_vector_dataset, &short_vector_value_, 0);
+    h5xx::read_chunked_dataset(int_vector_dataset, short_vector_value_, 0);
     BOOST_CHECK(short_vector_value_.size() == int_vector_value.size());
     for (unsigned i = 0; i < int_vector_value.size(); ++i) {
         BOOST_CHECK(short_vector_value_[i] == static_cast<short int>(int_vector_value[i]));
@@ -300,7 +300,7 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
     // vector of arrays
     array_vector_dataset = group.openDataSet("array_vector");
     std::vector<array_type> array_vector_value_;
-    h5xx::read_chunked_dataset(array_vector_dataset, &array_vector_value_, 0);
+    h5xx::read_chunked_dataset(array_vector_dataset, array_vector_value_, 0);
     BOOST_CHECK(array_vector_value_.size() == array_vector_value.size());
     BOOST_CHECK(std::equal(
         array_vector_value_.begin()
@@ -310,7 +310,7 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
 
     // read vector of double arrays as float arrays
     std::vector<float_array_type> float_array_vector_value_;
-    h5xx::read_chunked_dataset(array_vector_dataset, &float_array_vector_value_, 0);
+    h5xx::read_chunked_dataset(array_vector_dataset, float_array_vector_value_, 0);
     BOOST_CHECK(float_array_vector_value_.size() == array_vector_value.size());
     for (unsigned i = 0; i < array_vector_value.size(); ++i) {
         for (unsigned j = 0; j < float_array_type::static_size; ++j) {
@@ -402,9 +402,9 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     BOOST_CHECK(h5xx::elements(uint_dataset) == 1);
 
     uint64_t uint_value_;
-    h5xx::read_dataset(uint_dataset, &uint_value_);
+    h5xx::read_dataset(uint_dataset, uint_value_);
     BOOST_CHECK(uint_value_ == uint_value);
-    h5xx::read_dataset(file, "uint", &uint_value_);
+    h5xx::read_dataset(file, "uint", uint_value_);
     BOOST_CHECK(uint_value_ == uint_value);
 
     // array type dataset
@@ -413,13 +413,13 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     BOOST_CHECK(h5xx::has_extent<array_type>(array_dataset));
     BOOST_CHECK(h5xx::elements(array_dataset) == 3);
     array_type array_value_;
-    h5xx::read_dataset(array_dataset, &array_value_);
+    h5xx::read_dataset(array_dataset, array_value_);
     BOOST_CHECK(array_value_ == array_value);
 
     // read array type dataset as float
     typedef boost::array<float, 3> float_array_type;
     float_array_type float_array_value_;
-    h5xx::read_dataset(array_dataset, &float_array_value_);
+    h5xx::read_dataset(array_dataset, float_array_value_);
     for (unsigned i = 0; i < array_value.size(); ++i) {
         BOOST_CHECK(float_array_value_[i] == static_cast<float>(array_value[i]));
     }
@@ -430,13 +430,13 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     BOOST_CHECK(h5xx::has_extent<multi_array2>(multi_array_dataset, multi_array_value.shape()));
     BOOST_CHECK(h5xx::elements(multi_array_dataset) == 3 * 4);
     multi_array2 multi_array_value_;
-    h5xx::read_dataset(multi_array_dataset, &multi_array_value_);
+    h5xx::read_dataset(multi_array_dataset, multi_array_value_);
     BOOST_CHECK(multi_array_value_ == multi_array_value);
 
     // read multi-array type dataset as char (8 bit)
     typedef boost::multi_array<char, 2> char_multi_array2;
     char_multi_array2 char_multi_array_value_;
-    h5xx::read_dataset(multi_array_dataset, &char_multi_array_value_);
+    h5xx::read_dataset(multi_array_dataset, char_multi_array_value_);
     for (unsigned i = 0; i < multi_array_value.num_elements(); ++i) {
         BOOST_CHECK(char_multi_array_value_.data()[i] == static_cast<char>(multi_array_value.data()[i]));
     }
@@ -444,7 +444,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     // vector of scalars
     int_vector_dataset = group.openDataSet("int_vector");
     std::vector<int> int_vector_value_;
-    h5xx::read_dataset(int_vector_dataset, &int_vector_value_);
+    h5xx::read_dataset(int_vector_dataset, int_vector_value_);
     BOOST_CHECK(int_vector_value_.size() == int_vector_value.size());
     BOOST_CHECK(std::equal(
         int_vector_value_.begin()
@@ -454,7 +454,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
     // read vector of int scalars as short integers
     std::vector<short int> short_vector_value_;
-    h5xx::read_dataset(int_vector_dataset, &short_vector_value_);
+    h5xx::read_dataset(int_vector_dataset, short_vector_value_);
     BOOST_CHECK(short_vector_value_.size() == int_vector_value.size());
     for (unsigned i = 0; i < int_vector_value.size(); ++i) {
         BOOST_CHECK(short_vector_value_[i] == static_cast<short int>(int_vector_value[i]));
@@ -463,8 +463,8 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     // vector of arrays
     array_vector_dataset = group.openDataSet("array_vector");
     std::vector<array_type> array_vector_value_;
-    h5xx::read_dataset(array_vector_dataset, &array_vector_value_);
-    h5xx::read_dataset(group, "array_vector", &array_vector_value_); // use helper function
+    h5xx::read_dataset(array_vector_dataset, array_vector_value_);
+    h5xx::read_dataset(group, "array_vector", array_vector_value_); // use helper function
     BOOST_CHECK(array_vector_value_.size() == array_vector_value.size());
     BOOST_CHECK(std::equal(
         array_vector_value_.begin()
@@ -474,7 +474,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
     // read vector of double arrays as float arrays
     std::vector<float_array_type> float_array_vector_value_;
-    h5xx::read_dataset(array_vector_dataset, &float_array_vector_value_);
+    h5xx::read_dataset(array_vector_dataset, float_array_vector_value_);
     BOOST_CHECK(float_array_vector_value_.size() == array_vector_value.size());
     for (unsigned i = 0; i < array_vector_value.size(); ++i) {
         for (unsigned j = 0; j < float_array_type::static_size; ++j) {

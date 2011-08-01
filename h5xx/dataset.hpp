@@ -98,15 +98,15 @@ create_chunked_dataset(
 }
 
 /**
- * Create unique dataset 'name' in given group/file. The dataset contains
- * a single entry only and should be written via write_unique_dataset().
+ * Create dataset 'name' in given group/file. The dataset contains
+ * a single entry only and should be written via write_dataset().
  *
  * This function creates missing intermediate groups.
  */
 // generic case: some fundamental type and a shape of arbitrary rank
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
-create_unique_dataset(
+create_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , hsize_t const* shape)
@@ -185,13 +185,13 @@ write_chunked_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H
 }
 
 /**
- * write data to unique dataset
+ * write data to dataset
  */
 // generic case: some fundamental type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write_unique_dataset(H5::DataSet const& dataset, T const* data)
+write_dataset(H5::DataSet const& dataset, T const* data)
 {
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank>(dataspace)) {
@@ -254,13 +254,13 @@ read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 }
 
 /**
- * read data from unique dataset
+ * read data from dataset
  */
 // generic case: some (fundamental) type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-read_unique_dataset(H5::DataSet const& dataset, T* data)
+read_dataset(H5::DataSet const& dataset, T* data)
 {
     H5::DataSpace dataspace(dataset.getSpace());
     if (!has_rank<rank>(dataspace)) {
@@ -296,11 +296,11 @@ create_chunked_dataset(
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
-create_unique_dataset(
+create_dataset(
     H5::CommonFG const& fg
   , std::string const& name)
 {
-    return create_unique_dataset<T, 0>(fg, name, NULL);
+    return create_dataset<T, 0>(fg, name, NULL);
 }
 
 template <typename T>
@@ -312,9 +312,9 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write_unique_dataset(H5::DataSet const& dataset, T const& data)
+write_dataset(H5::DataSet const& dataset, T const& data)
 {
-    write_unique_dataset<T, 0>(dataset, &data);
+    write_dataset<T, 0>(dataset, &data);
 }
 
 template <typename T>
@@ -326,9 +326,9 @@ read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-read_unique_dataset(H5::DataSet const& dataset, T* data)
+read_dataset(H5::DataSet const& dataset, T* data)
 {
-    return read_unique_dataset<T, 0>(dataset, data);
+    return read_dataset<T, 0>(dataset, data);
 }
 
 //
@@ -353,14 +353,14 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
-create_unique_dataset(
+create_dataset(
     H5::CommonFG const& fg
   , std::string const& name)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
     hsize_t shape[1] = { T::static_size };
-    return create_unique_dataset<value_type, rank>(fg, name, shape);
+    return create_dataset<value_type, rank>(fg, name, shape);
 }
 
 template <typename T>
@@ -382,7 +382,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write_unique_dataset(H5::DataSet const& dataset, T const& data)
+write_dataset(H5::DataSet const& dataset, T const& data)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
@@ -390,7 +390,7 @@ write_unique_dataset(H5::DataSet const& dataset, T const& data)
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_unique_dataset<value_type, rank>(dataset, &data.front());
+    write_dataset<value_type, rank>(dataset, &data.front());
 }
 
 template <typename T>
@@ -408,11 +408,11 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-read_unique_dataset(H5::DataSet const& dataset, T* data)
+read_dataset(H5::DataSet const& dataset, T* data)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    read_unique_dataset<value_type, rank>(dataset, &data->front());
+    read_dataset<value_type, rank>(dataset, &data->front());
 }
 
 //
@@ -436,7 +436,7 @@ create_chunked_dataset(
 
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
-create_unique_dataset(
+create_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type const* shape)
@@ -446,7 +446,7 @@ create_unique_dataset(
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return create_unique_dataset<value_type, rank>(fg, name, &shape_.front());
+    return create_dataset<value_type, rank>(fg, name, &shape_.front());
 }
 
 template <typename T>
@@ -464,7 +464,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
 
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
-write_unique_dataset(H5::DataSet const& dataset, T const& data)
+write_dataset(H5::DataSet const& dataset, T const& data)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -472,7 +472,7 @@ write_unique_dataset(H5::DataSet const& dataset, T const& data)
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_unique_dataset<value_type, rank>(dataset, data.origin());
+    write_dataset<value_type, rank>(dataset, data.origin());
 }
 
 /** read chunk of multi_array data, resize/reshape result array if necessary */
@@ -503,7 +503,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
-read_unique_dataset(H5::DataSet const& dataset, T* data)
+read_dataset(H5::DataSet const& dataset, T* data)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
@@ -521,7 +521,7 @@ read_unique_dataset(H5::DataSet const& dataset, T* data)
         data->resize(dim);
     }
 
-    return read_unique_dataset<value_type, rank>(dataset, data->origin());
+    return read_dataset<value_type, rank>(dataset, data->origin());
 }
 
 //
@@ -547,14 +547,14 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
-create_unique_dataset(
+create_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type size)
 {
     typedef typename T::value_type value_type;
     hsize_t shape[1] = { size };
-    return create_unique_dataset<value_type, 1>(fg, name, shape);
+    return create_dataset<value_type, 1>(fg, name, shape);
 }
 
 template <typename T>
@@ -581,7 +581,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write_unique_dataset(H5::DataSet const& dataset, T const& data)
+write_dataset(H5::DataSet const& dataset, T const& data)
 {
     typedef typename T::value_type value_type;
 
@@ -594,7 +594,7 @@ write_unique_dataset(H5::DataSet const& dataset, T const& data)
         }
     }
 
-    write_unique_dataset<value_type, 1>(dataset, &*data.begin());
+    write_dataset<value_type, 1>(dataset, &*data.begin());
 }
 
 /** read chunk of vector container with scalar data, resize/reshape result array if necessary */
@@ -622,7 +622,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-read_unique_dataset(H5::DataSet const& dataset, T* data)
+read_dataset(H5::DataSet const& dataset, T* data)
 {
     typedef typename T::value_type value_type;
 
@@ -635,7 +635,7 @@ read_unique_dataset(H5::DataSet const& dataset, T* data)
     dataspace.getSimpleExtentDims(&dim);
     data->resize(dim);
 
-    read_unique_dataset<value_type, 1>(dataset, &*data->begin());
+    read_dataset<value_type, 1>(dataset, &*data->begin());
 }
 
 //
@@ -662,7 +662,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, H5::DataSet>::type
-create_unique_dataset(
+create_dataset(
     H5::CommonFG const& fg
   , std::string const& name
   , typename T::size_type size)
@@ -670,7 +670,7 @@ create_unique_dataset(
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
     hsize_t shape[2] = { size, array_type::static_size };
-    return create_unique_dataset<value_type, 2>(fg, name, shape);
+    return create_dataset<value_type, 2>(fg, name, shape);
 }
 
 template <typename T>
@@ -699,7 +699,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, void>::type
-write_unique_dataset(H5::DataSet const& dataset, T const& data)
+write_dataset(H5::DataSet const& dataset, T const& data)
 {
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
@@ -714,7 +714,7 @@ write_unique_dataset(H5::DataSet const& dataset, T const& data)
     }
 
     // raw data are laid out contiguously
-    write_unique_dataset<value_type, 2>(dataset, &data.front().front());
+    write_dataset<value_type, 2>(dataset, &data.front().front());
 }
 
 /** read chunk of vector container with array data, resize/reshape result array if necessary */
@@ -744,7 +744,7 @@ template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, void>::type
-read_unique_dataset(H5::DataSet const& dataset, T* data)
+read_dataset(H5::DataSet const& dataset, T* data)
 {
     typedef typename T::value_type array_type;
     typedef typename array_type::value_type value_type;
@@ -759,35 +759,31 @@ read_unique_dataset(H5::DataSet const& dataset, T* data)
     data->resize(dim[0]);
 
     // raw data are laid out contiguously
-    read_unique_dataset<value_type, 2>(dataset, &data->front().front());
+    read_dataset<value_type, 2>(dataset, &data->front().front());
 }
 
 /**
- * Helper function to create a unique dataset on the fly and write to it.
- *
- * Note that this function overloads the generic write_unique_dataset(H5::DataSet, T const&).
+ * Helper function to create a dataset on the fly and write to it.
  */
 template <typename T>
-void write_unique_dataset(H5::CommonFG const& fg, std::string const& name, T const& data)
+void write_dataset(H5::CommonFG const& fg, std::string const& name, T const& data)
 {
-    H5::DataSet dataset = create_unique_dataset<T>(fg, name);
-    write_unique_dataset(dataset, data);
+    H5::DataSet dataset = create_dataset<T>(fg, name);
+    write_dataset(dataset, data);
 }
 
 /**
- * Helper function to open a unique dataset on the fly and read from it.
- *
- * Note that this function overloads the generic write_unique_dataset(H5::DataSet, T const&).
+ * Helper function to open a dataset on the fly and read from it.
  */
 template <typename T>
-void read_unique_dataset(H5::CommonFG const& fg, std::string const& name, T* data)
+void read_dataset(H5::CommonFG const& fg, std::string const& name, T* data)
 {
     H5E_BEGIN_TRY {
         // open dataset in file or group
         H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
         hid_t hid = H5Dopen(loc.getId(), name.c_str(), H5P_DEFAULT);
         if (hid > 0) {
-            read_unique_dataset(hid, data);
+            read_dataset(hid, data);
             H5Dclose(hid);
         }
         else {

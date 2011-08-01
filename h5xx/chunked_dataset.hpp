@@ -17,8 +17,8 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef H5XX_DATASET_HPP
-#define H5XX_DATASET_HPP
+#ifndef H5XX_CHUNKED_DATASET_HPP
+#define H5XX_CHUNKED_DATASET_HPP
 
 #include <boost/array.hpp>
 #include <boost/mpl/and.hpp>
@@ -34,44 +34,34 @@
 namespace h5xx {
 
 /**
- * determine whether dataset exists in file or group
- */
-inline bool exists_dataset(H5::CommonFG const& fg, std::string const& name)
-{
-    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
-    hid_t hid;
-    H5E_BEGIN_TRY {
-        hid = H5Dopen(loc.getId(), name.c_str(), H5P_DEFAULT);
-        if (hid > 0) {
-            H5Dclose(hid);
-        }
-    } H5E_END_TRY
-    return (hid > 0);
-}
-
-/**
- * Create dataset 'name' in given group/file. The dataset contains
- * a single entry only and should be written via write_dataset().
+ * create chunked dataset 'name' in given group/file with given size
  *
  * This function creates missing intermediate groups.
  */
 // generic case: some fundamental type and a shape of arbitrary rank
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
-  , hsize_t const* shape)
+  , hsize_t const* shape
+  , hsize_t max_size=H5S_UNLIMITED)
 {
     H5::IdComponent const& loc = dynamic_cast<H5::IdComponent const&>(fg);
 
-    // file dataspace holding a single multi_array of fixed rank
-    H5::DataSpace dataspace(rank, shape);
+    // file dataspace holding max_size multi_array chunks of fixed rank
+    boost::array<hsize_t, rank+1> dim, max_dim, chunk_dim;
+    std::copy(shape, shape + rank, dim.begin() + 1);
+    std::copy(shape, shape + rank, max_dim.begin() + 1);
+    std::copy(shape, shape + rank, chunk_dim.begin() + 1);
+    dim[0] = (max_size == H5S_UNLIMITED) ? 0 : max_size;
+    max_dim[0] = max_size;
+    chunk_dim[0] = 1;
+
+    H5::DataSpace dataspace(dim.size(), &dim.front(), &max_dim.front());
     H5::DSetCreatPropList cparms;
-    if (rank > 0 && sizeof(T) * shape[0] > 64) { // enable GZIP compression for at least 64 bytes
-        cparms.setChunk(rank, shape);
-        cparms.setDeflate(compression_level);
-    }
+    cparms.setChunk(chunk_dim.size(), &chunk_dim.front());
+    cparms.setDeflate(compression_level);    // enable GZIP compression
 
     // remove dataset if it exists
     H5E_BEGIN_TRY {
@@ -90,45 +80,87 @@ create_dataset(
 }
 
 /**
- * write data to dataset
+ * write data to chunked dataset at given index, default argument appends to dataset
  */
 // generic case: some fundamental type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write_dataset(H5::DataSet const& dataset, T const* data)
+write_chunked_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
 {
     H5::DataSpace dataspace(dataset.getSpace());
-    if (!has_rank<rank>(dataspace)) {
+    if (!has_rank<rank+1>(dataspace)) {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
 
+    // select hyperslab of multi_array chunk
+    boost::array<hsize_t, rank+1> dim, count, start, stride, block;
+    dataspace.getSimpleExtentDims(&dim.front());
+    std::fill(count.begin(), count.end(), 1);
+    start[0] = dim[0];
+    std::fill(start.begin() + 1, start.end(), 0);
+    std::fill(stride.begin(), stride.end(), 1);
+    block = dim;
+    block[0] = 1;
+
+    if (index == H5S_UNLIMITED) {
+        // extend dataspace to append another chunk
+        dim[0]++;
+        dataspace.setExtentSimple(dim.size(), &dim.front());
+        try {
+            H5XX_NO_AUTO_PRINT(H5::DataSetIException);
+            dataset.extend(&dim.front());
+        }
+        catch (H5::DataSetIException const&) {
+            throw std::runtime_error("HDF5 writer: fixed-size dataset cannot be extended");
+        }
+    }
+    else {
+        start[0] = index;
+    }
+    dataspace.selectHyperslab(H5S_SELECT_SET, &count.front(), &start.front(), &stride.front(), &block.front());
+
     // memory dataspace
-    hsize_t dim[rank];
-    dataspace.getSimpleExtentDims(dim);
-    H5::DataSpace mem_dataspace(rank, dim);
+    H5::DataSpace mem_dataspace(rank, block.begin() + 1);
 
     dataset.write(data, ctype<T>::hid(), mem_dataspace, dataspace);
 }
 
 /**
- * read data from dataset
+ * read data from chunked dataset at given index
  */
 // generic case: some (fundamental) type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
-read_dataset(H5::DataSet const& dataset, T* data)
+typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
+read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     H5::DataSpace dataspace(dataset.getSpace());
-    if (!has_rank<rank>(dataspace)) {
+    if (!has_rank<rank+1>(dataspace)) {
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
     }
 
+    boost::array<hsize_t, rank+1> dim;
+    dataspace.getSimpleExtentDims(&dim.front());
+
+    ssize_t const len = dim[0];
+    if ((index >= len) || ((-index) > len)) {
+        throw std::runtime_error("HDF5 reader: index out of bounds");
+    }
+    index = (index < 0) ? (index + len) : index;
+
+    boost::array<hsize_t, rank+1> count, start, stride, block;
+    std::fill(count.begin(), count.end(), 1);
+    start[0] = index;
+    std::fill(start.begin() + 1, start.end(), 0);
+    std::fill(stride.begin(), stride.end(), 1);
+    block = dim;
+    block[0] = 1;
+
+    dataspace.selectHyperslab(H5S_SELECT_SET, &count.front(), &start.front(), &stride.front(), &block.front());
+
     // memory dataspace
-    hsize_t dim[rank];
-    dataspace.getSimpleExtentDims(dim);
-    H5::DataSpace mem_dataspace(rank, dim);
+    H5::DataSpace mem_dataspace(rank, dim.begin() + 1);
 
     try {
         H5XX_NO_AUTO_PRINT(H5::Exception);
@@ -137,241 +169,186 @@ read_dataset(H5::DataSet const& dataset, T* data)
     catch (H5::Exception const&) {
         throw std::runtime_error("HDF5 reader: failed to read multidimensional array data");
     }
+
+    return index;
 }
 
 //
-// scalar/fundamental types
+// chunks of scalars
 //
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
-  , std::string const& name)
+  , std::string const& name
+  , hsize_t max_size=H5S_UNLIMITED)
 {
-    return create_dataset<T, 0>(fg, name, NULL);
+    return create_chunked_dataset<T, 0>(fg, name, NULL, max_size);
 }
 
 template <typename T>
 typename boost::enable_if<boost::is_fundamental<T>, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
-    write_dataset<T, 0>(dataset, &data);
+    write_chunked_dataset<T, 0>(dataset, &data, index);
 }
 
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
-read_dataset(H5::DataSet const& dataset, T& data)
+typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
+read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
-    return read_dataset<T, 0>(dataset, &data);
+    return read_chunked_dataset<T, 0>(dataset, &data, index);
 }
 
 //
-// fixed-size arrays
+// chunks of fixed-size arrays
 //
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
-  , std::string const& name)
+  , std::string const& name
+  , hsize_t max_size=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
     hsize_t shape[1] = { T::static_size };
-    return create_dataset<value_type, rank>(fg, name, shape);
+    return create_chunked_dataset<value_type, rank>(fg, name, shape, max_size);
 }
 
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    if (!has_extent<T>(dataset))
+    if (!has_extent<T, 1>(dataset))
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, &data.front());
+    write_chunked_dataset<value_type, rank>(dataset, &data.front(), index);
 }
 
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
-    >, void>::type
-read_dataset(H5::DataSet const& dataset, T& data)
+    >, hsize_t>::type
+read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    read_dataset<value_type, rank>(dataset, &data.front());
+    return read_chunked_dataset<value_type, rank>(dataset, &data.front(), index);
 }
 
 //
-// multi-arrays of fixed rank
+// chunks of multi-arrays of fixed rank
 //
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
-  , typename T::size_type const* shape)
+  , typename T::size_type const* shape
+  , hsize_t max_size=H5S_UNLIMITED)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return create_dataset<value_type, rank>(fg, name, &shape_.front());
+    return create_chunked_dataset<value_type, rank>(fg, name, &shape_.front(), max_size);
 }
 
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
-    if (!has_extent<T>(dataset, data.shape()))
+    if (!has_extent<T, 1>(dataset, data.shape()))
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    write_dataset<value_type, rank>(dataset, data.origin());
+    write_chunked_dataset<value_type, rank>(dataset, data.origin(), index);
 }
 
-/** read multi_array data, resize/reshape result array if necessary */
+/** read chunk of multi_array data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, void>::type
-read_dataset(H5::DataSet const& dataset, T& data)
+typename boost::enable_if<is_multi_array<T>, hsize_t>::type
+read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
 
     // determine extent of data space
     H5::DataSpace dataspace(dataset.getSpace());
-    if (!has_rank<rank>(dataspace)) {
+    if (!has_rank<rank+1>(dataspace)) {
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
     }
-    boost::array<hsize_t, rank> dim;
+    boost::array<hsize_t, rank+1> dim;
     dataspace.getSimpleExtentDims(&dim.front());
 
     // resize result array if necessary, may allocate new memory
-    if (!std::equal(dim.begin(), dim.end(), data.shape())) {
-        data.resize(dim);
+    if (!std::equal(dim.begin() + 1, dim.end(), data.shape())) {
+        boost::array<size_t, rank> shape;
+        std::copy(dim.begin() + 1, dim.end(), shape.begin());
+        data.resize(shape);
     }
 
-    return read_dataset<value_type, rank>(dataset, data.origin());
+    return read_chunked_dataset<value_type, rank>(dataset, data.origin(), index);
 }
 
 //
-// vector containers holding scalars
+// chunks of vector containers holding scalars
 //
 // pass length of vector as third parameter
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
-create_dataset(
+create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
-  , typename T::size_type size)
+  , typename T::size_type size
+  , hsize_t max_size=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
     hsize_t shape[1] = { size };
-    return create_dataset<value_type, 1>(fg, name, shape);
+    return create_chunked_dataset<value_type, 1>(fg, name, shape, max_size);
 }
 
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data)
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::value_type value_type;
-
-    // assert data.size() corresponds to dataspace extents
-    if (has_rank<1>(dataset)) {
-        hsize_t dim;
-        dataset.getSpace().getSimpleExtentDims(&dim);
-        if (data.size() != dim) {
-            throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
-        }
-    }
-
-    write_dataset<value_type, 1>(dataset, &*data.begin());
-}
-
-/** read vector container with scalar data, resize/reshape result array if necessary */
-template <typename T>
-typename boost::enable_if<boost::mpl::and_<
-        is_vector<T>, boost::is_fundamental<typename T::value_type>
-    >, void>::type
-read_dataset(H5::DataSet const& dataset, T& data)
-{
-    typedef typename T::value_type value_type;
-
-    // determine extent of data space and resize result vector (if necessary)
-    H5::DataSpace dataspace(dataset.getSpace());
-    if (!has_rank<1>(dataspace)) {
-        throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
-    }
-    hsize_t dim;
-    dataspace.getSimpleExtentDims(&dim);
-    data.resize(dim);
-
-    read_dataset<value_type, 1>(dataset, &*data.begin());
-}
-
-//
-// vector containers holding fixed-size arrays
-//
-// pass length of vector as third parameter
-template <typename T>
-typename boost::enable_if<boost::mpl::and_<
-        is_vector<T>, is_array<typename T::value_type>
-    >, H5::DataSet>::type
-create_dataset(
-    H5::CommonFG const& fg
-  , std::string const& name
-  , typename T::size_type size)
-{
-    typedef typename T::value_type array_type;
-    typedef typename array_type::value_type value_type;
-    hsize_t shape[2] = { size, array_type::static_size };
-    return create_dataset<value_type, 2>(fg, name, shape);
-}
-
-template <typename T>
-typename boost::enable_if<boost::mpl::and_<
-        is_vector<T>, is_array<typename T::value_type>
-    >, void>::type
-write_dataset(H5::DataSet const& dataset, T const& data)
-{
-    typedef typename T::value_type array_type;
-    typedef typename array_type::value_type value_type;
 
     // assert data.size() corresponds to dataspace extents
     if (has_rank<2>(dataset)) {
         hsize_t dim[2];
         dataset.getSpace().getSimpleExtentDims(dim);
-        if (data.size() != dim[0]) {
+        if (data.size() != dim[1]) {
             throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
         }
     }
 
-    // raw data are laid out contiguously
-    write_dataset<value_type, 2>(dataset, &data.front().front());
+    write_chunked_dataset<value_type, 1>(dataset, &*data.begin(), index);
 }
 
-/** read vector container with array data, resize/reshape result array if necessary */
+/** read chunk of vector container with scalar data, resize/reshape result array if necessary */
 template <typename T>
 typename boost::enable_if<boost::mpl::and_<
-        is_vector<T>, is_array<typename T::value_type>
-    >, void>::type
-read_dataset(H5::DataSet const& dataset, T& data)
+        is_vector<T>, boost::is_fundamental<typename T::value_type>
+    >, hsize_t>::type
+read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
-    typedef typename T::value_type array_type;
-    typedef typename array_type::value_type value_type;
+    typedef typename T::value_type value_type;
 
     // determine extent of data space and resize result vector (if necessary)
     H5::DataSpace dataspace(dataset.getSpace());
@@ -380,42 +357,76 @@ read_dataset(H5::DataSet const& dataset, T& data)
     }
     hsize_t dim[2];
     dataspace.getSimpleExtentDims(dim);
-    data.resize(dim[0]);
+    data.resize(dim[1]);
+
+    return read_chunked_dataset<value_type, 1>(dataset, &*data.begin(), index);
+}
+
+//
+// chunks of vector containers holding fixed-size arrays
+//
+// pass length of vector as third parameter
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, is_array<typename T::value_type>
+    >, H5::DataSet>::type
+create_chunked_dataset(
+    H5::CommonFG const& fg
+  , std::string const& name
+  , typename T::size_type size
+  , hsize_t max_size=H5S_UNLIMITED)
+{
+    typedef typename T::value_type array_type;
+    typedef typename array_type::value_type value_type;
+    hsize_t shape[2] = { size, array_type::static_size };
+    return create_chunked_dataset<value_type, 2>(fg, name, shape, max_size);
+}
+
+template <typename T>
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, is_array<typename T::value_type>
+    >, void>::type
+write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
+{
+    typedef typename T::value_type array_type;
+    typedef typename array_type::value_type value_type;
+
+    // assert data.size() corresponds to dataspace extents
+    if (has_rank<3>(dataset)) {
+        hsize_t dim[3];
+        dataset.getSpace().getSimpleExtentDims(dim);
+        if (data.size() != dim[1]) {
+            throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
+        }
+    }
 
     // raw data are laid out contiguously
-    read_dataset<value_type, 2>(dataset, &data.front().front());
+    write_chunked_dataset<value_type, 2>(dataset, &data.front().front(), index);
 }
 
-/**
- * Helper function to create a dataset on the fly and write to it.
- */
+/** read chunk of vector container with array data, resize/reshape result array if necessary */
 template <typename T>
-void write_dataset(H5::CommonFG const& fg, std::string const& name, T const& data)
+typename boost::enable_if<boost::mpl::and_<
+        is_vector<T>, is_array<typename T::value_type>
+    >, hsize_t>::type
+read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
-    H5::DataSet dataset = create_dataset<T>(fg, name);
-    write_dataset(dataset, data);
-}
+    typedef typename T::value_type array_type;
+    typedef typename array_type::value_type value_type;
 
-/**
- * Helper function to open a dataset on the fly and read from it.
- */
-template <typename T>
-void read_dataset(H5::CommonFG const& fg, std::string const& name, T& data)
-{
-    H5E_BEGIN_TRY {
-        // open dataset in file or group
-        H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
-        hid_t hid = H5Dopen(loc.getId(), name.c_str(), H5P_DEFAULT);
-        if (hid > 0) {
-            read_dataset(hid, data);
-            H5Dclose(hid);
-        }
-        else {
-            throw error("attempt to read non-existent dataset \"" + name + "\"");
-        }
-    } H5E_END_TRY
+    // determine extent of data space and resize result vector (if necessary)
+    H5::DataSpace dataspace(dataset.getSpace());
+    if (!has_rank<3>(dataspace)) {
+        throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
+    }
+    hsize_t dim[3];
+    dataspace.getSimpleExtentDims(dim);
+    data.resize(dim[1]);
+
+    // raw data are laid out contiguously
+    return read_chunked_dataset<value_type, 2>(dataset, &data.front().front(), index);
 }
 
 } // namespace h5xx
 
-#endif /* ! H5XX_DATASET_HPP */
+#endif /* ! H5XX_CHUNKED_DATASET_HPP */

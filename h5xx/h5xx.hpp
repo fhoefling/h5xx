@@ -21,9 +21,14 @@
 #ifndef H5XX_HPP
 #define H5XX_HPP
 
+namespace h5xx {
+    enum { compression_level = 6 };
+}
+
 #include <h5xx/attribute.hpp>
 #include <h5xx/ctype.hpp>
 #include <h5xx/dataset.hpp>
+#include <h5xx/chunked_dataset.hpp>
 #include <h5xx/exception.hpp>
 #include <h5xx/group.hpp>
 #include <h5xx/utility.hpp>

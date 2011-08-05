@@ -24,7 +24,7 @@ if(NOT DEFINED Boost_USE_MULTITHREADED)
   set(Boost_USE_MULTITHREADED FALSE)
 endif(NOT DEFINED Boost_USE_MULTITHREADED)
 
-find_package(Boost 1.47.0 QUIET REQUIRED COMPONENTS unit_test_framework)
+find_package(Boost 1.40.0 QUIET REQUIRED COMPONENTS unit_test_framework)
 find_package(HDF5 QUIET REQUIRED)
 
 include_directories("${HDF5_INCLUDE_DIR}")

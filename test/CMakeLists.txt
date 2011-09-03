@@ -28,15 +28,15 @@ target_link_libraries(test_h5xx
   ${HDF5_CPP_LIBRARY}
   ${HDF5_LIBRARY}
 )
-add_test(h5xx_attribute
+add_test(h5xx/attribute
   test_h5xx --run_test=h5xx_attribute --log_level=test_suite
 )
-add_test(h5xx_dataset
+add_test(h5xx/dataset
   test_h5xx --run_test=h5xx_dataset --log_level=test_suite
 )
-add_test(h5xx_chunked_dataset
+add_test(h5xx/chunked_dataset
   test_h5xx --run_test=h5xx_chunked_dataset --log_level=test_suite
 )
-add_test(h5xx_group
+add_test(h5xx/group
   test_h5xx --run_test=h5xx_group --log_level=test_suite
 )

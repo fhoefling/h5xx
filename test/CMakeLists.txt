@@ -20,23 +20,21 @@ if(suffix STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
   )
 endif(suffix STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
-add_executable(test_h5xx
-  h5xx.cpp
+foreach(module
+  attribute
+  dataset
+  chunked_dataset
+  group
 )
-target_link_libraries(test_h5xx
-  ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-  ${HDF5_CPP_LIBRARY}
-  ${HDF5_LIBRARY}
-)
-add_test(h5xx/attribute
-  test_h5xx --run_test=h5xx_attribute --log_level=test_suite
-)
-add_test(h5xx/dataset
-  test_h5xx --run_test=h5xx_dataset --log_level=test_suite
-)
-add_test(h5xx/chunked_dataset
-  test_h5xx --run_test=h5xx_chunked_dataset --log_level=test_suite
-)
-add_test(h5xx/group
-  test_h5xx --run_test=h5xx_group --log_level=test_suite
-)
+  add_executable(test_h5xx_${module}
+    ${module}.cpp
+  )
+  target_link_libraries(test_h5xx_${module}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${HDF5_CPP_LIBRARY}
+    ${HDF5_LIBRARY}
+  )
+  add_test(h5xx/${module}
+    test_h5xx_${module} --log_level=test_suite
+  )
+endforeach()

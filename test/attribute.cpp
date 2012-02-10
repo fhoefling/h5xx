@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010  Felix Höfling
+ * Copyright © 2010-2012  Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -30,6 +30,9 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     H5::H5File file(filename, H5F_ACC_TRUNC);
     H5::Group group = h5xx::open_group(file, "/");
 
+    bool bool_value = true;
+    h5xx::write_attribute(group, "bool, scalar", bool_value);
+
     uint64_t uint_value = 9223372036854775783LLU;  // largest prime below 2^63
     h5xx::write_attribute(group, "integral, scalar", 1);   // store something of wrong type first
     h5xx::write_attribute(group, "integral, scalar", uint_value);  // overwrite value
@@ -49,6 +52,10 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     h5xx::write_attribute(group, "char [], scalar", cstring_array[1]);
     h5xx::write_attribute(group, "string, scalar", std::string(cstring_array[1]));
     h5xx::write_attribute(group, "char [], array", cstring_array);
+
+    typedef boost::array<bool, 2> bool_array_type;
+    bool_array_type bool_array = {{ true, false }};
+    h5xx::write_attribute(group, "bool, array", bool_array);
 
     typedef boost::array<double, 5> double_array_type;
     double_array_type value_array;
@@ -85,17 +92,20 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     group = h5xx::open_group(file, "/");
 
     // check h5xx::has_type<>
+    BOOST_CHECK(h5xx::has_type<bool>(group.openAttribute("bool, scalar")));
     BOOST_CHECK(h5xx::has_type<uint64_t>(group.openAttribute("integral, scalar")));
     BOOST_CHECK(h5xx::has_type<long double>(group.openAttribute("long double, scalar")));
     BOOST_CHECK(h5xx::has_type<double>(group.openAttribute("double, scalar")));
     BOOST_CHECK(h5xx::has_type<char const*>(group.openAttribute("char [], scalar")));
     BOOST_CHECK(h5xx::has_type<std::string>(group.openAttribute("string, scalar")));
     BOOST_CHECK(h5xx::has_type<string_array_type>(group.openAttribute("char [], array")));
+    BOOST_CHECK(h5xx::has_type<bool_array_type>(group.openAttribute("bool, array")));
     BOOST_CHECK(h5xx::has_type<double_array_type>(group.openAttribute("double, array")));
     BOOST_CHECK(h5xx::has_type<double_vector_type>(group.openAttribute("double, std::vector")));
     BOOST_CHECK(h5xx::has_type<multi_array3>(group.openAttribute("int, multi_array")));
 
     // check h5xx::has_scalar_space()
+    BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("bool, scalar")));
     BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("integral, scalar")));
     BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("long double, scalar")));
     BOOST_CHECK(h5xx::has_scalar_space(group.openAttribute("double, scalar")));
@@ -104,11 +114,13 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
 
     // check h5xx::has_extent<>
     BOOST_CHECK(h5xx::has_extent<string_array_type>(group.openAttribute("char [], array")));
+    BOOST_CHECK(h5xx::has_extent<bool_array_type>(group.openAttribute("bool, array")));
     BOOST_CHECK(h5xx::has_extent<double_array_type>(group.openAttribute("double, array")));
     BOOST_CHECK(h5xx::has_extent<multi_array3>(group.openAttribute("int, multi_array"),
                 multi_array_value.shape()));
 
     // read attributes
+    BOOST_CHECK(h5xx::read_attribute<bool>(group, "bool, scalar") == bool_value);
     BOOST_CHECK(h5xx::read_attribute<uint64_t>(group, "integral, scalar") == uint_value);
     BOOST_CHECK(h5xx::read_attribute<long double>(group, "long double, scalar") == ldouble_value);
     BOOST_CHECK(h5xx::read_attribute<double>(group, "double, scalar")
@@ -117,6 +129,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     BOOST_CHECK(h5xx::read_attribute<std::string>(group, "string, scalar") == cstring_array[1]);
     // read support for fixed-size string array is missing
 //     BOOST_CHECK(h5xx::read_attribute<const char*>(group, "char [], array") == cstring_array);
+    BOOST_CHECK(h5xx::read_attribute<bool_array_type>(group, "bool, array") == bool_array);
     BOOST_CHECK(h5xx::read_attribute<double_array_type>(group, "double, array") == value_array);
     value_vector = h5xx::read_attribute<double_vector_type>(group, "double, array");
     BOOST_CHECK(equal(value_vector.begin(), value_vector.end(), value_array.begin()));

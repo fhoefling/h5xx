@@ -55,7 +55,7 @@ H5XX_MAKE_CTYPE( unsigned long long,    H5T_NATIVE_ULLONG );
 H5XX_MAKE_CTYPE( float,                 H5T_NATIVE_FLOAT );
 H5XX_MAKE_CTYPE( double,                H5T_NATIVE_DOUBLE );
 H5XX_MAKE_CTYPE( long double,           H5T_NATIVE_LDOUBLE );
-H5XX_MAKE_CTYPE( bool,                  H5T_NATIVE_HBOOL );
+H5XX_MAKE_CTYPE( bool,                  H5T_NATIVE_CHAR ); // ignore unsupported type HBOOL
 
 #undef H5XX_MAKE_CTYPE
 

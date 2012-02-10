@@ -20,15 +20,17 @@
 #define BOOST_TEST_MODULE h5xx_attribute
 #include <boost/test/unit_test.hpp>
 
+#include <boost/shared_ptr.hpp>
 #include <cmath>
 #include <h5xx/h5xx.hpp>
 #include <unistd.h>
 
 BOOST_AUTO_TEST_CASE( h5xx_attribute )
 {
-    char const filename[] = "test_h5xx.hdf5";
-    H5::H5File file(filename, H5F_ACC_TRUNC);
-    H5::Group group = h5xx::open_group(file, "/");
+    // store H5File object in shared_ptr to destroy it before re-opening the file
+    char const filename[] = "test_h5xx_attribute.hdf5";
+    boost::shared_ptr<H5::H5File> file(new H5::H5File(filename, H5F_ACC_TRUNC));
+    H5::Group group = h5xx::open_group(*file, "/");
 
     bool bool_value = true;
     h5xx::write_attribute(group, "bool, scalar", bool_value);
@@ -87,9 +89,8 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     h5xx::write_attribute(group, "int, multi_array", multi_array_value);
 
     // re-open file
-    file.close();
-    file.openFile(filename, H5F_ACC_RDONLY);
-    group = h5xx::open_group(file, "/");
+    file.reset(new H5::H5File(filename, H5F_ACC_RDONLY));
+    group = h5xx::open_group(*file, "/");
 
     // check h5xx::has_type<>
     BOOST_CHECK(h5xx::has_type<bool>(group.openAttribute("bool, scalar")));
@@ -141,6 +142,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
 
     // remove file
 #ifdef NDEBUG
+    file.reset();
     unlink(filename);
 #endif
 }

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010  Felix Höfling
+ * Copyright © 2010-2012  Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -26,7 +26,7 @@
 
 BOOST_AUTO_TEST_CASE( h5xx_group )
 {
-    char const filename[] = "test_h5xx.hdf5";
+    char const filename[] = "test_h5xx_group.hdf5";
     H5::H5File file(filename, H5F_ACC_TRUNC);
 
     BOOST_CHECK_NO_THROW(h5xx::open_group(file, "/"));
@@ -87,8 +87,11 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
 #ifdef NDEBUG
     unlink(filename);
 #endif
+}
 
-    // test h5xx::split_path separately
+// test h5xx::split_path separately
+BOOST_AUTO_TEST_CASE( h5xx_split_path )
+{
     std::vector<std::string> names(3);
     names[0] = "one";
     names[1] = "two";

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010  Felix Höfling
+ * Copyright © 2010-2012  Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -20,6 +20,7 @@
 #define BOOST_TEST_MODULE h5xx_chunked_dataset
 #include <boost/test/unit_test.hpp>
 
+#include <boost/shared_ptr.hpp>
 #include <cmath>
 #include <h5xx/h5xx.hpp>
 #include <unistd.h>
@@ -40,9 +41,10 @@ inline bool has_extent_one_extra(H5::DataSet const& dataset, size_t const* shape
 
 BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
 {
-    char const filename[] = "test_h5xx.hdf5";
-    H5::H5File file(filename, H5F_ACC_TRUNC);
-    H5::Group group = h5xx::open_group(file, "/");
+    // store H5File object in shared_ptr to destroy it before re-opening the file
+    char const filename[] = "test_h5xx_chunked_dataset.hdf5";
+    boost::shared_ptr<H5::H5File> file(new H5::H5File(filename, H5F_ACC_TRUNC));
+    H5::Group group = h5xx::open_group(*file, "/");
 
     //
     // create and write datasets
@@ -104,10 +106,8 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
     BOOST_CHECK_THROW(h5xx::write_chunked_dataset(int_vector_dataset, array_vector_value), std::runtime_error);
 
     // re-open file
-    file.flush(H5F_SCOPE_GLOBAL);
-    file.close();
-    file.openFile(filename, H5F_ACC_RDONLY);
-    group = h5xx::open_group(file, "/");
+    file.reset(new H5::H5File(filename, H5F_ACC_RDONLY));
+    group = h5xx::open_group(*file, "/");
 
     //
     // read datasets
@@ -212,6 +212,7 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
 
     // remove file
 #ifdef NDEBUG
+    file.reset();
     unlink(filename);
 #endif
 }

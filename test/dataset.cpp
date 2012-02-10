@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010  Felix Höfling
+ * Copyright © 2010-2012  Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -20,15 +20,17 @@
 #define BOOST_TEST_MODULE h5xx_dataset
 #include <boost/test/unit_test.hpp>
 
+#include <boost/shared_ptr.hpp>
 #include <cmath>
 #include <h5xx/h5xx.hpp>
 #include <unistd.h>
 
 BOOST_AUTO_TEST_CASE( h5xx_dataset )
 {
-    char const filename[] = "test_h5xx.hdf5";
-    H5::H5File file(filename, H5F_ACC_TRUNC);
-    H5::Group group = h5xx::open_group(file, "/");
+    // store H5File object in shared_ptr to destroy it before re-opening the file
+    char const filename[] = "test_h5xx_dataset.hdf5";
+    boost::shared_ptr<H5::H5File> file(new H5::H5File(filename, H5F_ACC_TRUNC));
+    H5::Group group = h5xx::open_group(*file, "/");
 
     //
     // create and write datasets
@@ -87,10 +89,8 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     BOOST_CHECK_THROW(h5xx::write_dataset(int_vector_dataset, array_vector_value), std::runtime_error);
 
     // re-open file
-    file.flush(H5F_SCOPE_GLOBAL);
-    file.close();
-    file.openFile(filename, H5F_ACC_RDONLY);
-    group = h5xx::open_group(file, "/");
+    file.reset(new H5::H5File(filename, H5F_ACC_RDONLY));
+    group = h5xx::open_group(*file, "/");
 
     //
     // read datasets
@@ -104,7 +104,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     uint64_t uint_value_;
     h5xx::read_dataset(uint_dataset, uint_value_);
     BOOST_CHECK(uint_value_ == uint_value);
-    h5xx::read_dataset(file, "uint", uint_value_);
+    h5xx::read_dataset(*file, "uint", uint_value_);
     BOOST_CHECK(uint_value_ == uint_value);
 
     // array type dataset
@@ -184,6 +184,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 
     // remove file
 #ifdef NDEBUG
+    file.reset();
     unlink(filename);
 #endif
 }

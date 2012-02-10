@@ -211,7 +211,7 @@ BOOST_AUTO_TEST_CASE( h5xx_chunked_dataset )
     }
 
     // remove file
-#ifndef NDEBUG
+#ifdef NDEBUG
     unlink(filename);
 #endif
 }

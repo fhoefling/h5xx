@@ -140,7 +140,7 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     BOOST_CHECK(equal(int_vector.begin(), int_vector.end(), multi_array_value.origin()));
 
     // remove file
-#ifndef NDEBUG
+#ifdef NDEBUG
     unlink(filename);
 #endif
 }

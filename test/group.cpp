@@ -84,7 +84,7 @@ BOOST_AUTO_TEST_CASE( h5xx_group )
     file.close();
 
     // remove file
-#ifndef NDEBUG
+#ifdef NDEBUG
     unlink(filename);
 #endif
 

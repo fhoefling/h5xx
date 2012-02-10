@@ -183,7 +183,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     }
 
     // remove file
-#ifndef NDEBUG
-//     unlink(filename);
+#ifdef NDEBUG
+    unlink(filename);
 #endif
 }

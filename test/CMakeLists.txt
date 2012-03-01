@@ -34,6 +34,7 @@ foreach(module
     ${HDF5_CPP_LIBRARY}
     ${HDF5_LIBRARY}
     pthread
+    z
   )
   add_test(h5xx/${module}
     test_h5xx_${module} --log_level=test_suite

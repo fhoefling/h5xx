@@ -1,15 +1,8 @@
 cmake_minimum_required(VERSION 2.8)
 
-project(H5XX CXX)
+set(CMAKE_USER_MAKE_RULES_OVERRIDE "cmake/platform.cmake")
 
-if(CMAKE_BUILD_TYPE STREQUAL "${CMAKE_BUILD_TYPE_INIT}")
-  set(CMAKE_BUILD_TYPE "Release" CACHE STRING
-    "Choose the type of build, options are: Debug Release RelWithDebInfo MinSizeRel." FORCE)
-endif()
-if(CMAKE_CXX_FLAGS STREQUAL "${CMAKE_CXX_FLAGS_INIT}")
-  set(CMAKE_CXX_FLAGS "-fPIC -Wall" CACHE STRING
-    "Flags used by the compiler during all build types." FORCE)
-endif()
+project(H5XX CXX)
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 

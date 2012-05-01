@@ -88,13 +88,7 @@ write_dataset(H5::DataSet const& dataset, T const* data)
     if (!has_rank<rank>(dataspace)) {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-
-    // memory dataspace
-    hsize_t dim[rank];
-    dataspace.getSimpleExtentDims(dim);
-    H5::DataSpace mem_dataspace(rank, dim);
-
-    dataset.write(data, ctype<T>::hid(), mem_dataspace, dataspace);
+    dataset.write(data, ctype<T>::hid(), dataspace, dataspace);
 }
 
 /**
@@ -110,15 +104,9 @@ read_dataset(H5::DataSet const& dataset, T* data)
     if (!has_rank<rank>(dataspace)) {
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
     }
-
-    // memory dataspace
-    hsize_t dim[rank];
-    dataspace.getSimpleExtentDims(dim);
-    H5::DataSpace mem_dataspace(rank, dim);
-
     try {
         H5XX_NO_AUTO_PRINT(H5::Exception);
-        dataset.read(data, ctype<T>::hid(), mem_dataspace, dataspace);
+        dataset.read(data, ctype<T>::hid(), dataspace, dataspace);
     }
     catch (H5::Exception const&) {
         throw std::runtime_error("HDF5 reader: failed to read multidimensional array data");

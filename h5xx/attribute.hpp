@@ -40,7 +40,7 @@ namespace h5xx {
  * create and write fundamental type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     H5::Attribute attr;
@@ -63,7 +63,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read fundamental type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, T>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     H5::Attribute attr;
@@ -86,7 +86,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
  * create and write string attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_same<T, std::string>, void>::type
+inline typename boost::enable_if<boost::is_same<T, std::string>, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     H5::StrType tid(H5::PredType::C_S1, value.size());
@@ -104,7 +104,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read string attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_same<T, std::string>, T>::type
+inline typename boost::enable_if<boost::is_same<T, std::string>, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     H5::Attribute attr;
@@ -129,7 +129,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
  * create and write C string attribute
  */
 template <typename T>
-typename boost::enable_if<boost::is_same<T, char const*>, void>::type
+inline typename boost::enable_if<boost::is_same<T, char const*>, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T value)
 {
     H5::StrType tid(H5::PredType::C_S1, strlen(value));
@@ -147,7 +147,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T value)
  * create and write fixed-size array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+inline typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
@@ -175,7 +175,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * create and write fixed-size C string array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_same<typename T::value_type, char const*> >, void>::type
+inline typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_same<typename T::value_type, char const*> >, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
@@ -206,7 +206,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read fixed-size array type attribute
  */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, T>::type
+inline typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::value_type value_type;
@@ -234,7 +234,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
  * create and write multi-dimensional array type attribute
  */
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, void>::type
+inline typename boost::enable_if<is_multi_array<T>, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::element value_type;
@@ -263,7 +263,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read multi-dimensional array type attribute
  */
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, T>::type
+inline typename boost::enable_if<is_multi_array<T>, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::element value_type;
@@ -296,7 +296,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
  * create and write vector type attribute
  */
 template <typename T>
-typename boost::enable_if<is_vector<T>, void>::type
+inline typename boost::enable_if<is_vector<T>, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
@@ -325,7 +325,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read data of possibly higher rank into 1D std::vector
  */
 template <typename T>
-typename boost::enable_if<is_vector<T>, T>::type
+inline typename boost::enable_if<is_vector<T>, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::value_type value_type;
@@ -365,7 +365,7 @@ inline bool exists_attribute(H5::H5Object const& object, std::string const& name
  * returns attribute value as boost::any if exists, or empty boost::any otherwise
  */
 template <typename T>
-boost::any read_attribute_if_exists(H5::H5Object const& object, std::string const& name)
+inline boost::any read_attribute_if_exists(H5::H5Object const& object, std::string const& name)
 {
     if (exists_attribute(object, name)) {
         return read_attribute<T>(object, name);

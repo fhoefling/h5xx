@@ -43,7 +43,7 @@ namespace detail {
  */
 // generic case: some fundamental type and a shape of arbitrary rank
 template <typename T, int rank>
-typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_dataset(
     H5::CommonFG const& fg
   , std::string const& name
@@ -81,7 +81,7 @@ create_dataset(
 // generic case: some fundamental type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_dataset(H5::DataSet const& dataset, T const* data)
 {
     H5::DataSpace dataspace(dataset.getSpace());
@@ -97,7 +97,7 @@ write_dataset(H5::DataSet const& dataset, T const* data)
 // generic case: some (fundamental) type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 read_dataset(H5::DataSet const& dataset, T* data)
 {
     H5::DataSpace dataspace(dataset.getSpace());
@@ -119,7 +119,7 @@ read_dataset(H5::DataSet const& dataset, T* data)
 // scalar/fundamental types
 //
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_dataset(
     H5::CommonFG const& fg
   , std::string const& name)
@@ -128,14 +128,14 @@ create_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data)
 {
     detail::write_dataset<T, 0>(dataset, &data);
 }
 
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 read_dataset(H5::DataSet const& dataset, T& data)
 {
     return detail::read_dataset<T, 0>(dataset, &data);
@@ -145,7 +145,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
 // fixed-size arrays
 //
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
@@ -159,7 +159,7 @@ create_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data)
@@ -174,7 +174,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
 read_dataset(H5::DataSet const& dataset, T& data)
@@ -188,7 +188,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
 // multi-arrays of fixed rank
 //
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
+inline typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
 create_dataset(
     H5::CommonFG const& fg
   , std::string const& name
@@ -203,7 +203,7 @@ create_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, void>::type
+inline typename boost::enable_if<is_multi_array<T>, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data)
 {
     typedef typename T::element value_type;
@@ -217,7 +217,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
 
 /** read multi_array data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, void>::type
+inline typename boost::enable_if<is_multi_array<T>, void>::type
 read_dataset(H5::DataSet const& dataset, T& data)
 {
     typedef typename T::element value_type;
@@ -244,7 +244,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
 //
 // pass length of vector as third parameter
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
@@ -258,7 +258,7 @@ create_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data)
@@ -279,7 +279,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
 
 /** read vector container with scalar data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
 read_dataset(H5::DataSet const& dataset, T& data)
@@ -303,7 +303,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
 //
 // pass length of vector as third parameter
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, H5::DataSet>::type
 create_dataset(
@@ -318,7 +318,7 @@ create_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, void>::type
 write_dataset(H5::DataSet const& dataset, T const& data)
@@ -341,7 +341,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
 
 /** read vector container with array data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, void>::type
 read_dataset(H5::DataSet const& dataset, T& data)
@@ -366,7 +366,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
  * Helper function to create a dataset on the fly and write to it.
  */
 template <typename T>
-void write_dataset(H5::CommonFG const& fg, std::string const& name, T const& data)
+inline void write_dataset(H5::CommonFG const& fg, std::string const& name, T const& data)
 {
     H5::DataSet dataset = create_dataset<T>(fg, name);
     write_dataset(dataset, data);
@@ -376,7 +376,7 @@ void write_dataset(H5::CommonFG const& fg, std::string const& name, T const& dat
  * Helper function to open a dataset on the fly and read from it.
  */
 template <typename T>
-void read_dataset(H5::CommonFG const& fg, std::string const& name, T& data)
+inline void read_dataset(H5::CommonFG const& fg, std::string const& name, T& data)
 {
     H5E_BEGIN_TRY {
         // open dataset in file or group

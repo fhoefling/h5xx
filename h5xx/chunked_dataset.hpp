@@ -42,7 +42,7 @@ namespace detail {
  */
 // generic case: some fundamental type and a shape of arbitrary rank
 template <typename T, int rank>
-typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
@@ -87,7 +87,7 @@ create_chunked_dataset(
 // generic case: some fundamental type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_chunked_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H5S_UNLIMITED)
 {
     H5::DataSpace dataspace(dataset.getSpace());
@@ -134,7 +134,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H
 // generic case: some (fundamental) type and a pointer to the contiguous array of data
 // size and shape are taken from the dataset
 template <typename T, int rank>
-typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
 read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 {
     H5::DataSpace dataspace(dataset.getSpace());
@@ -181,7 +181,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 // chunks of scalars
 //
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, H5::DataSet>::type
 create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
@@ -191,14 +191,14 @@ create_chunked_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     detail::write_chunked_dataset<T, 0>(dataset, &data, index);
 }
 
 template <typename T>
-typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, hsize_t>::type
 read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
     return detail::read_chunked_dataset<T, 0>(dataset, &data, index);
@@ -208,7 +208,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 // chunks of fixed-size arrays
 //
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
 create_chunked_dataset(
@@ -223,7 +223,7 @@ create_chunked_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
 write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
@@ -238,7 +238,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_array<T>, boost::is_fundamental<typename T::value_type>
     >, hsize_t>::type
 read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
@@ -252,7 +252,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 // chunks of multi-arrays of fixed rank
 //
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
+inline typename boost::enable_if<is_multi_array<T>, H5::DataSet>::type
 create_chunked_dataset(
     H5::CommonFG const& fg
   , std::string const& name
@@ -268,7 +268,7 @@ create_chunked_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, void>::type
+inline typename boost::enable_if<is_multi_array<T>, void>::type
 write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
 {
     typedef typename T::element value_type;
@@ -282,7 +282,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
 
 /** read chunk of multi_array data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<is_multi_array<T>, hsize_t>::type
+inline typename boost::enable_if<is_multi_array<T>, hsize_t>::type
 read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 {
     typedef typename T::element value_type;
@@ -311,7 +311,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 //
 // pass length of vector as third parameter
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, H5::DataSet>::type
 create_chunked_dataset(
@@ -326,7 +326,7 @@ create_chunked_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, void>::type
 write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
@@ -347,7 +347,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
 
 /** read chunk of vector container with scalar data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, boost::is_fundamental<typename T::value_type>
     >, hsize_t>::type
 read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
@@ -371,7 +371,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)
 //
 // pass length of vector as third parameter
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, H5::DataSet>::type
 create_chunked_dataset(
@@ -387,7 +387,7 @@ create_chunked_dataset(
 }
 
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, void>::type
 write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H5S_UNLIMITED)
@@ -410,7 +410,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const& data, hsize_t index=H
 
 /** read chunk of vector container with array data, resize/reshape result array if necessary */
 template <typename T>
-typename boost::enable_if<boost::mpl::and_<
+inline typename boost::enable_if<boost::mpl::and_<
         is_vector<T>, is_array<typename T::value_type>
     >, hsize_t>::type
 read_chunked_dataset(H5::DataSet const& dataset, T& data, ssize_t index)

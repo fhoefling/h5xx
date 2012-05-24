@@ -170,7 +170,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
     {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    detail::write_dataset<value_type, rank>(dataset, &data.front());
+    detail::write_dataset<value_type, rank>(dataset, &*data.begin());
 }
 
 template <typename T>
@@ -181,7 +181,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
 {
     typedef typename T::value_type value_type;
     enum { rank = 1 };
-    detail::read_dataset<value_type, rank>(dataset, &data.front());
+    detail::read_dataset<value_type, rank>(dataset, &*data.begin());
 }
 
 //
@@ -199,7 +199,7 @@ create_dataset(
     // convert T::size_type to hsize_t
     boost::array<hsize_t, rank> shape_;
     std::copy(shape, shape + rank, shape_.begin());
-    return detail::create_dataset<value_type, rank>(fg, name, &shape_.front());
+    return detail::create_dataset<value_type, rank>(fg, name, &*shape_.begin());
 }
 
 template <typename T>
@@ -229,7 +229,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
         throw std::runtime_error("HDF5 reader: dataset has incompatible dataspace");
     }
     boost::array<hsize_t, rank> dim;
-    dataspace.getSimpleExtentDims(&dim.front());
+    dataspace.getSimpleExtentDims(&*dim.begin());
 
     // resize result array if necessary, may allocate new memory
     if (!std::equal(dim.begin(), dim.end(), data.shape())) {
@@ -336,7 +336,7 @@ write_dataset(H5::DataSet const& dataset, T const& data)
     }
 
     // raw data are laid out contiguously
-    detail::write_dataset<value_type, 2>(dataset, &data.front().front());
+    detail::write_dataset<value_type, 2>(dataset, &*data.begin()->begin());
 }
 
 /** read vector container with array data, resize/reshape result array if necessary */
@@ -359,7 +359,7 @@ read_dataset(H5::DataSet const& dataset, T& data)
     data.resize(dim[0]);
 
     // raw data are laid out contiguously
-    detail::read_dataset<value_type, 2>(dataset, &data.front().front());
+    detail::read_dataset<value_type, 2>(dataset, &*data.begin()->begin());
 }
 
 /**

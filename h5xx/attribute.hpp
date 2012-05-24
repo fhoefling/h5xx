@@ -168,7 +168,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
         H5::DataSpace ds(1, dim);
         attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
     }
-    attr.write(ctype<value_type>::hid(), &value.front());
+    attr.write(ctype<value_type>::hid(), &*value.begin());
 }
 
 /*
@@ -197,9 +197,9 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
     H5::Attribute attr = object.createAttribute(name, tid, ds);
     std::vector<char> data(max_len * size);
     for (size_t i = 0; i < size; ++i) {
-        strncpy(&data.front() + i * max_len, value[i], max_len);
+        strncpy(&*data.begin() + i * max_len, value[i], max_len);
     }
-    attr.write(tid, &data.front());
+    attr.write(tid, &*data.begin());
 }
 
 /**
@@ -226,7 +226,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     }
 
     T value;
-    attr.read(ctype<value_type>::hid(), &value.front());
+    attr.read(ctype<value_type>::hid(), &*value.begin());
     return value;
 }
 

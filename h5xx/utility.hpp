@@ -20,15 +20,16 @@
 #ifndef H5XX_UTILITY_HPP
 #define H5XX_UTILITY_HPP
 
+#include <h5xx/ctype.hpp>
+
 #include <boost/algorithm/string.hpp>
 #include <boost/array.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/type_traits/is_same.hpp>
+
 #include <string>
 #include <list>
-
-#include <h5xx/ctype.hpp>
 
 namespace h5xx {
 

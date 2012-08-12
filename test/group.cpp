@@ -20,8 +20,9 @@
 #define BOOST_TEST_MODULE h5xx_group
 #include <boost/test/unit_test.hpp>
 
-#include <cmath>
 #include <h5xx/h5xx.hpp>
+
+#include <cmath>
 #include <unistd.h>
 
 BOOST_AUTO_TEST_CASE( h5xx_group )

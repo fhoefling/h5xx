@@ -21,18 +21,19 @@
 #ifndef H5XX_ATTRIBUTE_HPP
 #define H5XX_ATTRIBUTE_HPP
 
+#include <h5xx/ctype.hpp>
+#include <h5xx/error.hpp>
+#include <h5xx/exception.hpp>
+#include <h5xx/utility.hpp>
+
 #include <boost/any.hpp>
 #include <boost/array.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
-#include <vector>
 
-#include <h5xx/ctype.hpp>
-#include <h5xx/error.hpp>
-#include <h5xx/exception.hpp>
-#include <h5xx/utility.hpp>
+#include <vector>
 
 namespace h5xx {
 

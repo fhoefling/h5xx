@@ -20,9 +20,11 @@
 #define BOOST_TEST_MODULE h5xx_attribute
 #include <boost/test/unit_test.hpp>
 
-#include <boost/shared_ptr.hpp>
-#include <cmath>
 #include <h5xx/h5xx.hpp>
+
+#include <boost/shared_ptr.hpp>
+
+#include <cmath>
 #include <unistd.h>
 
 BOOST_AUTO_TEST_CASE( h5xx_attribute )

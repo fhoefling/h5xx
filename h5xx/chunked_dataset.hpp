@@ -20,6 +20,7 @@
 #ifndef H5XX_CHUNKED_DATASET_HPP
 #define H5XX_CHUNKED_DATASET_HPP
 
+#include <algorithm>
 #include <boost/array.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>
@@ -34,6 +35,10 @@
 namespace h5xx {
 
 namespace detail {
+
+// http://www.hdfgroup.org/training/HDFtraining/UsersGuide/Perform.fm2.html
+// It is recommended that the chunk size be at least 8K bytes.
+enum { CHUNK_MIN_SIZE = 8092 };
 
 /**
  * create chunked dataset 'name' in given group/file with given size
@@ -59,6 +64,12 @@ create_chunked_dataset(
     dim[0] = (max_size == H5S_UNLIMITED) ? 0 : max_size;
     max_dim[0] = max_size;
     chunk_dim[0] = 1;
+
+    // increase outermost dimension of chunk by powers of two until size of
+    // dataset is equal to or greater than recommended minimum chunk size
+    while (std::accumulate(chunk_dim.begin(), chunk_dim.end(), sizeof(T), std::multiplies<hsize_t>()) < CHUNK_MIN_SIZE) {
+        chunk_dim[0] *= 2;
+    }
 
     H5::DataSpace dataspace(dim.size(), &*dim.begin(), &*max_dim.begin());
     H5::DSetCreatPropList cparms;

@@ -71,6 +71,7 @@ create_chunked_dataset(
     while (std::accumulate(chunk_dim.begin(), chunk_dim.end(), sizeof(T), std::multiplies<hsize_t>()) < CHUNK_MIN_SIZE) {
         chunk_dim[0] *= 2;
     }
+    chunk_dim[0] = std::min(chunk_dim[0], max_dim[0]);
 
     H5::DataSpace dataspace(dim.size(), &*dim.begin(), &*max_dim.begin());
     H5::DSetCreatPropList cparms;

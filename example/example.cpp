@@ -17,6 +17,7 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#include <boost/multi_array.hpp>
 #include <h5xx/h5xx.hpp>
 #include <iostream>
 

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010-2012  Felix Höfling
+ * Copyright © 2010-2013  Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -23,9 +23,12 @@
 #include <h5xx/h5xx.hpp>
 
 #include <boost/shared_ptr.hpp>
-
 #include <cmath>
 #include <unistd.h>
+
+#include <test/ctest_full_output.hpp>
+
+BOOST_GLOBAL_FIXTURE( ctest_full_output )
 
 BOOST_AUTO_TEST_CASE( h5xx_dataset )
 {

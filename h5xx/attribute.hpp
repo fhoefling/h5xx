@@ -120,10 +120,13 @@ read_attribute(H5::H5Object const& object, std::string const& name)
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     // determine string length first and allocate space
-    size_t len = attr.getDataType().getSize();
-    std::vector<std::string::value_type> value(len);
-    attr.read(H5::StrType(H5::PredType::C_S1, len), &*value.begin());
-    return std::string(&*value.begin(), value.size());
+    H5::DataType tid = attr.getDataType();
+    size_t len = tid.getSize();
+    std::string value(len, std::string::value_type());
+
+    // read fixed-size string, works for both NULLTERM and NULLPAD strings
+    attr.read(tid, &*value.begin());
+    return value;
 }
 
 /**

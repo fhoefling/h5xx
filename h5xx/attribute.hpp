@@ -1,6 +1,7 @@
 /* HDF5 C++ extensions
  *
- * Copyright © 2008-2010  Peter Colberg and Felix Höfling
+ * Copyright © 2008-2013  Felix Höfling
+ * Copyright © 2008-2010  Peter Colberg
  *
  * This file is part of h5xx.
  *
@@ -119,13 +120,24 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     if (!has_scalar_space(attr)) {
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
-    // determine string length first and allocate space
     H5::DataType tid = attr.getDataType();
-    size_t len = tid.getSize();
-    std::string value(len, std::string::value_type());
-
-    // read fixed-size string, works for both NULLTERM and NULLPAD strings
-    attr.read(tid, &*value.begin());
+    std::string value;
+    if (!tid.isVariableStr()) {
+        // read fixed-size string, allocate space in advance and let the HDF5
+        // library take care about NULLTERM and NULLPAD strings
+        value.resize(tid.getSize(), std::string::value_type());
+        attr.read(tid, &*value.begin());
+    }
+    else {
+        // read variable-length string, memory will be allocated by HDF5 C
+        // library and must be freed by us
+        char *c_str;
+        if (H5Aread(attr.getId(), tid.getId(), &c_str) < 0) {
+            throw H5::AttributeIException("Attribute::read", "H5Aread failed");
+        }
+        value = c_str;  // copy '\0'-terminated string
+        free(c_str);
+    }
     return value;
 }
 

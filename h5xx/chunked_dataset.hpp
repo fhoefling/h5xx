@@ -85,7 +85,7 @@ create_chunked_dataset(
 
     H5::PropList pl = create_intermediate_group_property();
     hid_t dataset_id = H5Dcreate(
-        loc.getId(), name.c_str(), ctype<T>::hid(), dataspace.getId()
+        loc.getId(), name.c_str(), ctype<T>::hid_copy(), dataspace.getId()
       , pl.getId(), cparms.getId(), H5P_DEFAULT
     );
     if (dataset_id < 0) {
@@ -138,7 +138,7 @@ write_chunked_dataset(H5::DataSet const& dataset, T const* data, hsize_t index=H
     // memory dataspace
     H5::DataSpace mem_dataspace(rank, block.begin() + 1);
 
-    dataset.write(data, ctype<T>::hid(), mem_dataspace, dataspace);
+    dataset.write(data, ctype<T>::hid_copy(), mem_dataspace, dataspace);
 }
 
 /**
@@ -179,7 +179,7 @@ read_chunked_dataset(H5::DataSet const& dataset, T* data, ssize_t index)
 
     try {
         H5XX_NO_AUTO_PRINT(H5::Exception);
-        dataset.read(data, ctype<T>::hid(), mem_dataspace, dataspace);
+        dataset.read(data, ctype<T>::hid_copy(), mem_dataspace, dataspace);
     }
     catch (H5::Exception const&) {
         throw std::runtime_error("HDF5 reader: failed to read multidimensional array data");

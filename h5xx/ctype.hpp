@@ -1,5 +1,7 @@
 /*
- * Copyright © 2008-2010  Peter Colberg and Felix Höfling
+ * Copyright © 2008-2010  Felix Höfling
+ * Copyright © 2013       Manuel Dibak
+ * Copyright © 2008-2010  Peter Colberg
  *
  * This file is part of h5xx.
  *
@@ -36,6 +38,11 @@ struct ctype;
     struct ctype<T>                     \
     {                                   \
         static hid_t hid()              \
+        {                               \
+            return H5T;                 \
+        }                               \
+                                        \
+        static hid_t hid_copy()         \
         {                               \
             return H5Tcopy(H5T);        \
         }                               \

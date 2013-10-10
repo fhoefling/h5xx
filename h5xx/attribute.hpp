@@ -56,9 +56,9 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
         }
     }
     catch (H5::AttributeIException const&) {
-        attr = object.createAttribute(name, ctype<T>::hid(), H5S_SCALAR);
+        attr = object.createAttribute(name, ctype<T>::hid_copy(), H5S_SCALAR);
     }
-    attr.write(ctype<T>::hid(), &value);
+    attr.write(ctype<T>::hid_copy(), &value);
 }
 
 /**
@@ -80,7 +80,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
     T value;
-    attr.read(ctype<T>::hid(), &value);
+    attr.read(ctype<T>::hid_copy(), &value);
     return value;
 }
 
@@ -182,9 +182,9 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
     catch (H5::AttributeIException const&) {
         hsize_t dim[1] = { size };
         H5::DataSpace ds(1, dim);
-        attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
+        attr = object.createAttribute(name, ctype<value_type>::hid_copy(), ds);
     }
-    attr.write(ctype<value_type>::hid(), &*value.begin());
+    attr.write(ctype<value_type>::hid_copy(), &*value.begin());
 }
 
 /*
@@ -241,7 +241,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     }
 
     T value;
-    attr.read(ctype<value_type>::hid(), &*value.begin());
+    attr.read(ctype<value_type>::hid_copy(), &*value.begin());
     return value;
 }
 
@@ -269,9 +269,9 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
         hsize_t dim[rank];
         std::copy(value.shape(), value.shape() + rank, dim);
         H5::DataSpace ds(rank, dim);
-        attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
+        attr = object.createAttribute(name, ctype<value_type>::hid_copy(), ds);
     }
-    attr.write(ctype<value_type>::hid(), value.origin());
+    attr.write(ctype<value_type>::hid_copy(), value.origin());
 }
 
 /**
@@ -303,7 +303,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     boost::array<size_t, rank> shape;
     std::copy(dim, dim + rank, shape.begin());
     boost::multi_array<value_type, rank> value(shape);
-    attr.read(ctype<value_type>::hid(), value.origin());
+    attr.read(ctype<value_type>::hid_copy(), value.origin());
     return value;
 }
 
@@ -329,9 +329,9 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
     catch (H5::AttributeIException const&) {
         hsize_t dim[1] = { value.size() };
         H5::DataSpace ds(1, dim);
-        attr = object.createAttribute(name, ctype<value_type>::hid(), ds);
+        attr = object.createAttribute(name, ctype<value_type>::hid_copy(), ds);
     }
-    attr.write(ctype<value_type>::hid(), &*value.begin());
+    attr.write(ctype<value_type>::hid_copy(), &*value.begin());
 }
 
 /**
@@ -360,7 +360,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     }
     size_t size = ds.getSimpleExtentNpoints();
     std::vector<value_type> value(size);
-    attr.read(ctype<value_type>::hid(), &*value.begin());
+    attr.read(ctype<value_type>::hid_copy(), &*value.begin());
     return value;
 }
 

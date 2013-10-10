@@ -148,7 +148,7 @@ template <typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
 has_type(H5::AbstractDs const& ds)
 {
-    return ds.getDataType() == ctype<T>::hid();
+    return ds.getDataType() == ctype<T>::hid_copy();
 }
 
 template <typename T>

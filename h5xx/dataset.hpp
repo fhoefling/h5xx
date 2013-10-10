@@ -67,7 +67,7 @@ create_dataset(
 
     H5::PropList pl = create_intermediate_group_property();
     hid_t dataset_id = H5Dcreate(
-        loc.getId(), name.c_str(), ctype<T>::hid(), dataspace.getId()
+        loc.getId(), name.c_str(), ctype<T>::hid_copy(), dataspace.getId()
       , pl.getId(), cparms.getId(), H5P_DEFAULT
     );
     if (dataset_id < 0) {
@@ -89,7 +89,7 @@ write_dataset(H5::DataSet const& dataset, T const* data)
     if (!has_rank<rank>(dataspace)) {
         throw std::runtime_error("HDF5 writer: dataset has incompatible dataspace");
     }
-    dataset.write(data, ctype<T>::hid(), dataspace, dataspace);
+    dataset.write(data, ctype<T>::hid_copy(), dataspace, dataspace);
 }
 
 /**
@@ -107,7 +107,7 @@ read_dataset(H5::DataSet const& dataset, T* data)
     }
     try {
         H5XX_NO_AUTO_PRINT(H5::Exception);
-        dataset.read(data, ctype<T>::hid(), dataspace, dataspace);
+        dataset.read(data, ctype<T>::hid_copy(), dataspace, dataspace);
     }
     catch (H5::Exception const&) {
         throw std::runtime_error("HDF5 reader: failed to read multidimensional array data");

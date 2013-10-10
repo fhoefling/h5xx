@@ -1,6 +1,7 @@
 /* HDF5 C++ extensions
  *
  * Copyright © 2008-2013  Felix Höfling
+ * Copyright © 2013       Manuel Dibak
  * Copyright © 2008-2010  Peter Colberg
  *
  * This file is part of h5xx.
@@ -29,6 +30,7 @@
 
 #include <boost/any.hpp>
 #include <boost/array.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits.hpp>
@@ -38,27 +40,80 @@
 
 namespace h5xx {
 
+/**
+ * determine whether attribute exists in group, dataset, or datatype
+ *
+ * @param object Object ...
+ * @param name attribute name
+ * @return: true if attribute exists
+ */
+inline bool exists_attribute(H5::H5Object const& object, std::string const& name)
+{
+    hid_t obj_id = object.getId();
+    htri_t tri = H5Aexists(obj_id, name.c_str());
+    if (tri < 0) {
+        throw error("testing attribute \"" + name + "\" at object ID " + boost::lexical_cast<std::string>(obj_id));
+    }
+    return (tri > 0);
+}
+
+/**
+ * delete attribute from group, dataset, or datatype
+ *
+ * warning: no other attribute of the object must be opened
+ */
+inline void delete_attribute(H5::H5Object const& object, std::string const& name)
+{
+    hid_t obj_id = object.getId();
+    if (H5Adelete(obj_id, name.c_str()) < 0) {
+        throw error("deleting attribute \"" + name + "\" at object ID " + boost::lexical_cast<std::string>(obj_id));
+    }
+} // FIXME add test
+
+
 /*
  * create and write fundamental type attribute
  */
 template <typename T>
-inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, H5::Attribute>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
-    H5::Attribute attr;
-    try {
-        H5XX_NO_AUTO_PRINT(H5::AttributeIException);
-        attr = object.openAttribute(name);
+    hid_t loc_id = object.getId();
+    char const* attr_name = name.c_str();
+    hid_t attr_id;
+    bool err = false;
+
+    // open or create attribute
+    bool do_create = true;
+    if (exists_attribute(object, name)) {
+        err |= (attr_id = H5Aopen(loc_id, attr_name, H5P_DEFAULT)) < 0;
+        H5::Attribute attr(attr_id);
+        attr.incRefCount();
         if (!has_type<T>(attr) || !has_scalar_space(attr)) {
             // recreate attribute with proper type
-            object.removeAttr(name);
-            throw H5::AttributeIException();
+            err |= H5Aclose(attr_id) < 0;
+            attr.decRefCount();
+            delete_attribute(object, name);
+        }
+        else {
+            // reuse existing attribute
+            do_create = false;
         }
     }
-    catch (H5::AttributeIException const&) {
-        attr = object.createAttribute(name, ctype<T>::hid_copy(), H5S_SCALAR);
+    if (do_create) {
+        hid_t space_id = H5Screate(H5S_SCALAR);
+        attr_id = H5Acreate(loc_id, attr_name, ctype<T>::hid(), space_id, H5P_DEFAULT, H5P_DEFAULT);
+        H5Sclose(space_id);
     }
-    attr.write(ctype<T>::hid_copy(), &value);
+    err |= attr_id < 0;
+
+    // write data
+    err |= H5Awrite(attr_id, ctype<T>::hid(), &value) < 0;
+    err |= H5Aclose(attr_id) < 0;
+    if (err) {
+        throw error("writing attribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
+    }
+    return attr_id;
 }
 
 /**
@@ -68,7 +123,11 @@ template <typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
+    hid_t loc_id = object.getId();
+    char const* attr_name = name.c_str();
+    hid_t attr_id;
     H5::Attribute attr;
+    bool err = false;
     try {
         H5XX_NO_AUTO_PRINT(H5::AttributeIException);
         attr = object.openAttribute(name);
@@ -79,8 +138,16 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     if (!has_scalar_space(attr)) {
         throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
     }
+    // open object
+    err |= (attr_id = H5Aopen(loc_id, attr_name, H5P_DEFAULT)) < 0;
     T value;
-    attr.read(ctype<T>::hid_copy(), &value);
+    // read from opened object
+    err |= (H5Aread(attr_id,ctype<T>::hid(), &value)) < 0;
+    // close object
+    err |= H5Aclose(attr_id) < 0;
+    if (err) {
+        throw error("reading atrribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
+    }
     return value;
 }
 
@@ -362,18 +429,6 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     std::vector<value_type> value(size);
     attr.read(ctype<value_type>::hid_copy(), &*value.begin());
     return value;
-}
-
-/**
- * determine whether attribute exists in file/group/dataset
- */
-inline bool exists_attribute(H5::H5Object const& object, std::string const& name)
-{
-    htri_t tri = H5Aexists(object.getId(), name.c_str());
-    if (tri < 0) {
-        throw error("failed to determine whether attribute \"" + name + "\" exists");
-    }
-    return (tri > 0);
 }
 
 /**

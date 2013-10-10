@@ -22,47 +22,56 @@
 
 #include <h5xx/h5xx.hpp>
 
-#include <boost/shared_ptr.hpp>
+#include <boost/make_shared.hpp>
 #include <cmath>
 #include <unistd.h>
 
 #include <test/ctest_full_output.hpp>
+#include <test/catch_boost_no_throw.hpp>
 
 BOOST_GLOBAL_FIXTURE( ctest_full_output )
 
 BOOST_AUTO_TEST_CASE( h5xx_attribute )
 {
-    // store H5File object in shared_ptr to destroy it before re-opening the file
     char const filename[] = "test_h5xx_attribute.hdf5";
-    boost::shared_ptr<H5::H5File> file(new H5::H5File(filename, H5F_ACC_TRUNC));
-    H5::Group group = h5xx::open_group(*file, "/");
+
+    // store H5File object in shared_ptr to destroy it before re-opening the file
+
+    boost::shared_ptr<H5::H5File> file;
+    H5::Group group;
+    BOOST_CHECK_NO_THROW(file = boost::make_shared<H5::H5File>(filename, H5F_ACC_TRUNC));
+    BOOST_CHECK_NO_THROW(group = h5xx::open_group(*file, "/"));
 
     bool bool_value = true;
-    h5xx::write_attribute(group, "bool, scalar", bool_value);
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "bool, scalar", bool_value));
+    BOOST_CHECK(h5xx::exists_attribute(group, "bool, scalar"));
+    BOOST_CHECK_NO_THROW(h5xx::delete_attribute(group, "bool, scalar"));
+    BOOST_CHECK(h5xx::exists_attribute(group, "bool, scalar") == false);
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "bool, scalar", bool_value));
 
     uint64_t uint_value = 9223372036854775783LLU;  // largest prime below 2^63
-    h5xx::write_attribute(group, "integral, scalar", 1);   // store something of wrong type first
-    h5xx::write_attribute(group, "integral, scalar", uint_value);  // overwrite value
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "integral, scalar", uint64_t(1)));   // store wrong value of correct type first
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "integral, scalar", uint_value));  // overwrite value
 
     // long double is supported by the HDF5 library,
     // but neither by h5dump nor pytables ...
     long double ldouble_value = std::sqrt(2.L);
-    h5xx::write_attribute(group, "long double, scalar", 2);   // store something of wrong type first
-    h5xx::write_attribute(group, "long double, scalar", ldouble_value);
-    h5xx::write_attribute(group, "double, scalar", static_cast<double>(ldouble_value));
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "long double, scalar", 2));   // store something of wrong type first
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "long double, scalar", ldouble_value));
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "double, scalar", static_cast<double>(ldouble_value)));
 
     boost::array<char const*, 3> cstring_array = {{
         "HALMD", "HAL's MD package",
         "Highly accelerated large-scale molecular dynamics simulation package"
     }};
     typedef boost::array<std::string, 3> string_array_type;
-    h5xx::write_attribute(group, "char [], scalar", cstring_array[1]);
-    h5xx::write_attribute(group, "string, scalar", std::string(cstring_array[1]));
-    h5xx::write_attribute(group, "char [], array", cstring_array);
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "char [], scalar", cstring_array[1]));
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "string, scalar", std::string(cstring_array[1])));
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "char [], array", cstring_array));
 
     typedef boost::array<bool, 2> bool_array_type;
     bool_array_type bool_array = {{ true, false }};
-    h5xx::write_attribute(group, "bool, array", bool_array);
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "bool, array", bool_array));
 
     typedef boost::array<double, 5> double_array_type;
     double_array_type value_array;
@@ -70,14 +79,14 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
        1., std::sqrt(2.), 2., std::sqrt(3.), 3.
     };
     std::copy(double_values, double_values + value_array.size(), value_array.begin());
-    h5xx::write_attribute(group, "double, array", value_array);
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "double, array", value_array));
 
     typedef std::vector<double> double_vector_type;
     double_vector_type value_vector(value_array.size());
     std::copy(value_array.begin(), value_array.end(), value_vector.begin());
-    h5xx::write_attribute(group, "double, std::vector", value_vector);
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "double, std::vector", value_vector));
     value_vector.resize(4);
-    h5xx::write_attribute(group, "double, std::vector", value_vector);     // overwrite with different size
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "double, std::vector", value_vector));     // overwrite with different size
 
     typedef boost::multi_array<int, 3> multi_array3;
     int data3[] = {
@@ -91,11 +100,12 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     };
     multi_array3 multi_array_value(boost::extents[2][3][4]);
     multi_array_value.assign(data3, data3 + 2 * 3 * 4);
-    h5xx::write_attribute(group, "int, multi_array", multi_array_value);
+    BOOST_CHECK_NO_THROW(h5xx::write_attribute(group, "int, multi_array", multi_array_value));
 
     // re-open file
-    file.reset(new H5::H5File(filename, H5F_ACC_RDONLY));
-    group = h5xx::open_group(*file, "/");
+    BOOST_CHECK_NO_THROW(group.close());
+    BOOST_CHECK_NO_THROW(file = boost::make_shared<H5::H5File>(filename, H5F_ACC_RDONLY));
+    BOOST_CHECK_NO_THROW(group = h5xx::open_group(*file, "/"));
 
     // check h5xx::has_type<>
     BOOST_CHECK(h5xx::has_type<bool>(group.openAttribute("bool, scalar")));
@@ -144,6 +154,19 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     std::vector<int> int_vector = h5xx::read_attribute<std::vector<int> >(group, "int, multi_array");
     BOOST_CHECK(int_vector.size() == multi_array_value.num_elements());
     BOOST_CHECK(equal(int_vector.begin(), int_vector.end(), multi_array_value.origin()));
+
+    // check exists_attribute
+    BOOST_CHECK(h5xx::exists_attribute(group, "bool, scalar") == true);
+    BOOST_CHECK(h5xx::exists_attribute(group, "foo") == false);
+    H5E_BEGIN_TRY {
+        BOOST_CHECK_THROW(h5xx::exists_attribute(group, "") == false, h5xx::error);
+        BOOST_CHECK_THROW(h5xx::exists_attribute(H5::Group(-1), "foo"), h5xx::error);
+    } H5E_END_TRY
+
+    // check delete_attribute
+    H5E_BEGIN_TRY{
+         BOOST_CHECK_THROW(h5xx::delete_attribute(group, "bool, scalar"), h5xx::error); // delete deleted attribute in H5_ACC_RDONLY access mode
+     } H5E_END_TRY
 
     // remove file
 #ifdef NDEBUG

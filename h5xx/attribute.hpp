@@ -194,7 +194,6 @@ template <typename T>
 inline typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_same<typename T::value_type, char const*> >, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
-    typedef typename T::value_type value_type;
     enum { size = T::static_size };
 
     hsize_t dim[1] = { size };

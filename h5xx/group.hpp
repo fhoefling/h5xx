@@ -1,5 +1,7 @@
 /*
- * Copyright © 2008-2010  Peter Colberg and Felix Höfling
+ * Copyright © 2008-2013 Felix Höfling
+ * Copyright © 2013      Manuael Dibak
+ * Copyright © 2008-2010 Peter Colberg
  *
  * This file is part of h5xx.
  *
@@ -20,14 +22,115 @@
 #ifndef H5XX_GROUP_HPP
 #define H5XX_GROUP_HPP
 
+#include <h5xx/file.hpp>
+#include <h5xx/utility.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/property.hpp>
 
 namespace h5xx {
 
+// this class is meant to replace the H5::Group class
+class group : boost::noncopyable
+{
+public:
+    /** default constructor */
+    group() : hid_(-1) {}
+
+    /** constructor to open or generate a group in an existing superior group */
+    group(group const& other, std::string const& name);
+
+    /** open root group of file */
+    group(file const& f);
+
+    /** default destructor */
+    ~group();
+
+    /** return HDF5 object ID */
+    hid_t hid() const
+    {
+        return hid_;
+    }
+
+    /** open handle to HDF5 group from an object's ID (called by non-default constructors) */
+    void open(group const& other, std::string const& name);
+
+    /** close handle to HDF5 group (called by default destructor)*/
+    void close();
+
+
+
+private:
+    hid_t hid_;
+};
+
 /**
- * determine whether group exists in file or group
+ * return true if group "name" exists in group "grp"
  */
+inline bool exists_group(group const& grp, std::string const& name);
+
+group::group(group const& other, std::string const& name)
+{
+    hid_ = -1;
+    open(other, name);
+}
+
+group::group(file const& f)
+{
+    hid_ = H5Gopen(f.hid(), "/", H5P_DEFAULT);
+    if (hid_ < 0){
+        throw error("opening root group of file \"" + f.name() + "\"");
+    }
+}
+
+group::~group()
+{
+    close();
+}
+
+void group::open(group const& other, std::string const& name)
+{
+    if (hid_ >= 0) {
+        throw error("h5xx::group object is already in use");
+    }
+
+    if (exists_group(other, name)){
+        hid_ = H5Gopen(other.hid(), name.c_str(), H5P_DEFAULT);
+    } else{
+        H5E_BEGIN_TRY{
+            hid_t create_intermediate = H5Pcreate(H5P_LINK_CREATE);     //create group creation property list
+            H5Pset_create_intermediate_group(create_intermediate, 1);   //set intermediate link creation
+            hid_ = H5Gcreate(other.hid(), name.c_str(), create_intermediate, H5P_DEFAULT, H5P_DEFAULT);
+        } H5E_END_TRY
+    }
+    if (hid_ < 0){
+        throw error("creating or opening group \"" + name + "\"");
+    }
+}
+
+void group::close() {
+    if (hid_ >= 0) {
+        if(H5Gclose(hid_) < 0){
+            throw error("closing h5xx::group with ID " + boost::lexical_cast<std::string>(hid_));
+        }
+        hid_ = -1;
+    }
+}
+
+/**
+ * return true if group "name" exists in group "grp"
+ */
+inline bool exists_group(group const& grp, std::string const& name)
+{
+    hid_t hid = grp.hid();
+    H5E_BEGIN_TRY {
+        hid = H5Gopen(hid, name.c_str(), H5P_DEFAULT);
+        if (hid > 0) {
+            H5Gclose(hid);
+        }
+    } H5E_END_TRY
+    return (hid > 0);
+}
+
 inline bool exists_group(H5::CommonFG const& fg, std::string const& name)
 {
     H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
@@ -61,6 +164,15 @@ inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path)
         throw error("failed to create group \"" + path + "\"");
     }
     return H5::Group(group_id);
+}
+
+inline hid_t open_group(hid_t loc_id, std::string const& path)
+{
+    hid_t group_id;
+    H5E_BEGIN_TRY {
+        group_id = H5Gopen(loc_id, path.c_str(), H5P_DEFAULT);
+    } H5E_END_TRY
+    return group_id;
 }
 
 } // namespace h5xx

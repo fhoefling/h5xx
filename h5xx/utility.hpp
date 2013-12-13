@@ -75,10 +75,15 @@ inline std::string path(H5::IdComponent const& id)
     return &*name_.begin();
 }
 
-template <typename h5xx_object>
-inline std::string get_name(h5xx_object const& obj)
+/**
+ * overload function to return the absolute path of an h5xx object or a general HDF5 object given by its hid
+ *
+ *
+ * For attributes the path of the parent object is returned!
+ *
+ */
+std::string get_name(hid_t hid)
 {
-    hid_t hid = obj.hid();
     ssize_t size = H5Iget_name(hid, NULL, 0);        // get size of string
     std::vector<char> buffer;
     if (size >= 0) {
@@ -89,6 +94,12 @@ inline std::string get_name(h5xx_object const& obj)
         throw error("failed to get name of HDF5 object with ID " + boost::lexical_cast<std::string>(hid));
     }
     return &*buffer.begin();                         // convert char* to std::string
+}
+
+template <typename h5xxObject>
+std::string get_name(h5xxObject const& obj)
+{
+    return get_name(obj.hid());
 }
 
 /** FIXME disable definition for h5xx::file and use specialisation for attribute */
@@ -171,9 +182,58 @@ template <typename T, typename Alloc>
 struct is_vector<std::vector<T, Alloc> >
   : boost::true_type {};
 
+
+/**
+ * h5xx implementation for checking data types of abstract datasets (dataset or attribute)
+ */
+template <typename T>
+inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
+has_type(hid_t const& hid)
+{
+    hid_t type_id = H5Aget_type(hid);
+    return H5Tget_class(type_id) == ctype<T>::hid_copy();
+}
+
+template <typename T>
+inline typename boost::enable_if<boost::is_same<T, std::string>, bool>::type
+has_type(hid_t const& hid)
+{
+    hid_t type_id = H5Aget_type(hid);
+    return H5Tget_class(type_id) == H5T_STRING;
+}
+
+template <typename T>
+inline typename boost::enable_if<boost::is_same<T, char const*>, bool>::type
+has_type(hid_t const& hid)
+{
+    return has_type<std::string>(hid);
+}
+
+template <typename T>
+inline typename boost::enable_if<is_vector<T>, bool>::type
+has_type(hid_t const& hid)
+{
+    return has_type<typename T::value_type>(hid);
+}
+
+template <typename T>
+inline typename boost::enable_if<is_array<T>, bool>::type
+has_type(hid_t const& hid)
+{
+    return has_type<typename T::value_type>(hid);
+}
+
+template <typename T>
+inline typename boost::enable_if<is_multi_array<T>, bool>::type
+has_type(hid_t const& hid)
+{
+    return has_type<typename T::element>(hid);
+}
+
 /**
  * check data type of abstract dataset (dataset or attribute)
  */
+
 template <typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
 has_type(H5::AbstractDs const& ds)
@@ -217,6 +277,31 @@ has_type(H5::AbstractDs const& ds)
 }
 
 /**
+ * h5xx implementation to check whether a data space is scalar
+ */
+inline bool has_scalar_space(hid_t attr_id)
+{
+    hid_t space_id;
+    if ((space_id = H5Aget_space(attr_id)) < 0) {
+        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
+    }
+    return H5Sget_simple_extent_type(space_id) == H5S_SCALAR;
+}
+
+
+/**
+ * h5xx implementation to check whether a data space is simple
+ */
+inline bool has_simple_space(hid_t attr_id)
+{
+    hid_t space_id;
+    if ((space_id = H5Aget_space(attr_id)) < 0) {
+        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
+    }
+    return H5Sget_simple_extent_type(space_id) == H5S_SIMPLE;
+}
+
+/**
  * check if data space is scalar
  */
 inline bool is_scalar(H5::DataSpace const& dataspace)
@@ -230,6 +315,15 @@ inline bool is_scalar(H5::DataSpace const& dataspace)
 inline bool has_scalar_space(H5::AbstractDs const& ds)
 {
     return is_scalar(ds.getSpace());
+}
+
+/**
+ * check rank of dataspace given by its id
+ */
+template <hsize_t rank>
+inline bool has_rank(hid_t space_id)
+{
+    return H5Sget_simple_extent_ndims(space_id) == rank;
 }
 
 /**
@@ -257,6 +351,22 @@ inline bool has_rank(H5::AbstractDs const& ds)
  * are skipped. It should be 1 for multi-valued datasets
  * and 2 multi-valued datasets of std::vector.
  */
+template <typename T>
+inline typename boost::enable_if<is_array<T>, bool>::type
+has_extent(hid_t space_id)
+{
+    if ( has_rank<1>(space_id) )
+    {
+        hsize_t dim[1];
+        hsize_t maxdim[1];
+        H5Sget_simple_extent_dims(space_id, dim, maxdim);
+        return dim[0] == T::static_size;
+    }
+    else
+        return false;
+
+}
+
 template <typename T, hsize_t extra_rank>
 inline typename boost::enable_if<is_array<T>, bool>::type
 has_extent(H5::DataSpace const& dataspace)

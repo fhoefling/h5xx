@@ -1,5 +1,6 @@
 /*
- * Copyright © 2008-2009  Peter Colberg and Felix Höfling
+ * Copyright © 2008-2013 Felix Höfling
+ * Copyright © 2008-2009 Peter Colberg
  *
  * This file is part of h5xx.
  *
@@ -21,9 +22,11 @@
 #define H5XX_UTILITY_HPP
 
 #include <h5xx/ctype.hpp>
+#include <h5xx/error.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/array.hpp>
+#include <boost/lexical_cast.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits/is_fundamental.hpp>
 #include <boost/type_traits/is_same.hpp>
@@ -34,6 +37,25 @@
 namespace h5xx {
 
 using h5xx::detail::ctype; // FIXME HDF5 C++ to C transition
+
+/**
+ * returns the associated file of an h5xx Object
+ */
+template <typename h5xxObject>
+inline std::string filename(h5xxObject const& obj)
+{
+    hid_t hid = obj.hid();
+    if (hid < 0) {
+        throw error("h5xx::filename: object is empty");
+    }
+    ssize_t size = H5Fget_name(hid, NULL, 0);        // determine string length
+    if (size < 0) {
+        throw error("retrieving filename of HDF5 object with ID " + boost::lexical_cast<std::string>(hid));
+    }
+    std::vector<char> buffer(size + 1);
+    H5Fget_name(hid, &*buffer.begin(), buffer.size()); // get string data
+    return &*buffer.begin();
+}
 
 /**
  * returns absolute path of an HDF5 object within file
@@ -52,6 +74,36 @@ inline std::string path(H5::IdComponent const& id)
     }
     return &*name_.begin();
 }
+
+template <typename h5xx_object>
+inline std::string get_name(h5xx_object const& obj)
+{
+    hid_t hid = obj.hid();
+    ssize_t size = H5Iget_name(hid, NULL, 0);        // get size of string
+    std::vector<char> buffer;
+    if (size >= 0) {
+        buffer.resize(size + 1);                     // includes NULL terminator
+        size = H5Iget_name(hid, &*buffer.begin(), buffer.size()); // get string data
+    }
+    if (size < 0) {
+        throw error("failed to get name of HDF5 object with ID " + boost::lexical_cast<std::string>(hid));
+    }
+    return &*buffer.begin();                         // convert char* to std::string
+}
+
+/** FIXME disable definition for h5xx::file and use specialisation for attribute */
+/*template <>
+inline std::string name(attribute const& obj)
+{
+    return std::string();
+}
+
+template <>
+inline std::string name(file const& obj)
+{
+    return std::string();
+}
+*/
 
 /**
  * split path_string on '/' and return list of group names,

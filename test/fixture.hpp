@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Felix Höfling
+ * Copyright © 2013-2014 Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -31,18 +31,18 @@ template <char const* filename>
 struct h5file
 {
     h5file()
-      : file(filename)
+      : file(filename, h5xx::file::trunc)
     {
         BOOST_TEST_MESSAGE("HDF5 file created: " << filename);
     }
 
     ~h5file()
     {
-        file.close();
+        file.close(true);
 #ifdef NDEBUG
         unlink(filename);
-#endif
         BOOST_TEST_MESSAGE("HDF5 file removed: " << filename);
+#endif
     }
 
     h5xx::file file;

@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010-2013 Felix Höfling
+ * Copyright © 2010-2014 Felix Höfling
  * Copyright © 2013      Manuel Dibak
  *
  * This file is part of h5xx.
@@ -33,8 +33,10 @@
 
 BOOST_GLOBAL_FIXTURE( ctest_full_output )
 
+namespace fixture { // preferred over BOOST_FIXTURE_TEST_SUITE
+
 char filename[] = "test_h5xx_group.h5";
-BOOST_FIXTURE_TEST_SUITE( dummy, h5file<filename> )
+typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
 using namespace h5xx;
 
@@ -61,7 +63,7 @@ BOOST_AUTO_TEST_CASE( h5xx_group_remake )
 
 BOOST_AUTO_TEST_CASE( h5xx_group )
 {
-    file.close(); H5::H5File file(::filename, H5F_ACC_TRUNC); // FIXME remove this line
+    file.close(); H5::H5File file(filename, H5F_ACC_TRUNC); // FIXME remove this line
 
     BOOST_CHECK_NO_THROW(h5xx::open_group(file, "/"));
     BOOST_CHECK_THROW(h5xx::open_group(file, ""), h5xx::error);
@@ -139,4 +141,4 @@ BOOST_AUTO_TEST_CASE( h5xx_split_path )
     BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
 }
 
-BOOST_AUTO_TEST_SUITE_END()
+} // namespace fixture

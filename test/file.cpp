@@ -1,6 +1,6 @@
 /*
- * Copyright © 2013 Manuel Dibak
- * Copyright © 2013 Felix Höfling
+ * Copyright © 2013      Manuel Dibak
+ * Copyright © 2013-2014 Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -60,19 +60,21 @@ BOOST_AUTO_TEST_CASE( open )
     BOOST_CHECK(is_hdf5_file(foo) > 0);
     BOOST_CHECK_NO_THROW(file f(foo));                         // re-open existing file
     BOOST_CHECK_NO_THROW(file(foo, file::in));                 // read-only
+    BOOST_CHECK_NO_THROW(file(foo, file::in | file::out));     // append
     BOOST_CHECK_NO_THROW(file(foo, file::out));                // append
+    BOOST_CHECK_NO_THROW(file(foo, file::trunc));              // write and truncate
     BOOST_CHECK_NO_THROW(file(foo, file::out | file::trunc));  // write and truncate
 
     // remove and recreate file
     unlink(foo);
     BOOST_CHECK_THROW(file(foo, file::in), error);                 // read non-existing file
     BOOST_CHECK_NO_THROW(file(foo, file::out | file::excl));       // create new file
+    unlink(foo);                                                   // remove file ...
+    BOOST_CHECK_NO_THROW(file(foo, file::excl));                   // ... and create again
     BOOST_CHECK_THROW(file(foo, file::out | file::excl), error);   // don't overwrite existing file
     unlink(foo);
 
     // check conflicting modes, should not create a file
-    BOOST_CHECK_THROW(file(foo, file::trunc), error);                          // no "out" given
-    BOOST_CHECK_THROW(file(foo, file::excl), error);                           // no "out" given
     BOOST_CHECK_THROW(file(foo, file::trunc | file::excl), error);             // "trunc" and "excl" are conflicting
     BOOST_CHECK_THROW(file(foo, file::out | file::trunc | file::excl), error); // "trunc" and "excl" are conflicting
 

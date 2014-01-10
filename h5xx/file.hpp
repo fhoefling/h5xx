@@ -1,6 +1,6 @@
 /*
- * Copyright © 2013 Manuel Dibak
- * Copyright © 2013 Felix Höfling
+ * Copyright © 2013      Manuel Dibak
+ * Copyright © 2013-2014 Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -39,6 +39,20 @@ htri_t is_hdf5_file(std::string const& filename)
     } H5E_END_TRY
 }
 
+/**
+ *  Represent HDF5 file. Instances of the class cannot be copied.
+ *
+ *  The following flags are defined to specify the opening mode:
+ *
+ *      file::in       read access
+ *      file::out      write access, append to existing file
+ *      file::trunc    write access, truncate existing file
+ *      file::excl     write access, file must not exist
+ *
+ *  The flags may be combined by bitwise OR. Read access is always granted by
+ *  the HDF5 library, so file::in may be omitted. The flags file::trunc and
+ *  file::excl are mutually exclusive and imply file::out.
+ */
 class file : boost::noncopyable
 {
 public:
@@ -68,8 +82,12 @@ public:
     /** open HDF5 file in specified mode */
     void open(std::string const& filename, unsigned mode = in | out);
 
-    /** close HDF5 file */
-    void close();
+    /** close HDF5 file
+     *
+     *  If strict is true, throw h5xx::error if open HDF5 objects are
+     *  associated with the file
+     */
+    void close(bool strict=false);
 
     /** flush all buffers associated with the file to disk */
     void flush() const;
@@ -100,38 +118,35 @@ void file::open(std::string const& filename, unsigned mode)
         throw error("h5xx::file object is already open");
     }
 
-    // check for invalid combination of opening flags
-    if (((mode & trunc) && (mode & excl)) || ((mode & (trunc | excl)) && !(mode & out))) {
-        throw error("h5xx::file: invalid opening mode: " + boost::lexical_cast<std::string>(mode));
+    // check for conflicting combination of opening flags
+    if ((mode & trunc) && (mode & excl)) {
+        throw error("h5xx::file: conflicting opening mode: " + boost::lexical_cast<std::string>(mode));
     }
 
     htri_t is_hdf5 = is_hdf5_file(filename);
-    if (is_hdf5 >= 0) { // file exists and may be valid HDF5
-        if (mode & out) {
-            if (mode & excl) {
-                throw error("refuse to overwrite existing HDF5 file: " + filename);
-            }
-            if (mode & trunc) { // truncate file
-                hid_ = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-            }
-            else { // append to file
-                hid_ = H5Fopen(filename.c_str(), H5F_ACC_RDWR, H5P_DEFAULT);
-            }
+    if (is_hdf5 >= 0 && !(mode & trunc)) {
+        // file exists and may be valid HDF5, but shall not be truncated
+        if (mode & excl) {
+            throw error("refuse to overwrite existing HDF5 file: " + filename);
         }
-        else { // read-only
+        else { // open file, either to append or read-only
             if (is_hdf5 == 0) {
                 throw error("not a valid HDF5 file: " + filename);
             }
-            hid_ = H5Fopen(filename.c_str(), H5F_ACC_RDONLY, H5P_DEFAULT);
+            // use that "in" and "out" are equal to H5F_ACC_RDONLY and H5F_ACC_RDWR, resp.
+            hid_ = H5Fopen(filename.c_str(), mode & (in | out), H5P_DEFAULT);
         }
     }
-    else { // file does not exist, or other error
-        if(mode & out) { // create non-existing file
-            hid_ = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
-        }
-        else {
+    else {
+        // file does not exist (or other error), or it exists, but shall be truncated
+        if (mode == in) { // read-only
             throw error("read-only access to non-existing HDF5 file: " + filename);
         }
+        // create new file
+        hid_ = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, H5P_DEFAULT);
+    }
+    if (hid_ < 0) {
+        throw error("opening or creation of HDF5 file \"" + filename + "\" failed");
     }
 }
 
@@ -145,11 +160,18 @@ void file::flush() const
     }
 }
 
-void file::close()
+void file::close(bool strict)
 {
     if (hid_ < 0) {
         return;
     }
+    if (strict) {
+        ssize_t count = H5Fget_obj_count(hid_, H5F_OBJ_ALL | H5F_OBJ_LOCAL) - 1; // don't count the file itself
+        if (count > 0) {
+            throw error("closing HDF5 file would leave " + boost::lexical_cast<std::string>(count) + " open objects behind");
+        }
+    }
+
     if (H5Fclose(hid_) < 0) {
         throw error("closing HDF5 file: " + name() +
                     ", file ID: " + boost::lexical_cast<std::string>(hid_));

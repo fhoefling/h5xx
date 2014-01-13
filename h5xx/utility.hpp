@@ -105,28 +105,6 @@ inline std::string name(file const& obj)
 }
 */
 
-/**
- * split path_string on '/' and return list of group names,
- * empty names are suppressed
- */
-inline std::list<std::string> split_path(std::string const& path_string)
-{
-    using namespace std;
-    using namespace boost::algorithm;
-
-    list<string> groups;
-    split(groups, path_string, is_any_of("/"));  // equal('/')
-    // drop empty strings (if path starts or ends with '/')
-    for (list<string>::iterator s=groups.begin(); s != groups.end(); ) {
-        if (*s == "") {
-            groups.erase(s++);
-        }
-        else
-            ++s;
-    }
-
-    return groups;
-}
 
 /**
  * hard link HDF5 object into the given group with given name

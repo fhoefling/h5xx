@@ -84,25 +84,4 @@ BOOST_AUTO_TEST_CASE( usage )
     BOOST_CHECK(get_name(four) == "/one/two/four");
 }
 
-// test h5xx::split_path separately
-BOOST_AUTO_TEST_CASE( h5xx_split_path )
-{
-    std::vector<std::string> names(3);
-    names[0] = "one";
-    names[1] = "two";
-    names[2] = "three";
-
-    std::list<std::string> path = h5xx::split_path("/one/two/three/");
-    BOOST_CHECK(path.size() == 3);
-    BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
-
-    path = h5xx::split_path("one/two/three");
-    BOOST_CHECK(path.size() == 3);
-    BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
-
-    path = h5xx::split_path("//one///two//three");
-    BOOST_CHECK(path.size() == 3);
-    BOOST_CHECK(std::equal(path.begin(), path.end(), names.begin()));
-}
-
 } // namespace fixture

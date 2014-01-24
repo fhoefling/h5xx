@@ -30,7 +30,7 @@
 namespace h5xx {
 
 // this class is meant to replace the H5::Group class
-class group : boost::noncopyable
+class group
 {
 public:
     /** default constructor */
@@ -42,6 +42,19 @@ public:
     /** open root group of file */
     group(file const& f);
 
+    /** copy constructor with move semantics
+     *
+     * The group object on the right hand side is empty after assignment. In
+     * C++98, moving from an r-values (e.g., a temporary) is not possible.
+     */
+    group(group& other);
+
+    /** assignment operator with move semantics
+     *
+     * the group object on the right hand side is empty after assignment
+     */
+    group const& operator=(group other);
+
     /** default destructor */
     ~group();
 
@@ -51,13 +64,17 @@ public:
         return hid_;
     }
 
+    /** returns true if associated to a valid HDF5 object */
+    bool valid() const
+    {
+        return hid_ >= 0;
+    }
+
     /** open handle to HDF5 group from an object's ID (called by non-default constructors) */
     void open(group const& other, std::string const& name);
 
-    /** close handle to HDF5 group (called by default destructor)*/
+    /** close handle to HDF5 group (called by default destructor) */
     void close();
-
-
 
 private:
     hid_t hid_;
@@ -69,8 +86,8 @@ private:
 inline bool exists_group(group const& grp, std::string const& name);
 
 group::group(group const& other, std::string const& name)
+  : hid_(-1)
 {
-    hid_ = -1;
     open(other, name);
 }
 
@@ -82,9 +99,25 @@ group::group(file const& f)
     }
 }
 
+group::group(group& other)
+{
+    hid_ = other.hid_;
+    other.hid_ = -1;
+}
+
 group::~group()
 {
     close();
+}
+
+group const& group::operator=(group other)
+{
+    // swap(hid_, other.hid_),
+    // the previous group object will be closed upon destruction of other
+    hid_t tmp = hid_;
+    hid_ = other.hid_;
+    other.hid_ = tmp;
+    return *this;
 }
 
 void group::open(group const& other, std::string const& name)
@@ -93,14 +126,13 @@ void group::open(group const& other, std::string const& name)
         throw error("h5xx::group object is already in use");
     }
 
-    if (exists_group(other, name)){
+    if (exists_group(other, name)) {
         hid_ = H5Gopen(other.hid(), name.c_str(), H5P_DEFAULT);
-    } else{
-        H5E_BEGIN_TRY{
-            hid_t create_intermediate = H5Pcreate(H5P_LINK_CREATE);     //create group creation property list
-            H5Pset_create_intermediate_group(create_intermediate, 1);   //set intermediate link creation
-            hid_ = H5Gcreate(other.hid(), name.c_str(), create_intermediate, H5P_DEFAULT, H5P_DEFAULT);
-        } H5E_END_TRY
+    }
+    else {
+        hid_t lcpl_id = H5Pcreate(H5P_LINK_CREATE);     // create group creation property list
+        H5Pset_create_intermediate_group(lcpl_id, 1);   // set intermediate link creation
+        hid_ = H5Gcreate(other.hid(), name.c_str(), lcpl_id, H5P_DEFAULT, H5P_DEFAULT);
     }
     if (hid_ < 0){
         throw error("creating or opening group \"" + name + "\"");

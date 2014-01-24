@@ -21,11 +21,7 @@
 #define BOOST_TEST_MODULE h5xx_group
 #include <boost/test/unit_test.hpp>
 
-#include <h5xx/attribute.hpp>
 #include <h5xx/group.hpp>
-#include <h5xx/utility.hpp>
-
-#include<istream>
 
 #include <test/ctest_full_output.hpp>
 #include <test/catch_boost_no_throw.hpp>
@@ -40,84 +36,52 @@ typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
 using namespace h5xx;
 
-BOOST_AUTO_TEST_CASE( h5xx_group_remake )
+BOOST_AUTO_TEST_CASE( construction )
 {
-    char const* foogroup  = "foo";
-    group h5group;
-    BOOST_CHECK_NO_THROW(h5group.open(file, foogroup));
-    BOOST_CHECK(get_name(h5group) == "foogroup");
+    BOOST_CHECK_NO_THROW(group());                 // default constructor
 
+    group foo, bar;
+
+    BOOST_CHECK_NO_THROW(group g(file));           // convert h5xx::file to h5xx::group
+    BOOST_CHECK_NO_THROW(group(file, "foo"));      // create group in a file on the fly
+    BOOST_CHECK_NO_THROW(foo.open(file, "foo"));   // open existing group in a file
+    BOOST_CHECK_EQUAL(get_name(foo), "/foo");
+    BOOST_CHECK(foo.valid());
+
+    BOOST_CHECK_NO_THROW(bar.open(foo, "bar"));    // create group in a group
+    BOOST_CHECK_EQUAL(get_name(bar), "/foo/bar");
+    BOOST_CHECK(bar.valid());
+
+    hid_t hid = foo.hid();
+    BOOST_CHECK_NO_THROW(group g(bar));            // copy constructor with move semantics, closes bar
+    BOOST_CHECK(!bar.valid());
+    BOOST_CHECK_NO_THROW(bar = foo);               // assignment operator with move semantics
+    BOOST_CHECK_EQUAL(bar.hid(), hid);
+    BOOST_CHECK(!foo.valid());
+
+    group root(file);
+//  root = group(file);                            // doesn't compile due to copy construction of temporary group
+    BOOST_CHECK_EQUAL(get_name(root), "/");
+    BOOST_CHECK_NO_THROW(foo.open(root, "foo"));   // re-open existing and opened group
+    BOOST_CHECK(get_name(foo) == get_name(bar));
+    BOOST_CHECK(foo.hid() != bar.hid());
+
+    BOOST_CHECK_NO_THROW(foo.close());             // close group
+    BOOST_CHECK_NO_THROW(foo.close());             // closing again doesn't throw
+}
+
+BOOST_AUTO_TEST_CASE( usage )
+{
     group one, two, three, four;
     BOOST_CHECK_NO_THROW(one.open(file, "one"));
-    BOOST_CHECK_NO_THROW(three.open(one, "two/three"));
-    BOOST_CHECK(exists_group(one, "two"));
+    BOOST_CHECK_NO_THROW(three.open(one, "two/three"));  // create intermediate group
+    BOOST_CHECK(exists_group(one, "two"));               // check existence of intermediate group
     BOOST_CHECK_NO_THROW(two.open(one, "two"));
     BOOST_CHECK_NO_THROW(four.open(two, "four"));
     BOOST_CHECK(get_name(one) == "/one");
     BOOST_CHECK(get_name(two) == "/one/two");
     BOOST_CHECK(get_name(three) == "/one/two/three");
     BOOST_CHECK(get_name(four) == "/one/two/four");
-
-    BOOST_CHECK_NO_THROW(h5group.close());
-}
-
-BOOST_AUTO_TEST_CASE( h5xx_group )
-{
-    file.close(); H5::H5File file(filename, H5F_ACC_TRUNC); // FIXME remove this line
-
-    BOOST_CHECK_NO_THROW(h5xx::open_group(file, "/"));
-    BOOST_CHECK_THROW(h5xx::open_group(file, ""), h5xx::error);
-
-    H5::Group group = h5xx::open_group(file, "/");
-    BOOST_CHECK_NO_THROW(h5xx::open_group(group, "/"));
-    BOOST_CHECK_THROW(h5xx::open_group(group, ""), h5xx::error);
-
-    // create a hierarchy of groups
-    h5xx::open_group(file, "/");
-    h5xx::open_group(file, "/one");
-    h5xx::open_group(file, "/one/two");
-    h5xx::open_group(file, "/one/two/three");
-
-    group = h5xx::open_group(file, "one");
-//     BOOST_CHECK(group.getNumAttrs() == 1);
-//     BOOST_CHECK(h5xx::exists_attribute(group, "level"));
-//     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 1);
-//     BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 1);
-
-    h5xx::open_group(group, "branch");        // create branch in '/one'
-//     BOOST_CHECK(group.getNumAttrs() == 1);
-    BOOST_CHECK(group.getNumObjs() == 2);
-
-    group = h5xx::open_group(group, "two/three/");
-//     BOOST_CHECK(group.getNumAttrs() == 1);
-//     BOOST_CHECK(h5xx::exists_attribute(group, "level"));
-//     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
-//     BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 3);
-
-    group = h5xx::open_group(file, "one/two");
-//     BOOST_CHECK(group.getNumAttrs() == 1);
-//     BOOST_CHECK(h5xx::exists_attribute(group, "level"));
-//     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 2);
-//     BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 2);
-
-    group = h5xx::open_group(group, "three");
-//     BOOST_CHECK(group.getNumAttrs() == 1);
-//     BOOST_CHECK(h5xx::exists_attribute(group, "level"));
-//     BOOST_CHECK(h5xx::read_attribute<int>(group, "level") == 3);
-//     BOOST_CHECK(boost::any_cast<int>(h5xx::read_attribute_if_exists<int>(group, "level")) == 3);
-
-    group = h5xx::open_group(group, "three");          // create new group
-//     BOOST_CHECK(group.getNumAttrs() == 0);
-//     BOOST_CHECK(!h5xx::exists_attribute(group, "level"));
-//     H5E_BEGIN_TRY{
-//         BOOST_CHECK_THROW(h5xx::read_attribute<int>(group, "level"), H5::AttributeIException);
-//     }H5E_END_TRY
-//     BOOST_CHECK(h5xx::read_attribute_if_exists<int>(group, "level").empty());
-
-    // test h5xx::path
-    BOOST_CHECK(h5xx::path(h5xx::open_group(file, "/")) == "/");
-    BOOST_CHECK(h5xx::path(h5xx::open_group(file, "one/two/three")) == "/one/two/three");
-    // note on previous check: semantics of h5xx::open_group seems to be somewhat too lazy
 }
 
 // test h5xx::split_path separately

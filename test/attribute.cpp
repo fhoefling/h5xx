@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010-2013  Felix Höfling
+ * Copyright © 2010-2014 Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -24,6 +24,7 @@
 
 #include <boost/shared_ptr.hpp>
 #include <cmath>
+#include <iterator>
 #include <unistd.h>
 
 #include <test/ctest_full_output.hpp>
@@ -60,6 +61,11 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     h5xx::write_attribute(group, "string, scalar", std::string(cstring_array[1]));
     h5xx::write_attribute(group, "char [], array", cstring_array);
 
+    typedef std::vector<std::string> string_vector_type;
+    string_vector_type string_vector;
+    std::copy(cstring_array.begin(), cstring_array.end(), std::back_inserter(string_vector));
+    h5xx::write_attribute(group, "char [], vector", string_vector);
+
     typedef boost::array<bool, 2> bool_array_type;
     bool_array_type bool_array = {{ true, false }};
     h5xx::write_attribute(group, "bool, array", bool_array);
@@ -74,6 +80,11 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
 
     typedef std::vector<double> double_vector_type;
     double_vector_type value_vector(value_array.size());
+    std::copy(value_array.begin(), value_array.end(), value_vector.begin());
+    h5xx::write_attribute(group, "double, std::vector", value_vector);
+    value_vector.resize(4);
+    h5xx::write_attribute(group, "double, std::vector", value_vector);     // overwrite with different size
+
     std::copy(value_array.begin(), value_array.end(), value_vector.begin());
     h5xx::write_attribute(group, "double, std::vector", value_vector);
     value_vector.resize(4);
@@ -135,6 +146,11 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     BOOST_CHECK(h5xx::read_attribute<std::string>(group, "string, scalar") == cstring_array[1]);
     // read support for fixed-size string array is missing
 //     BOOST_CHECK(h5xx::read_attribute<const char*>(group, "char [], array") == cstring_array);
+    string_vector_type string_vector2 = h5xx::read_attribute<string_vector_type>(group, "char [], vector");
+    BOOST_CHECK_EQUAL(string_vector.size(), string_vector2.size());
+    BOOST_CHECK_EQUAL_COLLECTIONS(
+        string_vector.begin(), string_vector.end(), string_vector2.begin(), string_vector2.end()
+    );
     BOOST_CHECK(h5xx::read_attribute<bool_array_type>(group, "bool, array") == bool_array);
     BOOST_CHECK(h5xx::read_attribute<double_array_type>(group, "double, array") == value_array);
     value_vector = h5xx::read_attribute<double_vector_type>(group, "double, array");

@@ -1,6 +1,6 @@
 /* HDF5 C++ extensions
  *
- * Copyright © 2008-2013  Felix Höfling
+ * Copyright © 2008-2014  Felix Höfling
  * Copyright © 2008-2010  Peter Colberg
  *
  * This file is part of h5xx.
@@ -37,6 +37,18 @@
 #include <vector>
 
 namespace h5xx {
+
+/**
+ * determine whether attribute exists in file/group/dataset
+ */
+inline bool exists_attribute(H5::H5Object const& object, std::string const& name)
+{
+    htri_t tri = H5Aexists(object.getId(), name.c_str());
+    if (tri < 0) {
+        throw error("failed to determine whether attribute \"" + name + "\" exists");
+    }
+    return (tri > 0);
+}
 
 /*
  * create and write fundamental type attribute
@@ -311,7 +323,9 @@ read_attribute(H5::H5Object const& object, std::string const& name)
  * create and write vector type attribute
  */
 template <typename T>
-inline typename boost::enable_if<is_vector<T>, void>::type
+inline typename boost::enable_if<boost::mpl::and_<
+    is_vector<T>, boost::is_fundamental<typename T::value_type>
+>, void>::type
 write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
@@ -340,7 +354,9 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
  * read data of possibly higher rank into 1D std::vector
  */
 template <typename T>
-inline typename boost::enable_if<is_vector<T>, T>::type
+inline typename boost::enable_if<boost::mpl::and_<
+    is_vector<T>, boost::is_fundamental<typename T::value_type>
+>, T>::type
 read_attribute(H5::H5Object const& object, std::string const& name)
 {
     typedef typename T::value_type value_type;
@@ -364,17 +380,89 @@ read_attribute(H5::H5Object const& object, std::string const& name)
     return value;
 }
 
-/**
- * determine whether attribute exists in file/group/dataset
+/*
+ * create and write vector<string> attribute as fixed-length strings
  */
-inline bool exists_attribute(H5::H5Object const& object, std::string const& name)
+template <typename T>
+inline typename boost::enable_if<boost::mpl::and_<
+    is_vector<T>
+  , boost::is_same<typename T::value_type, std::string>
+>, void>::type
+write_attribute(H5::H5Object const& object, std::string const& name, T const& value)
 {
-    htri_t tri = H5Aexists(object.getId(), name.c_str());
-    if (tri < 0) {
-        throw error("failed to determine whether attribute \"" + name + "\" exists");
+    size_t size = value.size();
+
+    // size of longest string
+    size_t str_len = 0;
+    for (size_t i = 0; i < size; ++i) {
+        str_len = std::max(str_len, value[i].size());
     }
-    return (tri > 0);
+
+    // remove attribute if it exists and re-create with proper String datatype
+    // and simple dataspace
+    if (exists_attribute(object, name)) {
+        object.removeAttr(name);
+    }
+
+    hsize_t dim[1] = { size };
+    H5::DataSpace ds(1, dim);
+    H5::StrType tid(H5::PredType::C_S1, str_len);
+    H5::Attribute attr = object.createAttribute(name, tid, ds);
+
+    // copy strings to contiguous buffer
+    std::vector<char> buffer(size * str_len);
+    for (size_t i = 0; i < size; ++i) {
+        value[i].copy(buffer.data() + i * str_len, str_len);
+    }
+
+    attr.write(tid, &*buffer.begin());
 }
+
+/*
+ * returns array attribute of fixed-length strings as vector<string>
+ */
+template <typename T>
+inline typename boost::enable_if<boost::mpl::and_<
+    is_vector<T>
+  , boost::is_same<typename T::value_type, std::string>
+>, T>::type
+read_attribute(H5::H5Object const& object, std::string const& name)
+{
+    H5::Attribute attr;
+    try {
+        H5XX_NO_AUTO_PRINT(H5::AttributeIException);
+        attr = object.openAttribute(name);
+    }
+    catch (H5::AttributeIException const&) {
+        throw;
+    }
+
+    H5::DataSpace ds(attr.getSpace());
+    if (!ds.isSimple()) {
+        throw H5::AttributeIException("H5::attribute::as", "incompatible dataspace");
+    }
+    size_t size = ds.getSimpleExtentNpoints();
+
+    H5::DataType tid = attr.getDataType();
+    if (tid.isVariableStr()) {
+        throw error("reading non-scalar attribute of variable-length strings not supported");
+    }
+    size_t str_len = tid.getSize();
+
+    // read to contiguous buffer and copy to std::vector
+    std::vector<char> buffer(str_len * size);
+    H5::StrType mem_tid(H5::PredType::C_S1, str_len);
+    attr.read(mem_tid, &*buffer.begin());
+
+    T value;
+    value.reserve(size);
+    for (unsigned int i = 0; i < size; ++i) {
+        value.push_back(buffer.data() + i * str_len);
+    }
+
+    return value;
+}
+
 
 /**
  * returns attribute value as boost::any if exists, or empty boost::any otherwise

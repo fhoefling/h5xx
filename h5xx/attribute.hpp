@@ -456,8 +456,10 @@ read_attribute(H5::H5Object const& object, std::string const& name)
 
     T value;
     value.reserve(size);
-    for (unsigned int i = 0; i < size; ++i) {
-        value.push_back(buffer.data() + i * str_len);
+    char const* s = buffer.data();
+    for (size_t i = 0; i < size; ++i, s += str_len) {
+        size_t len = strnlen(s, str_len);     // strings of str_len size are not '\0'-terminated
+        value.push_back(std::string(s, len)); // copy len bytes from buffer
     }
 
     return value;

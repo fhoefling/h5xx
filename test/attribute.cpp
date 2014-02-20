@@ -53,8 +53,9 @@ BOOST_AUTO_TEST_CASE( h5xx_attribute )
     h5xx::write_attribute(group, "double, scalar", static_cast<double>(ldouble_value));
 
     boost::array<char const*, 3> cstring_array = {{
-        "HALMD", "HAL's MD package",
-        "Highly accelerated large-scale molecular dynamics simulation package"
+        "HAL's MD package",
+        "Highly accelerated large-scale molecular dynamics simulation package",
+        "HALMD"
     }};
     typedef boost::array<std::string, 3> string_array_type;
     h5xx::write_attribute(group, "char [], scalar", cstring_array[1]);

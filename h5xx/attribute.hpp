@@ -23,9 +23,11 @@
 #ifndef H5XX_ATTRIBUTE_HPP
 #define H5XX_ATTRIBUTE_HPP
 
+#include <h5xx/attribute/attribute.hpp>
 #include <h5xx/attribute/boost_array.hpp>
 #include <h5xx/attribute/boost_multi_array.hpp>
 #include <h5xx/attribute/scalar.hpp>
 #include <h5xx/attribute/std_vector.hpp>
+#include <h5xx/attribute/utility.hpp>
 
 #endif /* ! H5XX_ATTRIBUTE_HPP */

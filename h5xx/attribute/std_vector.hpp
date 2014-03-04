@@ -49,10 +49,10 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     char const* attr_name = name.c_str();
     hid_t attr_id;
     hsize_t dim[1] = {value.size()};
-    if (exists_attribute(object, name))     //the attribute will be replaced if it already exists
-    {
-        delete_attribute(object, name);
-    }
+
+    // remove attribute if it exists
+    delete_attribute(object, name);
+
     hid_t space_id = H5Screate_simple(1, dim, dim);
     hid_t type_id = ctype<value_type>::hid();       //this ID can not be closed
     err |= (attr_id = H5Acreate(object.hid(), attr_name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT)) < 0;
@@ -87,7 +87,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     hsize_t dim[1];
     hsize_t maxdim[1];
 
-    if(!exists_attribute(object, attr_name)) {
+    if(!exists_attribute(object, name)) {
         throw error("Attribute does not exist");
     }
 
@@ -134,10 +134,9 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     hid_t attr_id;
     size_t size = value.size();
     hsize_t dim[1] = { size };
-    if (exists_attribute(object, name))     //the attribute will be replaced if it already exists
-    {
-        delete_attribute(object, name);
-    }
+
+    // remove attribute if it exists
+    delete_attribute(object, name);
 
     // size of longest string
     size_t str_size = 0;
@@ -190,7 +189,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     bool err = false;
     // open object
 
-    if(!exists_attribute(object, attr_name)) {
+    if(!exists_attribute(object, name)) {
         throw error("Attribute does not exist");
     }
 

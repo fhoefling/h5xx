@@ -45,10 +45,8 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     bool err = false;
     char const* attr_name = name.c_str();
 
-    // delete attribute if it existed before
-    if (exists_attribute(object, attr_name)) {
-        delete_attribute(object, name);
-    }
+    // remove attribute if it exists
+    delete_attribute(object, name);
 
     // (re)create attribute
     hid_t space_id = H5Screate(H5S_SCALAR);
@@ -75,7 +73,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     hid_t attr_id;
     bool err = false;
 
-    if(!exists_attribute(object, attr_name)) {
+    if(!exists_attribute(object, name)) {
         throw error("Attribute does not exist");
     }
     // open object
@@ -107,10 +105,8 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     hid_t type_id = policy.make_type(value.size());
     hid_t attr_id;
 
-    // open or create attribute
-    if (exists_attribute(object, name)) {
-        delete_attribute(object, name);
-    }
+    // remove attribute if it exists
+    delete_attribute(object, name);
 
     err |= (attr_id = H5Acreate(object.hid(), attr_name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT)) < 0;
     err |= H5Sclose(space_id) < 0;
@@ -151,10 +147,8 @@ write_attribute(h5xxObject const& object, std::string const& name, T value, Stri
     bool err = false;
     htri_t attr_id;
 
-    // delete attribute if it already exists
-    if (exists_attribute(object, attr_name) > 0) {
-        delete_attribute(object, name);
-    }
+    // remove attribute if it exists
+    delete_attribute(object, name);
 
     hid_t space_id = H5Screate(H5S_SCALAR);
     hid_t type_id = policy.make_type(strlen(value));
@@ -196,7 +190,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     hid_t attr_id;
     bool err = false;
 
-    if(!exists_attribute(object, attr_name)) {
+    if(!exists_attribute(object, name)) {
         throw error("Attribute does not exist");
     }
 

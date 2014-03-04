@@ -48,10 +48,9 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     char const* attr_name = name.c_str();
     hid_t attr_id;
 
-    if (exists_attribute(object, name))     //the attribute will be replaced if it already exists
-    {
-        delete_attribute(object, name);
-    }
+    // remove attribute if it exists
+    delete_attribute(object, name);
+
     hsize_t dim[1] = {size};
     hid_t space_id = H5Screate_simple(1, dim, dim);
     err |= (attr_id = H5Acreate(object.hid(), attr_name, ctype<value_type>::hid(), space_id, H5P_DEFAULT, H5P_DEFAULT)) < 0;
@@ -78,7 +77,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     hid_t attr_id;
     bool err = false;
 
-    if(!exists_attribute(object, attr_name)) {
+    if(!exists_attribute(object, name)) {
         throw error("Attribute does not exist");
     }
     // open object
@@ -124,11 +123,9 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     hid_t attr_id;
 
     // remove attribute if it exists
-    if (exists_attribute(object, name)) {
-        delete_attribute(object, name);
-    }
-    size_t str_size = 0;
+    delete_attribute(object, name);
 
+    size_t str_size = 0;
     for (hsize_t i = 0; i < size; ++i) {
         str_size = std::max(str_size, value[i].size());  // include terminating NULL character
     }
@@ -188,7 +185,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     bool err = false;
     // open object
 
-    if(!exists_attribute(object, attr_name)) {
+    if(!exists_attribute(object, name)) {
         throw error("Attribute does not exist");
     }
 
@@ -281,9 +278,7 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     }
 
     // remove attribute if it exists
-    if (exists_attribute(object, name)) {
-        delete_attribute(object, name);
-    }
+    delete_attribute(object, name);
 
     hid_t space_id = H5Screate_simple(1, dim, dim);
     hid_t type_id = policy.make_type(str_size);

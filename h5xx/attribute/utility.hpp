@@ -1,6 +1,5 @@
-/* HDF5 C++ extensions
- *
- * Copyright © 2014  Manuel Dibak
+/*
+ * Copyright © 2014 Manuel Dibak
  *
  * This file is part of h5xx.
  *
@@ -21,53 +20,40 @@
 #ifndef H5XX_ATTRIBUTE_UTILITY_HPP
 #define H5XX_ATTRIBUTE_UTILITY_HPP
 
-#include <h5xx/ctype.hpp>
 #include <h5xx/error.hpp>
-#include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
-
-#include <boost/lexical_cast.hpp>
 
 namespace h5xx {
 
-
 /**
- * Check whether an attribute exists for an object
- * given by either the object hid or as a h5xx Object
- **/
-
+ * Check whether an attribute of the given name is attached to the h5xx object.
+ */
 template <typename h5xxObject>
-inline bool exists_attribute(h5xxObject const& object, std::string const& name)
+inline bool exists_attribute(h5xxObject const& obj, std::string const& name)
 {
-    hid_t obj_id = object.hid();
-    htri_t tri = H5Aexists(obj_id, name.c_str());
+    htri_t tri = H5Aexists(obj.hid(), name.c_str());
     if (tri < 0) {
-        throw error("testing attribute \"" + name + "\" at object ID " + boost::lexical_cast<std::string>(obj_id));
+        throw error("testing attribute \"" + name + "\" at HDF5 object \"" + get_name(obj) + "\"");
     }
     return (tri > 0);
 }
 
-
 /**
- * Delete attribute from group, dataset, or datatype
- * given as by either its object hid or as a h5xx object
+ * Delete the attribute of the given name from the h5xx object. Non-existence
+ * of the attribute is not an error.
  *
- * warning: no other attribute of the object must be opened
+ * Warning: no other attribute of the object must be opened.
  */
-
 template <typename h5xxObject>
-inline void delete_attribute(h5xxObject const& object, std::string const& name)
+inline void delete_attribute(h5xxObject const& obj, std::string const& name)
 {
-    hid_t obj_id = object.hid();
-    if (exists_attribute(object, name)) {
-        if (H5Adelete(obj_id, name.c_str()) < 0) {
-            throw error("deleting attribute \"" + name + "\" for object \"" + get_name(obj_id) + "\"");
+    if (exists_attribute(obj, name)) {
+        if (H5Adelete(obj.hid(), name.c_str()) < 0) {
+            throw error("deleting attribute \"" + name + "\" from HDF5 object \"" + get_name(obj) + "\"");
         }
     }
-    else {
-        throw error("to be deleted attribute \"" + name + "\"  does not exist for object \"" + get_name(obj_id) + "\"");
-    }
 }
-} //namespace h5xx
+
+} // namespace h5xx
 
 #endif /* ! H5XX_ATTRIBUTE_UTILITY_HPP */

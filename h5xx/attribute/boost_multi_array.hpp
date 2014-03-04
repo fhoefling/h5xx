@@ -45,10 +45,10 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
     bool err = false;
     char const* attr_name = name.c_str();
     hid_t attr_id;
-    if (exists_attribute(object, name))     //the attribute will be replaced if it already exists
-    {
-        delete_attribute(object, name);
-    }
+
+    // remove attribute if it exists
+    delete_attribute(object, name);
+
     hsize_t dim[rank];
     std::copy(value.shape(), value.shape() + rank, dim);
     hid_t space_id = H5Screate_simple(rank, dim, dim);
@@ -83,7 +83,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     hsize_t dim[rank];
     hsize_t maxdim[rank];
 
-    if(!exists_attribute(object, attr_name)) {
+    if(!exists_attribute(object, name)) {
         throw error("Attribute does not exist");
     }
 

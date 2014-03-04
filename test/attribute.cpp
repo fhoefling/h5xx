@@ -51,7 +51,6 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     BOOST_CHECK(exists_attribute(file, "bool, scalar") == false);
     H5E_BEGIN_TRY{
         BOOST_CHECK_THROW(read_attribute<bool>(file, "bool, scalar"), h5xx::error);
-        BOOST_CHECK_THROW(delete_attribute(file, "bool, scalar"), h5xx::error);
     } H5E_END_TRY
 
     double double_value = std::sqrt(2.L);

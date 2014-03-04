@@ -54,6 +54,79 @@ inline void delete_attribute(h5xxObject const& obj, std::string const& name)
     }
 }
 
+namespace detail {
+
+/**
+ * Returns HDF5 handle for data space of given attribute. Must be closed by
+ * calling H5Sclose() after use. FIXME add class h5xx::dataspace
+ */
+inline hid_t get_dataspace(attribute const& attr) {
+    hid_t space_id;
+    if ((space_id = H5Aget_space(attr.hid())) < 0) {
+        throw error ("can not get dataspace of attribute \"" + get_name(attr) + "\"");
+    }
+    return space_id;
+}
+
+/**
+ * Returns true if the data space of the attribute is of scalar type.
+ */
+inline bool has_scalar_dataspace(attribute const& attr)
+{
+    if (!attr.valid()) {
+        return false;
+    }
+
+    hid_t space_id = get_dataspace(attr);
+    bool ret = H5Sget_simple_extent_type(space_id) == H5S_SCALAR;
+    H5Sclose(space_id);
+    return ret;
+}
+
+/**
+ * Returns true if the data space of the attribute is of simple type.
+ */
+inline bool has_simple_dataspace(attribute const& attr)
+{
+    if (!attr.valid()) {
+        return false;
+    }
+
+    hid_t space_id = get_dataspace(attr);
+    bool ret = H5Sget_simple_extent_type(space_id) == H5S_SIMPLE;
+    H5Sclose(space_id);
+    return ret;
+}
+
+} // namespace detail
+
+/**
+ * FIXME remove this function
+ * h5xx implementation to check whether a data space is scalar
+ */
+inline bool has_scalar_space(hid_t attr_id)
+{
+    hid_t space_id;
+    if ((space_id = H5Aget_space(attr_id)) < 0) {
+        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
+    }
+    return H5Sget_simple_extent_type(space_id) == H5S_SCALAR;
+}
+
+
+/**
+ * FIXME remove this function
+ * h5xx implementation to check whether a data space is simple
+ */
+inline bool has_simple_space(hid_t attr_id)
+{
+    hid_t space_id;
+    if ((space_id = H5Aget_space(attr_id)) < 0) {
+        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
+    }
+    return H5Sget_simple_extent_type(space_id) == H5S_SIMPLE;
+}
+
 } // namespace h5xx
 
 #endif /* ! H5XX_ATTRIBUTE_UTILITY_HPP */

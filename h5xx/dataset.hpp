@@ -21,6 +21,7 @@
 #define H5XX_DATASET_HPP
 
 #include <h5xx/attribute.hpp>
+#include <h5xx/exception.hpp>
 #include <h5xx/property.hpp>
 #include <h5xx/utility.hpp>
 

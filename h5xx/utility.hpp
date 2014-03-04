@@ -259,31 +259,6 @@ has_type(H5::AbstractDs const& ds)
 }
 
 /**
- * h5xx implementation to check whether a data space is scalar
- */
-inline bool has_scalar_space(hid_t attr_id)
-{
-    hid_t space_id;
-    if ((space_id = H5Aget_space(attr_id)) < 0) {
-        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
-    }
-    return H5Sget_simple_extent_type(space_id) == H5S_SCALAR;
-}
-
-
-/**
- * h5xx implementation to check whether a data space is simple
- */
-inline bool has_simple_space(hid_t attr_id)
-{
-    hid_t space_id;
-    if ((space_id = H5Aget_space(attr_id)) < 0) {
-        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
-    }
-    return H5Sget_simple_extent_type(space_id) == H5S_SIMPLE;
-}
-
-/**
  * check if data space is scalar
  */
 inline bool is_scalar(H5::DataSpace const& dataspace)

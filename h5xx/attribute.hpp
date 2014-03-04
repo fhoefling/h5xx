@@ -212,7 +212,7 @@ write_attribute(H5::H5Object const& object, std::string const& name, T const& va
     H5::DataSpace ds(1, dim);
     size_t max_len = 0;
     for (size_t i = 0; i < size; ++i) {
-        max_len = std::max(max_len, strlen(value[i]) + 1);  // include terminating NULL character
+        max_len = std::max(max_len, strlen(value[i]));
     }
     H5::StrType tid(H5::PredType::C_S1, max_len);
     // remove attribute if it exists
@@ -451,8 +451,7 @@ read_attribute(H5::H5Object const& object, std::string const& name)
 
     // read to contiguous buffer and copy to std::vector
     std::vector<char> buffer(str_len * size);
-    H5::StrType mem_tid(H5::PredType::C_S1, str_len);
-    attr.read(mem_tid, &*buffer.begin());
+    attr.read(tid, &*buffer.begin());
 
     T value;
     value.reserve(size);

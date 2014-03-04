@@ -1,6 +1,6 @@
 /*
  * Copyright © 2014 Felix Höfling
- * Copyright © 2014  Manuel Dibak
+ * Copyright © 2014 Manuel Dibak
  *
  * This file is part of h5xx.
  *
@@ -21,17 +21,16 @@
 #ifndef H5XX_ATTRIBUTE_BOOST_ARRAY
 #define H5XX_ATTRIBUTE_BOOST_ARRAY
 
-#include <h5xx/ctype.hpp>
-#include <h5xx/error.hpp>
-#include <h5xx/exception.hpp>
-#include <h5xx/utility.hpp>
-#include <h5xx/attribute/utility.hpp>
-#include <h5xx/policy/string.hpp>
-
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
+
+#include <h5xx/attribute/utility.hpp>
+#include <h5xx/ctype.hpp>
+#include <h5xx/error.hpp>
+#include <h5xx/policy/string.hpp>
+#include <h5xx/utility.hpp>
 
 namespace h5xx {
 
@@ -39,27 +38,29 @@ namespace h5xx {
  * create and write fixed-size fundamental array type attribute for h5xx objects
  */
 template <typename T, typename h5xxObject>
-inline typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+inline typename boost::enable_if<boost::mpl::and_<
+    is_array<T>, boost::is_fundamental<typename T::value_type>
+>, void>::type
 write_attribute(h5xxObject const& object, std::string const& name, T const& value)
 {
     typedef typename T::value_type value_type;
     enum { size = T::static_size };
     bool err = false;
-    char const* attr_name = name.c_str();
-    hid_t attr_id;
 
     // remove attribute if it exists
     delete_attribute(object, name);
 
-    hsize_t dim[1] = {size};
+    hsize_t dim[1] = { size };
     hid_t space_id = H5Screate_simple(1, dim, dim);
-    err |= (attr_id = H5Acreate(object.hid(), attr_name, ctype<value_type>::hid(), space_id, H5P_DEFAULT, H5P_DEFAULT)) < 0;
+    hid_t attr_id = H5Acreate(object.hid(), name.c_str(), ctype<value_type>::hid(), space_id, H5P_DEFAULT, H5P_DEFAULT);
+    err |= attr_id < 0;
     err |= H5Sclose(space_id) < 0;
+
     // write data
     err |= H5Awrite(attr_id, ctype<value_type>::hid(), &*value.begin()) < 0;
     err |= H5Aclose(attr_id) < 0;
     if (err) {
-        throw error("writing attribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
+        throw error("writing attribute \"" + name + "\" at HDF5 object \"" + get_name(object) + "\"");
     }
 }
 
@@ -67,44 +68,34 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
  * read fixed-size fundamental array type attributes from h5xx objects
  */
 template <typename T, typename h5xxObject>
-inline typename boost::enable_if<boost::mpl::and_<is_array<T>, boost::is_fundamental<typename T::value_type> >, T>::type
+inline typename boost::enable_if<boost::mpl::and_<
+    is_array<T>, boost::is_fundamental<typename T::value_type>
+>, T>::type
 read_attribute(h5xxObject const& object, std::string const& name)
 {
-
     typedef typename T::value_type value_type;
-    enum { size = T::static_size };
-    char const* attr_name = name.c_str();
-    hid_t attr_id;
+
+    // open attribute
+    attribute attr(object, name);
+
     bool err = false;
+    err |= !detail::has_simple_dataspace(attr);
 
-    if(!exists_attribute(object, name)) {
-        throw error("Attribute does not exist");
-    }
-    // open object
-    err |= (attr_id = H5Aopen(object.hid(), attr_name, H5P_DEFAULT)) < 0;
+    hid_t attr_space = detail::get_dataspace(attr);
+    err |= !has_rank<1>(attr_space);
     if (err) {
-        throw error("opening atrribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
+        throw error("attribute \"" + name + "\" of object \"" + get_name(object) + "\" has incompatible dataspace");
     }
-    if (!has_simple_space(attr_id)) {
-        throw error("Attribute \"" + name + "\" of object \"" + get_name(object) + "\" has incompatible dataspace");
-    }
-    hid_t attr_space = H5Aget_space(attr_id);
-    if ( !has_rank<1>(attr_space)) {
-        throw error("Attribute has an invalid dataspace");
-    }
-    if ( !has_extent<T>(attr_space)  ) {
+    if (!has_extent<T>(attr_space)) {
         throw error("Dimension of given type and attribute are not matching");
-
     }
     err |= H5Sclose(attr_space) < 0;
 
-    T value;
     // read from opened object
-    err |= (H5Aread(attr_id, ctype<value_type>::hid(), &*value.begin())) < 0;
-    // close object
-    err |= H5Aclose(attr_id) < 0;
+    T value;
+    err |= (H5Aread(attr.hid(), ctype<value_type>::hid(), &*value.begin())) < 0;
     if (err) {
-        throw error("reading atrribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
+        throw error("reading attribute \"" + name + "\" at HDF5 object \"" + get_name(object) + "\"");
     }
     return value;
 }

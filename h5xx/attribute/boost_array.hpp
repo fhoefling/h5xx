@@ -219,9 +219,14 @@ read_attribute(h5xxObject const& object, std::string const& name)
 
     T value;
     if (!is_varlen_str){
+        // create memory datatype with matching size and padding,
+        // convert space padding to null padding
         hid_t mem_type_id = H5Tcopy(H5T_C_S1);
-        hsize_t str_size = H5Tget_size(type_id) + 1;    //one extra char for nullpad and spacepad
+        hsize_t str_size = H5Tget_size(type_id);
         err |= H5Tset_size(mem_type_id, str_size) < 0;
+        if (H5Tget_strpad(type_id) != H5T_STR_NULLTERM) {
+            H5Tset_strpad(mem_type_id, H5T_STR_NULLPAD);
+        }
 
         // read from opened object
         std::vector<char> buffer(str_size * size);
@@ -272,7 +277,7 @@ write_attribute(h5xxObject const& object, std::string const& name, T const& valu
 
     size_t str_size = 0;
     for (hsize_t i = 0; i < size; ++i) {
-        str_size = std::max(str_size, strlen(value[i]) + 1);  // include terminating NULL character
+        str_size = std::max(str_size, strlen(value[i]));
     }
 
     // remove attribute if it exists

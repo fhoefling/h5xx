@@ -1,5 +1,6 @@
 /*
- * Copyright © 2008-2013 Felix Höfling
+ * Copyright © 2008-2014 Felix Höfling
+ * Copyright © 2014      Manuel Dibak
  * Copyright © 2008-2009 Peter Colberg
  *
  * This file is part of h5xx.
@@ -58,31 +59,13 @@ inline std::string filename(h5xxObject const& obj)
 }
 
 /**
- * returns absolute path of an HDF5 object within file
+ * Return the name (absolute path) of an h5xx object, or a general HDF5 object
+ * given by its hid
  *
- * For attributes the path of the parent object is returned.
+ * For attributes, return the name of the object to which that attribute is
+ * attached.
  */
-inline std::string path(H5::IdComponent const& id)
-{
-    ssize_t size; // excludes NULL terminator
-    if (-1 == (size = H5Iget_name(id.getId(), NULL, 0))) {
-        throw H5::IdComponentException("H5Iget_name", "failed to get length of name");
-    }
-    std::vector<char> name_(size + 1); // includes NULL terminator
-    if (-1 == (H5Iget_name(id.getId(), &*name_.begin(), name_.size()))) {
-        throw H5::IdComponentException("H5Iget_name", "failed to get name");
-    }
-    return &*name_.begin();
-}
-
-/**
- * overload function to return the absolute path of an h5xx object or a general HDF5 object given by its hid
- *
- *
- * For attributes the path of the parent object is returned!
- *
- */
-std::string get_name(hid_t hid)
+inline std::string get_name(hid_t hid)
 {
     ssize_t size = H5Iget_name(hid, NULL, 0);        // get size of string
     std::vector<char> buffer;
@@ -97,7 +80,7 @@ std::string get_name(hid_t hid)
 }
 
 template <typename h5xxObject>
-std::string get_name(h5xxObject const& obj)
+inline std::string get_name(h5xxObject const& obj)
 {
     return get_name(obj.hid());
 }
@@ -115,7 +98,6 @@ inline std::string name(file const& obj)
     return std::string();
 }
 */
-
 
 /**
  * hard link HDF5 object into the given group with given name
@@ -190,8 +172,8 @@ template <typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
 has_type(hid_t const& hid)
 {
-    hid_t type_id = H5Aget_type(hid);
-    return H5Tget_class(type_id) == ctype<T>::hid_copy();
+    hid_t type_id = H5Aget_type(hid); // FIXME works for attributes only
+    return H5Tget_class(type_id) == ctype<T>::hid();
 }
 
 template <typename T>
@@ -238,7 +220,7 @@ template <typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
 has_type(H5::AbstractDs const& ds)
 {
-    return ds.getDataType() == ctype<T>::hid_copy();
+    return ds.getDataType() == ctype<T>::hid();
 }
 
 template <typename T>

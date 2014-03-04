@@ -220,17 +220,13 @@ BOOST_AUTO_TEST_CASE( stdvector_int )
 
 BOOST_AUTO_TEST_CASE( stdvector_string )
 {
-    typedef std::vector<std::string> string_vector_type;
-    static const std::string values[] = {
-        "HAL's MD package",
-        "Highly accelerated large-scale molecular dynamics simulation package",
-        "HALMD"
-    };
-    string_vector_type string_vector(values, values + sizeof(values)/sizeof(std::string) );
-    string_vector_type read;
-    BOOST_CHECK_NO_THROW(write_attribute(file, "stdvector, string", string_vector));
-    BOOST_CHECK_NO_THROW(read = read_attribute<string_vector_type>(file, "stdvector, string"));
-    BOOST_CHECK(read == string_vector);
+    std::vector<std::string> output, input;
+    output.push_back("HAL's MD package");
+    output.push_back("Highly accelerated large-scale molecular dynamics simulation package");
+    output.push_back("HALMD");
+    BOOST_CHECK_NO_THROW(write_attribute(file, "std::vector, string", output));
+    BOOST_CHECK_NO_THROW(input = read_attribute<std::vector<std::string> >(file, "std::vector, string"));
+    BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
 }
 
 BOOST_AUTO_TEST_CASE( boost_multi_array)

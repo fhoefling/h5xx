@@ -23,6 +23,7 @@
 #include <boost/lexical_cast.hpp>
 
 #include <h5xx/hdf5_compat.hpp>
+#include <h5xx/dataspace.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/utility.hpp>
 
@@ -45,14 +46,17 @@ public:
      */
     attribute(attribute& other);
 
+    /** default destructor */
+    ~attribute();
+
+    /** deduce dataspace from attribute */
+    operator dataspace() const;
+
     /** assignment operator with move semantics
      *
      * the attribute object on the right hand side is empty after assignment
      */
     attribute const& operator=(attribute other);
-
-    /** default destructor */
-    ~attribute();
 
     /** return HDF5 object ID */
     hid_t hid() const
@@ -68,6 +72,10 @@ public:
 
     // FIXME make the following functions private and add friend functions
 
+    /** create attribute for given object */
+    template <typename h5xxObject>
+    attribute(h5xxObject const& object, std::string const& name, hid_t type_id, dataspace const& space, hid_t acpl_id = H5P_DEFAULT, hid_t aapl_id = H5P_DEFAULT);
+
     /** open existing attribute of given name, attached to the HDF5 object */
     template <typename h5xxObject>
     attribute(h5xxObject const& object, std::string const& name, hid_t aapl_id = H5P_DEFAULT);
@@ -75,9 +83,24 @@ public:
     /** construct from HDF5 object ID */
     attribute(hid_t hid) : hid_(hid) {}
 
+    /** write attribute */
+    void write(hid_t mem_type_id, void const* value);
+
+    /** read attribute */
+    void read(hid_t mem_type_id, void* buffer);
+
 private:
     hid_t hid_;
 };
+
+template <typename h5xxObject>
+attribute::attribute(h5xxObject const& object, std::string const& name, hid_t type_id, dataspace const& space, hid_t acpl_id, hid_t aapl_id)
+{
+    if ((hid_ = H5Acreate(object.hid(), name.c_str(), type_id, space.hid(), acpl_id, aapl_id)) < 0 )
+    {
+        throw error("creating attribute \"" + name + "\"");
+    }
+}
 
 template <typename h5xxObject>
 attribute::attribute(h5xxObject const& object, std::string const& name, hid_t aapl_id)
@@ -108,6 +131,16 @@ attribute::~attribute()
     }
 }
 
+attribute::operator dataspace() const
+{
+    hid_t hid = H5Aget_space(hid_);
+    if(hid < 0 ) {
+        throw error("attribute has invalid dataspace");
+    }
+    dataspace ds(hid);
+    return ds;
+}
+
 attribute const& attribute::operator=(attribute other)
 {
     // swap(hid_, other.hid_),
@@ -116,6 +149,22 @@ attribute const& attribute::operator=(attribute other)
     hid_ = other.hid_;
     other.hid_ = tmp;
     return *this;
+}
+
+void attribute::write(hid_t mem_type_id, void const* value)
+{
+    if (H5Awrite(hid_, mem_type_id, value) < 0)
+    {
+        throw error("writing attribute with id ");
+    }
+}
+
+void attribute::read(hid_t mem_type_id, void * buffer)
+{
+    if (H5Aread(hid_, mem_type_id, buffer) < 0)
+    {
+        throw error("reading attribute");
+    }
 }
 
 } // namespace h5xx

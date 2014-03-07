@@ -24,9 +24,9 @@
 
 #include <h5xx/hdf5_compat.hpp>
 #include <h5xx/error.hpp>
+#include <h5xx/utility.hpp>
 
 #include <boost/lexical_cast.hpp>
-#include <boost/noncopyable.hpp>
 #include <string>
 #include <vector>
 
@@ -53,7 +53,7 @@ htri_t is_hdf5_file(std::string const& filename)
  *  the HDF5 library, so file::in may be omitted. The flags file::trunc and
  *  file::excl are mutually exclusive and imply file::out.
  */
-class file : boost::noncopyable
+class file
 {
 public:
     enum mode
@@ -70,6 +70,23 @@ public:
     /** open file upon construction */
     explicit file(std::string const& filename, unsigned mode = in | out);
 
+    /**
+     * deleted copy constructor
+     *
+     * Calling the constructor throws an exception. Copying must be elided by
+     * return value optimisation. See also "file h5xx::move(file&)".
+     */
+    file(file const& other);
+
+    /**
+     * assignment operator
+     *
+     * Uses the copy-and-swap idiom. Move semantics is achieved in conjunction
+     * with "file h5xx::move(file&)", i.e., the group object on the right
+     * hand side is empty after move assignment.
+     */
+    file const& operator=(file other);
+
     /** close file upon destruction */
     ~file();
 
@@ -77,6 +94,12 @@ public:
     hid_t hid() const
     {
         return hid_;
+    }
+
+    /** returns true if associated to a valid HDF5 object */
+    bool valid() const
+    {
+        return hid_ >= 0;
     }
 
     /** open HDF5 file in specified mode */
@@ -98,12 +121,28 @@ public:
 private:
     /** HDF5 object ID */
     hid_t hid_;
+
+    template <typename h5xxObject>
+    friend void swap(h5xxObject& left, h5xxObject& right);
 };
 
 file::file(std::string const& filename, unsigned mode)
   : hid_(-1)
 {
     open(filename, mode);
+}
+
+file::file(file const& other)
+{
+    // copying would be safe if the exception were disabled.
+    throw error("h5xx::file can not be copied. Copying must be elided by return value optimisation.");
+    hid_ = H5Freopen(other.hid_);
+}
+
+file const& file::operator=(file other)
+{
+    swap(*this, other);
+    return *this;
 }
 
 file::~file()

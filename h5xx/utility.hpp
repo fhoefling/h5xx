@@ -68,14 +68,12 @@ inline std::string filename(h5xxObject const& obj)
 inline std::string get_name(hid_t hid)
 {
     ssize_t size = H5Iget_name(hid, NULL, 0);        // get size of string
-    std::vector<char> buffer;
-    if (size >= 0) {
-        buffer.resize(size + 1);                     // includes NULL terminator
-        size = H5Iget_name(hid, &*buffer.begin(), buffer.size()); // get string data
-    }
     if (size < 0) {
         throw error("failed to get name of HDF5 object with ID " + boost::lexical_cast<std::string>(hid));
     }
+    std::vector<char> buffer;
+    buffer.resize(size + 1);                         // includes NULL terminator
+    size = H5Iget_name(hid, &*buffer.begin(), buffer.size()); // get string data
     return &*buffer.begin();                         // convert char* to std::string
 }
 
@@ -84,20 +82,6 @@ inline std::string get_name(h5xxObject const& obj)
 {
     return get_name(obj.hid());
 }
-
-/** FIXME disable definition for h5xx::file and use specialisation for attribute */
-/*template <>
-inline std::string name(attribute const& obj)
-{
-    return std::string();
-}
-
-template <>
-inline std::string name(file const& obj)
-{
-    return std::string();
-}
-*/
 
 /**
  * hard link HDF5 object into the given group with given name

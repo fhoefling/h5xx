@@ -93,6 +93,14 @@ public:
     /** read attribute */
     void read(hid_t mem_type_id, void* buffer);
 
+    /**
+     * returns the name of the attribute.
+     *
+     * This is not the path of the object it is attached to, use
+     * get_name(attribute const&).
+     */
+    std::string name() const;
+
 private:
     /** HDF5 object ID */
     hid_t hid_;
@@ -171,6 +179,18 @@ void attribute::read(hid_t mem_type_id, void * buffer)
     {
         throw error("reading attribute");
     }
+}
+
+std::string attribute::name() const
+{
+    ssize_t size = H5Aget_name(hid_, 0, NULL);        // get size of string
+    if (size < 0) {
+        throw error("failed to get name of HDF5 attribute with ID " + boost::lexical_cast<std::string>(hid_));
+    }
+    std::vector<char> buffer;
+    buffer.resize(size + 1);                         // includes NULL terminator
+    size = H5Aget_name(hid_, buffer.size(), &*buffer.begin()); // get string data
+    return &*buffer.begin();                         // convert char* to std::string
 }
 
 } // namespace h5xx

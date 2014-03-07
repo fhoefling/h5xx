@@ -49,6 +49,7 @@ BOOST_AUTO_TEST_CASE( construction )
 
     attribute foo(file, "foo");
     BOOST_CHECK_EQUAL(get_name(foo), "/");             // path of the object the attribute is attached to
+    BOOST_CHECK_EQUAL(foo.name(), "foo");              // name of the attribute
     BOOST_CHECK(foo.valid());
 
     hid_t hid = foo.hid();

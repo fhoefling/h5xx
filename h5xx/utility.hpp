@@ -409,6 +409,28 @@ inline hsize_t elements(H5::AbstractDs const& ds)
     return elements(ds.getSpace());
 }
 
+/** swaps two h5xx objects */
+template <typename h5xxObject>
+void swap(h5xxObject& left, h5xxObject& right)
+{
+    hid_t tmp = left.hid_;
+    left.hid_ = right.hid_;
+    right.hid_ = tmp;
+}
+
+/**
+ * Moves the object from 'right' to the returned temporary and leaves a default
+ * constructed object in 'right'. Can be used to implement move semantics in
+ * copying and assignment. Inspired by std::move in C++11.
+ */
+template <typename T>
+T move(T& right)
+{
+    T left;
+    swap(left, right);
+    return left;
+}
+
 } // namespace h5xx
 
 #endif /* ! H5XX_UTILITY_HPP */

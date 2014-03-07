@@ -53,14 +53,17 @@ BOOST_AUTO_TEST_CASE( construction )
     BOOST_CHECK(bar.valid());
 
     hid_t hid = foo.hid();
-    BOOST_CHECK_NO_THROW(group g(bar));            // copy constructor with move semantics, closes bar
+    BOOST_CHECK_THROW(group g(bar), h5xx::error);  // copying is not allowed
+    BOOST_CHECK_NO_THROW(group g(move(bar)));      // copying from temporary is allowed (with move semantics)
     BOOST_CHECK(!bar.valid());
-    BOOST_CHECK_NO_THROW(bar = foo);               // assignment operator with move semantics
+    BOOST_CHECK_THROW(bar = foo, h5xx::error);     // assignment is not allowed (it makes a copy)
+    BOOST_CHECK_NO_THROW(bar = move(foo));         // move assignment
     BOOST_CHECK_EQUAL(bar.hid(), hid);
     BOOST_CHECK(!foo.valid());
 
     group root(file);
-//  root = group(file);                            // doesn't compile due to copy construction of temporary group
+    BOOST_CHECK_EQUAL(get_name(root), "/");
+    BOOST_CHECK_NO_THROW(root = group(file));      // convert file to root group
     BOOST_CHECK_EQUAL(get_name(root), "/");
     BOOST_CHECK_NO_THROW(foo.open(root, "foo"));   // re-open existing and opened group
     BOOST_CHECK(get_name(foo) == get_name(bar));

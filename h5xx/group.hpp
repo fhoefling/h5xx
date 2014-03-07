@@ -42,16 +42,20 @@ public:
     /** open root group of file */
     group(file const& f);
 
-    /** copy constructor with move semantics
+    /**
+     * deleted copy constructor
      *
-     * The group object on the right hand side is empty after assignment. In
-     * C++98, moving from an r-values (e.g., a temporary) is not possible.
+     * Calling the constructor throws an exception. Copying must be elided by
+     * return value optimisation. See also "group h5xx::move(group&)".
      */
-    group(group& other);
+    group(group const& other);
 
-    /** assignment operator with move semantics
+    /**
+     * assignment operator
      *
-     * the group object on the right hand side is empty after assignment
+     * Uses the copy-and-swap idiom. Move semantics is achieved in conjunction
+     * with "group h5xx::move(group&)", i.e., the group object on the right
+     * hand side is empty after move assignment.
      */
     group const& operator=(group other);
 
@@ -77,7 +81,11 @@ public:
     void close();
 
 private:
+    /** HDF5 object ID */
     hid_t hid_;
+
+    template <typename h5xxObject>
+    friend void swap(h5xxObject& left, h5xxObject& right);
 };
 
 /**
@@ -99,25 +107,23 @@ group::group(file const& f)
     }
 }
 
-group::group(group& other)
+group::group(group const& other)
+  : hid_(other.hid_)
 {
-    hid_ = other.hid_;
-    other.hid_ = -1;
+    // copying would be safe if the exception were disabled.
+    throw error("h5xx::group can not be copied. Copying must be elided by return value optimisation.");
+    H5Iinc_ref(hid_);
+}
+
+group const& group::operator=(group other)
+{
+    swap(*this, other);
+    return *this;
 }
 
 group::~group()
 {
     close();
-}
-
-group const& group::operator=(group other)
-{
-    // swap(hid_, other.hid_),
-    // the previous group object will be closed upon destruction of other
-    hid_t tmp = hid_;
-    hid_ = other.hid_;
-    other.hid_ = tmp;
-    return *this;
 }
 
 void group::open(group const& other, std::string const& name)

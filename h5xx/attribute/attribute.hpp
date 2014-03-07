@@ -39,24 +39,28 @@ public:
     /** default constructor */
     attribute() : hid_(-1) {}
 
-    /** copy constructor with move semantics
+    /**
+     * deleted copy constructor
      *
-     * The attribute object on the right hand side is empty after assignment. In
-     * C++98, moving from an r-values (e.g., a temporary) is not possible.
+     * Calling the constructor throws an exception. Copying must be elided by
+     * return value optimisation. See also "attribute h5xx::move(attribute&)".
      */
-    attribute(attribute& other);
+    attribute(attribute const& other);
+
+    /**
+     * assignment operator
+     *
+     * Uses the copy-and-swap idiom. Move semantics is achieved in conjunction
+     * with "attribute h5xx::move(attribute&)", i.e., the attribute object on the right
+     * hand side is empty after move assignment.
+     */
+    attribute const& operator=(attribute other);
 
     /** default destructor */
     ~attribute();
 
     /** deduce dataspace from attribute */
     operator dataspace() const;
-
-    /** assignment operator with move semantics
-     *
-     * the attribute object on the right hand side is empty after assignment
-     */
-    attribute const& operator=(attribute other);
 
     /** return HDF5 object ID */
     hid_t hid() const
@@ -90,7 +94,11 @@ public:
     void read(hid_t mem_type_id, void* buffer);
 
 private:
+    /** HDF5 object ID */
     hid_t hid_;
+
+    template <typename h5xxObject>
+    friend void swap(h5xxObject& left, h5xxObject& right);
 };
 
 template <typename h5xxObject>
@@ -116,10 +124,18 @@ attribute::attribute(h5xxObject const& object, std::string const& name, hid_t aa
     }
 }
 
-attribute::attribute(attribute& other)
+attribute::attribute(attribute const& other)
+  : hid_(other.hid_)
 {
-    hid_ = other.hid_;
-    other.hid_ = -1;
+    // copying would be safe if the exception were disabled.
+    throw error("h5xx::attribute can not be copied. Copying must be elided by return value optimisation.");
+    H5Iinc_ref(hid_);
+}
+
+attribute const& attribute::operator=(attribute other)
+{
+    swap(*this, other);
+    return *this;
 }
 
 attribute::~attribute()
@@ -139,16 +155,6 @@ attribute::operator dataspace() const
     }
     dataspace ds(hid);
     return ds;
-}
-
-attribute const& attribute::operator=(attribute other)
-{
-    // swap(hid_, other.hid_),
-    // the previous attribute object will be closed upon destruction of other
-    hid_t tmp = hid_;
-    hid_ = other.hid_;
-    other.hid_ = tmp;
-    return *this;
 }
 
 void attribute::write(hid_t mem_type_id, void const* value)

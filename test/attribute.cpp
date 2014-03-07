@@ -40,6 +40,29 @@ typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
 using namespace h5xx;
 
+BOOST_AUTO_TEST_CASE( construction )
+{
+    BOOST_CHECK_NO_THROW(attribute());                 // default constructor
+
+    write_attribute(file, "foo", 1);                   // create attribute in a file's root group
+    BOOST_CHECK_NO_THROW(attribute(file, "foo"));      // open existing attribute on-the-fly
+
+    attribute foo(file, "foo");
+    BOOST_CHECK_EQUAL(get_name(foo), "/");             // path of the object the attribute is attached to
+    BOOST_CHECK(foo.valid());
+
+    hid_t hid = foo.hid();
+    attribute bar;
+    BOOST_CHECK_THROW(bar = foo, h5xx::error);         // assignment is not allowed (it makes a copy)
+    BOOST_CHECK_NO_THROW(bar = move(foo));             // move assignment
+    BOOST_CHECK_EQUAL(bar.hid(), hid);
+    BOOST_CHECK(!foo.valid());
+
+    BOOST_CHECK_THROW(attribute g(bar), h5xx::error);  // copying is not allowed
+    BOOST_CHECK_NO_THROW(attribute g(move(bar)));      // copying from temporary is allowed (with move semantics)
+    BOOST_CHECK(!bar.valid());
+}
+
 BOOST_AUTO_TEST_CASE( scalar_fundamental )
 {
 

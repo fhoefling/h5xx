@@ -54,16 +54,20 @@ public:
     template <std::size_t N>
     dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t, N> const& max_dims);
 
-    /** copy constructor with move semantics
+    /**
+     * deleted copy constructor
      *
-     * The dataspace object on the right hand side is empty after assignment. In
-     * C++98, moving from an r-values (e.g., a temporary) is not possible.
+     * Calling the constructor throws an exception. Copying must be elided by
+     * return value optimisation. See also "dataspace h5xx::move(dataspace&)".
      */
-    dataspace(dataspace& other);
+    dataspace(dataspace const& other);
 
-    /** assignment operator with move semantics
+    /**
+     * assignment operator
      *
-     * the dataspace object on the right hand side is empty after assignment
+     * Uses the copy-and-swap idiom. Move semantics is achieved in conjunction
+     * with "dataspace h5xx::move(dataspace&)", i.e., the dataspace object on the right
+     * hand side is empty after move assignment.
      */
     dataspace const& operator=(dataspace other);
 
@@ -90,31 +94,24 @@ public:
     bool is_scalar() const;
 
 private:
+    /** HDF5 object ID */
     hid_t hid_;
+
+    template <typename h5xxObject>
+    friend void swap(h5xxObject& left, h5xxObject& right);
 };
 
-dataspace::dataspace(dataspace& other)
+dataspace::dataspace(dataspace const& other)
+  : hid_(other.hid_)
 {
-    hid_ = other.hid_;
-    other.hid_ = -1;
-}
-
-dataspace::~dataspace()
-{
-    if (hid_ >= 0) {
-        if(H5Sclose(hid_) < 0){
-            throw error("closing h5xx::dataspace with ID " + boost::lexical_cast<std::string>(hid_));
-        }
-    }
+    // copying would be safe if the exception were disabled.
+    throw error("h5xx::dataspace can not be copied. Copying must be elided by return value optimisation.");
+    H5Iinc_ref(hid_);
 }
 
 dataspace const& dataspace::operator=(dataspace other)
 {
-    // swap(hid_, other.hid_),
-    // the previous dataspace object will be closed upon destruction of other
-    hid_t tmp = hid_;
-    hid_ = other.hid_;
-    other.hid_ = tmp;
+    swap(*this, other);
     return *this;
 }
 
@@ -136,6 +133,15 @@ dataspace::dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t,
 {
     if ((hid_ = H5Screate_simple(N, &*dims.begin(), &*max_dims.begin())) < 0) {
         throw error("creating simple dataspace");
+    }
+}
+
+dataspace::~dataspace()
+{
+    if (hid_ >= 0) {
+        if(H5Sclose(hid_) < 0){
+            throw error("closing h5xx::dataspace with ID " + boost::lexical_cast<std::string>(hid_));
+        }
     }
 }
 

@@ -1,6 +1,6 @@
 /*
  * Copyright © 2014 Felix Höfling
- * Copyright © 2014  Manuel Dibak
+ * Copyright © 2014 Manuel Dibak
  *
  * This file is part of h5xx.
  *
@@ -22,7 +22,10 @@
 #define H5XX_ATTRIBUTE_MULTI_ARRAY
 
 #include <algorithm>
+
+#include <h5xx/attribute/attribute.hpp>
 #include <h5xx/ctype.hpp>
+#include <h5xx/dataspace.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
@@ -36,87 +39,62 @@
 
 namespace h5xx {
 
+/**
+* write attribute of multi-dimensional array type
+*/
 template <typename h5xxObject, typename T>
 inline typename boost::enable_if<is_multi_array<T>, void>::type
 write_attribute(h5xxObject const& object, std::string const& name, T const& value)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
-    bool err = false;
-    char const* attr_name = name.c_str();
-    hid_t attr_id;
 
     // remove attribute if it exists
     delete_attribute(object, name);
 
-    hsize_t dim[rank];
-    std::copy(value.shape(), value.shape() + rank, dim);
-    hid_t space_id = H5Screate_simple(rank, dim, dim);
-    hid_t type_id = ctype<value_type>::hid();       //this ID can not be closed
-    err |= (attr_id = H5Acreate(object.hid(), attr_name, type_id, space_id, H5P_DEFAULT, H5P_DEFAULT)) < 0;
-    err |= H5Sclose(space_id);
-    if (err) {
-        throw error("creating attribute");
-    }
+    // create attribute with given dimensions
+    boost::array<hsize_t, rank> dims;
+    std::copy(value.shape(), value.shape() + rank, dims.begin());
+    hid_t type_id = ctype<value_type>::hid();       // this ID must not be closed
+    attribute attr(object, name, type_id, dataspace(dims));
 
-    err |= H5Awrite(attr_id, type_id, value.origin()) < 0;
-
-    err |= H5Aclose(attr_id) < 0;
-    if (err) {
-        throw error("writing attribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
-    }
+    // write attribute
+    attr.write(type_id, value.origin());
 }
 
 /**
-* read multi-dimensional array type attribute
+* read attribute of multi-dimensional array type
 */
-
 template <typename T, typename h5xxObject>
 inline typename boost::enable_if<is_multi_array<T>, T>::type
 read_attribute(h5xxObject const& object, std::string const& name)
 {
     typedef typename T::element value_type;
     enum { rank = T::dimensionality };
-    char const* attr_name = name.c_str();
-    hid_t attr_id;
-    bool err = false;
-    hsize_t dim[rank];
-    hsize_t maxdim[rank];
-
-    if(!exists_attribute(object, name)) {
-        throw error("Attribute does not exist");
-    }
 
     // open object
-    err |= (attr_id = H5Aopen(object.hid(), attr_name, H5P_DEFAULT)) < 0;
-    if (err) {
-        throw error("opening atrribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
-    }
-    if (!has_simple_space(attr_id)) {
-        throw error("Attribute \"" + name + "\" of object \"" + get_name(object) + "\" has incompatible dataspace");
-    }
+    attribute attr(object, name);
 
-    hid_t attr_space = H5Aget_space(attr_id);
-    if ( !has_rank<rank>(attr_space)) {
-        throw error("Attribute has an invalid dataspace");
+    // check if rank of dataspace and rank of array to be returned are matching
+    dataspace space(attr);
+    if (!(space.rank() == rank)) {
+        throw error("attribute \"" + name + "\" of object \"" + get_name(object) + "\" has mismatching dataspace");
     }
 
+    // get extents of dataspace
+    boost::array<hsize_t, rank> dims = space.get_extent<rank>();
 
-    H5Sget_simple_extent_dims(attr_space, dim, maxdim);
-    err |= H5Sclose(attr_space) < 0;
-
+    // create boost::multi_array of given extents for use as buffer
     boost::array<size_t, rank> shape;
-    std::copy(dim, dim + rank, shape.begin());
+    std::copy(dims.begin(), dims.begin() + rank, shape.begin());
     boost::multi_array<value_type, rank> value(shape);
-    err |= (H5Aread(attr_id, ctype<value_type>::hid(), value.origin())) < 0;
 
-    // close object
-    err |= H5Aclose(attr_id) < 0;
-    if (err) {
-        throw error("reading atrribute \"" + name + "\" with ID " + boost::lexical_cast<std::string>(attr_id));
-    }
+    // read attribute to buffer
+    attr.read(ctype<value_type>::hid(), value.origin());
+
     return value;
 }
-} //namespace h5xx
+
+} // namespace h5xx
 
 #endif // ! H5XX_ATTRIBUTE_MULTI_ARRAY

@@ -27,15 +27,16 @@ namespace h5xx {
 
 /**
  * Check whether an attribute of the given name is attached to the h5xx object.
+ *
+ * @param object    one of h5xx::group, h5xx::dataset, or h5xx::datatype
+ * @param name      attribute name
+ * @returns         true if attribute exists
  */
 template <typename h5xxObject>
-inline bool exists_attribute(h5xxObject const& obj, std::string const& name)
+inline bool exists_attribute(h5xxObject const& object, std::string const& name)
 {
-    htri_t tri = H5Aexists(obj.hid(), name.c_str());
-    if (tri < 0) {
-        throw error("testing attribute \"" + name + "\" at HDF5 object \"" + get_name(obj) + "\"");
-    }
-    return (tri > 0);
+    // return false also if existence can not be queried
+    return H5Aexists(object.hid(), name.c_str()) > 0;
 }
 
 /**
@@ -43,88 +44,18 @@ inline bool exists_attribute(h5xxObject const& obj, std::string const& name)
  * of the attribute is not an error.
  *
  * Warning: no other attribute of the object must be opened.
+ *
+ * @param object    one of h5xx::group, h5xx::dataset, or h5xx::datatype
+ * @param name      attribute name
  */
 template <typename h5xxObject>
-inline void delete_attribute(h5xxObject const& obj, std::string const& name)
+inline void delete_attribute(h5xxObject const& object, std::string const& name)
 {
-    if (exists_attribute(obj, name)) {
-        if (H5Adelete(obj.hid(), name.c_str()) < 0) {
-            throw error("deleting attribute \"" + name + "\" from HDF5 object \"" + get_name(obj) + "\"");
+    if (exists_attribute(object, name)) {
+        if (H5Adelete(object.hid(), name.c_str()) < 0) {
+            throw error("deleting attribute \"" + name + "\" from HDF5 object \"" + get_name(object) + "\"");
         }
     }
-}
-
-namespace detail {
-
-/**
- * Returns HDF5 handle for data space of given attribute. Must be closed by
- * calling H5Sclose() after use. FIXME add class h5xx::dataspace
- */
-inline hid_t get_dataspace(attribute const& attr) {
-    hid_t space_id;
-    if ((space_id = H5Aget_space(attr.hid())) < 0) {
-        throw error ("can not get dataspace of attribute \"" + get_name(attr) + "\"");
-    }
-    return space_id;
-}
-
-/**
- * Returns true if the data space of the attribute is of scalar type.
- */
-inline bool has_scalar_dataspace(attribute const& attr)
-{
-    if (!attr.valid()) {
-        return false;
-    }
-
-    hid_t space_id = get_dataspace(attr);
-    bool ret = H5Sget_simple_extent_type(space_id) == H5S_SCALAR;
-    H5Sclose(space_id);
-    return ret;
-}
-
-/**
- * Returns true if the data space of the attribute is of simple type.
- */
-inline bool has_simple_dataspace(attribute const& attr)
-{
-    if (!attr.valid()) {
-        return false;
-    }
-
-    hid_t space_id = get_dataspace(attr);
-    bool ret = H5Sget_simple_extent_type(space_id) == H5S_SIMPLE;
-    H5Sclose(space_id);
-    return ret;
-}
-
-} // namespace detail
-
-/**
- * FIXME remove this function
- * h5xx implementation to check whether a data space is scalar
- */
-inline bool has_scalar_space(hid_t attr_id)
-{
-    hid_t space_id;
-    if ((space_id = H5Aget_space(attr_id)) < 0) {
-        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
-    }
-    return H5Sget_simple_extent_type(space_id) == H5S_SCALAR;
-}
-
-
-/**
- * FIXME remove this function
- * h5xx implementation to check whether a data space is simple
- */
-inline bool has_simple_space(hid_t attr_id)
-{
-    hid_t space_id;
-    if ((space_id = H5Aget_space(attr_id)) < 0) {
-        throw error ("can not get dataspace of attribute with id " + boost::lexical_cast<std::string>(attr_id));
-    }
-    return H5Sget_simple_extent_type(space_id) == H5S_SIMPLE;
 }
 
 } // namespace h5xx

@@ -78,7 +78,11 @@ public:
 
     /** create attribute for given object */
     template <typename h5xxObject>
-    attribute(h5xxObject const& object, std::string const& name, hid_t type_id, dataspace const& space, hid_t acpl_id = H5P_DEFAULT, hid_t aapl_id = H5P_DEFAULT);
+    attribute(
+        h5xxObject const& object, std::string const& name
+      , hid_t type_id, dataspace const& space
+      , hid_t acpl_id = H5P_DEFAULT, hid_t aapl_id = H5P_DEFAULT
+    );
 
     /** open existing attribute of given name, attached to the HDF5 object */
     template <typename h5xxObject>
@@ -92,6 +96,9 @@ public:
 
     /** read attribute */
     void read(hid_t mem_type_id, void* buffer);
+
+    /** return copy of attribute's type */
+    hid_t get_type();
 
     /**
      * returns the name of the attribute.
@@ -110,7 +117,11 @@ private:
 };
 
 template <typename h5xxObject>
-attribute::attribute(h5xxObject const& object, std::string const& name, hid_t type_id, dataspace const& space, hid_t acpl_id, hid_t aapl_id)
+attribute::attribute(
+    h5xxObject const& object, std::string const& name
+  , hid_t type_id, dataspace const& space
+  , hid_t acpl_id, hid_t aapl_id
+)
 {
     if ((hid_ = H5Acreate(object.hid(), name.c_str(), type_id, space.hid(), acpl_id, aapl_id)) < 0 )
     {
@@ -152,6 +163,7 @@ attribute::~attribute()
         if(H5Aclose(hid_) < 0){
             throw error("closing h5xx::attribute with ID " + boost::lexical_cast<std::string>(hid_));
         }
+        hid_ = -1;
     }
 }
 
@@ -159,7 +171,7 @@ attribute::operator dataspace() const
 {
     hid_t hid = H5Aget_space(hid_);
     if(hid < 0 ) {
-        throw error("attribute has invalid dataspace");
+        throw error("attribute +\"" + name() + "\" has invalid dataspace");
     }
     dataspace ds(hid);
     return ds;
@@ -169,7 +181,7 @@ void attribute::write(hid_t mem_type_id, void const* value)
 {
     if (H5Awrite(hid_, mem_type_id, value) < 0)
     {
-        throw error("writing attribute with id ");
+        throw error("writing attribute \"" + name() + "\"");
     }
 }
 
@@ -177,9 +189,20 @@ void attribute::read(hid_t mem_type_id, void * buffer)
 {
     if (H5Aread(hid_, mem_type_id, buffer) < 0)
     {
-        throw error("reading attribute");
+        throw error("reading attribute \"" + name() + "\"");
     }
 }
+
+hid_t attribute::get_type()
+{
+    hid_t type_id = H5Aget_type(hid_);
+    if (type_id < 0)
+    {
+        throw error("failed to obtain type_id of attribute \"" + name() + "\"");
+    }
+    return type_id;
+}
+
 
 std::string attribute::name() const
 {

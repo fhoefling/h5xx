@@ -33,6 +33,7 @@ foreach(module
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
     ${HDF5_CPP_LIBRARY}
     ${HDF5_LIBRARY}
+    dl
     pthread
     z
   )

@@ -128,12 +128,15 @@ BOOST_AUTO_TEST_CASE( scalar_cstring )
     BOOST_CHECK_NO_THROW(write_attribute(file, "scalar, cstring, varlen", cstring, policy::string::variable_length()));
     BOOST_CHECK_NO_THROW(write_attribute(file, "scalar, cstring, nullpad", cstring, policy::string::null_padded()));
     BOOST_CHECK_NO_THROW(write_attribute(file, "scalar, cstring, spacepad", cstring, policy::string::space_padded()));
+    BOOST_CHECK_NO_THROW(write_attribute(file, "scalar, cstring, empty", ""));
+
     BOOST_CHECK(exists_attribute(file, "scalar, cstring"));
     BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring") == cstring);
     BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, nullterm") == cstring);
     BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, varlen") == cstring);
     BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, nullpad") == cstring);
     BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, spacepad") == cstring);
+    BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, empty") == "");
 }
 
 BOOST_AUTO_TEST_CASE( array_int )

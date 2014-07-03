@@ -1,5 +1,5 @@
 /*
- * Copyright © 2013 Felix Höfling
+ * Copyright © 2013-2014 Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -21,39 +21,63 @@
 #include <h5xx/h5xx.hpp>
 #include <iostream>
 
-int main(int argc, char** argv)
+typedef boost::multi_array<int, 3> array_t;
+
+void write(std::string const& filename, array_t const& array)
 {
     // open group within HDF5 file
+    h5xx::file f(filename, h5xx::file::trunc); // truncate existing file
+    h5xx::group g(f, "group");
+
+    // attach string attribute to file root
+    h5xx::write_attribute(f, "location", "Here is the file root.");
+
+    // attach array data as attribute to group
+    h5xx::write_attribute(g, "integer array", array);
+
+    // file and group are closed when 'f' and 'g' go out of scope
+}
+
+void read(std::string const& filename)
+{
+    // open HDF5 file read-only
+    h5xx::file f(filename, h5xx::file::in);
+
+    // read and print string attribute
+    std::cout << h5xx::read_attribute<std::string>(f, "location") << std::endl;
+
+    // read array data from attribute
+    array_t array = h5xx::read_attribute<array_t>(h5xx::group(f, "group"), "integer array");
+
+    // close file explicitly
+    f.close();
+
+    // print array along second dimension
+    for (unsigned int i = 0; i < array.shape()[1]; ++i) {
+        std::cout << "/group/integer array[0, " << i << ", 0] = " << array[0][i][0] << std::endl;
+    }
+
+    // TODO read dataset of rank 3 by iterating over the first index (see master branch)
+}
+
+int main(int argc, char** argv)
+{
+    // take filename from command line
     if (argc <= 1) {
         std::cout << "Usage: example file.h5" << std::endl;
         return(-1);
     }
-    H5::H5File file(argv[1], H5F_ACC_RDONLY);
-    H5::Group group = h5xx::open_group(file, "/group");
 
-    // open dataset
-    H5::DataSet dataset = group.openDataSet("array");
+    // set-up data as Boost.MultiArray
+    array_t array(boost::extents[2][3][2]);
+    int data[] = {99, 98, 97, 96, 95, 94, 93, 92, 91, 90, 89, 88};
+    array.assign(data, data + sizeof(data) / sizeof(int));
 
-    //
-    // read dataset of rank 3 by iterating over the first index
-    //
+    // write to HDF5 file
+    write(argv[1], array);
 
-    // use boost::multi_array to read arrays of rank 2
-    typedef boost::multi_array<float, 2> array_type;
-    array_type data;
-
-    // determine data set extents assuming an array size of 5×3
-    h5xx::read_chunked_dataset(dataset, data, 0);                    // FIXME make shape directly accessible
-    array_type::size_type const* shape = data.shape();
-    unsigned int n = h5xx::elements(dataset) / (shape[0] * shape[1]);
-
-    std::cout << "Read " << n << " arrays of shape (" << shape[0] << "," << shape[1] << ")" << std::endl;
-
-    for (unsigned int i = 0; i < n; ++i) {
-        array_type data;
-        h5xx::read_chunked_dataset(dataset, data, i);
-        std::cout << "/group/array[" << i << ", 0, 0] = " << data[0][0] << std::endl;
-    }
+    // read from HDF5 file
+    read(argv[1]);
 
     return 0;
 }

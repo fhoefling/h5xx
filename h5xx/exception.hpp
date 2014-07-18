@@ -33,12 +33,12 @@ public:
         H5::Exception::getAutoPrint(func, &client_data);
         H5::Exception::dontPrint();
     }
-
+/*
     ~no_autoprint()
     {
         H5::Exception::setAutoPrint(func, client_data);
     }
-
+*/
 private:
     H5E_auto_t func;
     void* client_data;

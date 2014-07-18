@@ -21,4 +21,6 @@ add_executable(example
 target_link_libraries(example
     ${HDF5_CPP_LIBRARY}
     ${HDF5_LIBRARY}
+    dl
+    z
 )

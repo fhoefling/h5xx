@@ -35,6 +35,7 @@ foreach(module
     ${HDF5_CPP_LIBRARY}
     ${HDF5_LIBRARY}
     pthread
+    dl
     z
   )
   add_test(h5xx/${module}

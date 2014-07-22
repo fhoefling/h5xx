@@ -1,0 +1,48 @@
+* implement class h5xx::dataset, in analogy to h5xx::attribute
+
+  As a difference, multiple writes to different hyperslabs of the same dataset
+  can occur (incremental write). Hence, creation and writing have to be
+  separate functions. 
+
+  Suggestion: creation occurs in the constructor (or in a free function?),
+  writing is separate free function and will eventually support
+  hyperslab addressing for incremental and parallel I/O.
+
+  Example:
+
+    // create dataset via constructor
+    h5xx::dataset dataset(group, name, datatype, dataspace, policies); // variant of the constructor
+
+    // alternative: pass data variable to derive datatype and dataspace,
+    // template specialisation is simpler if it is a free function
+    template <typename T>
+    h5xx::dataset create_dataset(group, name, data);
+
+    // write to dataset (free function)
+    template <typename T>
+    h5xx::write<T>(h5xx::dataset const& dataset, T const& data, hyperslab_index);
+
+    // read from dataset,
+    // passing data as argument gives automatically access to the type T
+    template <typename T>
+    h5xx::read<T>(h5xx::dataset const& dataset, T& data, hyperslab_index);
+
+* implement policies for h5xx::dataset constructor (see StringPolicy in attribute/scalar.hpp):
+    - storage_layout (compact, contiguous, chunked)
+    - filters (deflate, shuffle), parameter for chunked layout
+    - fill_value
+
+    - example:
+
+    auto storage_policy = policy::storage::chunked(boost::array const& shape, policy::filter::deflate(6));
+    h5xx::dataset ds(..., storage_policy, fill_value); // create dataset via constructor
+    write(ds, data);
+
+* implement hyperslab (policy?) for reading/writing h5xx::dataset, can we
+  introduce a slicing notation as in Python?
+
+* implement class h5xx::datatype, we have already h5xx::ctype<T>
+  (removing any explicit calls to H5T*, look at output of `grep -R H5T h5xx/`)
+
+* make support of Boost C++ types optional to relax build requirements
+

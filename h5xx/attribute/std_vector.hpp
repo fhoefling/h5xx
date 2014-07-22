@@ -80,7 +80,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     }
 
     // read from opened object
-    hsize_t size = space.get_extent<1>()[0];
+    hsize_t size = space.extents<1>()[0];
     std::vector<value_type> value(size);
     attr.read(ctype<value_type>::hid(), &*value.begin());
     return value;
@@ -151,7 +151,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     err |= H5Tset_size(mem_type_id, str_size) < 0;
 
     // read from opened object to buffer
-    hsize_t size = space.get_extent<1>()[0];
+    hsize_t size = space.extents<1>()[0];
     std::vector<char> buffer(str_size * size);
     err |= (H5Aread(attr.hid(), mem_type_id, &*buffer.begin())) < 0;
     if (err) {

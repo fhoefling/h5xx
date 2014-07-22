@@ -66,7 +66,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     // open attribute
     attribute attr(object, name);
     dataspace space(attr);
-    if (space.rank() != 1 || space.get_extent<1>()[0] != T::static_size) {
+    if (space.rank() != 1 || space.extents<1>()[0] != T::static_size) {
         throw error("attribute \"" + name + "\" of object \"" + get_name(object) + "\" has mismatching dataspace");
     }
 
@@ -141,7 +141,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     // open object and check dataspace
     attribute attr(object, name);
     dataspace space(attr);
-    if (space.rank() != 1 || space.get_extent<1>()[0] != T::static_size) {
+    if (space.rank() != 1 || space.extents<1>()[0] != T::static_size) {
         throw error("attribute \"" + name + "\" of object \"" + get_name(object) + "\" has mismatching dataspace");
     }
 

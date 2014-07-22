@@ -91,7 +91,7 @@ public:
 
     /** returns extents/dimensions of simple dataspace, optionally the maximal dimensions are returned in maxdims */
     template <std::size_t N>
-    boost::array<hsize_t, N> get_extent(hsize_t *maxdims = NULL) const;
+    boost::array<hsize_t, N> extents(hsize_t *maxdims = NULL) const;
 
     /** returns true if dataspace is of scalar type */
     bool is_scalar() const;
@@ -167,7 +167,7 @@ int dataspace::rank() const
 }
 
 template <std::size_t N>
-boost::array<hsize_t, N> dataspace::get_extent(hsize_t *maxdims) const
+boost::array<hsize_t, N> dataspace::extents(hsize_t *maxdims) const
 {
     boost::array<hsize_t, N> dims;
     if (rank() != N) {

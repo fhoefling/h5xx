@@ -82,7 +82,7 @@ read_attribute(h5xxObject const& object, std::string const& name)
     }
 
     // get extents of dataspace
-    boost::array<hsize_t, rank> dims = space.get_extent<rank>();
+    boost::array<hsize_t, rank> dims = space.extents<rank>();
 
     // create boost::multi_array of given extents for use as buffer
     boost::array<size_t, rank> shape;

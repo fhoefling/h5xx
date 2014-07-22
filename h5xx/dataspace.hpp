@@ -43,7 +43,7 @@ public:
     /** construct dataspace from HDF5 handle */
     dataspace(hid_t hid) : hid_(hid) {}
 
-    /** construct dataspace of zero rank */
+    /** construct dataspace of rank zero */
     dataspace(H5S_class_t type);
 
     /** construct simple dataspace of given extents */
@@ -86,12 +86,18 @@ public:
         return hid_ >= 0;
     }
 
+    /** returns rank/dimensionality of simple dataspace */
     int rank() const;
 
+    /** returns extents/dimensions of simple dataspace, optionally the maximal dimensions are returned in maxdims */
     template <std::size_t N>
     boost::array<hsize_t, N> get_extent(hsize_t *maxdims = NULL) const;
 
+    /** returns true if dataspace is of scalar type */
     bool is_scalar() const;
+
+    /** returns true if dataspace is of simple type */
+    bool is_simple() const;
 
 private:
     /** HDF5 object ID */
@@ -125,7 +131,9 @@ dataspace::dataspace(H5S_class_t type)
 template <std::size_t N>
 dataspace::dataspace(boost::array<hsize_t, N> const& dims)
 {
-    dataspace(dims, dims);
+    if ((hid_ = H5Screate_simple(N, &*dims.begin(), &*dims.begin())) < 0) {
+        throw error("creating simple dataspace");
+    }
 }
 
 template <std::size_t N>
@@ -142,11 +150,15 @@ dataspace::~dataspace()
         if(H5Sclose(hid_) < 0){
             throw error("closing h5xx::dataspace with ID " + boost::lexical_cast<std::string>(hid_));
         }
+        hid_ = -1;
     }
 }
 
 int dataspace::rank() const
 {
+    if (!valid()) {
+        throw error("invalid dataspace");
+    }
     int rank = H5Sget_simple_extent_ndims(hid_);
     if (rank < 0) {
         throw error("dataspace has invalid rank");
@@ -169,9 +181,19 @@ boost::array<hsize_t, N> dataspace::get_extent(hsize_t *maxdims) const
 
 bool dataspace::is_scalar() const
 {
+    if (!valid()) {
+        return false;
+    }
     return H5Sget_simple_extent_type(hid_) == H5S_SCALAR;
 }
 
+bool dataspace::is_simple() const
+{
+    if (!valid()) {
+        return false;
+    }
+    return H5Sget_simple_extent_type(hid_) == H5S_SIMPLE;
+}
 
 } // namespace h5xx
 

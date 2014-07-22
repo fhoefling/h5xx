@@ -259,15 +259,6 @@ inline bool has_scalar_space(H5::AbstractDs const& ds)
 }
 
 /**
- * check rank of dataspace given by its id
- */
-template <hsize_t rank>
-inline bool has_rank(hid_t space_id)
-{
-    return H5Sget_simple_extent_ndims(space_id) == rank;
-}
-
-/**
  * check rank of data space
  */
 template <hsize_t rank>
@@ -292,22 +283,6 @@ inline bool has_rank(H5::AbstractDs const& ds)
  * are skipped. It should be 1 for multi-valued datasets
  * and 2 multi-valued datasets of std::vector.
  */
-template <typename T>
-inline typename boost::enable_if<is_array<T>, bool>::type
-has_extent(hid_t space_id)
-{
-    if ( has_rank<1>(space_id) )
-    {
-        hsize_t dim[1];
-        hsize_t maxdim[1];
-        H5Sget_simple_extent_dims(space_id, dim, maxdim);
-        return dim[0] == T::static_size;
-    }
-    else
-        return false;
-
-}
-
 template <typename T, hsize_t extra_rank>
 inline typename boost::enable_if<is_array<T>, bool>::type
 has_extent(H5::DataSpace const& dataspace)

@@ -18,8 +18,10 @@ find_package(Boost 1.40.0 QUIET REQUIRED COMPONENTS unit_test_framework)
 find_package(HDF5 QUIET REQUIRED)
 
 include_directories("${HDF5_INCLUDE_DIR}")
+include_directories("${Boost_INCLUDE_DIRS}")
 include_directories("${CMAKE_SOURCE_DIR}")
 
 enable_testing()
 include(CTest)
 add_subdirectory(test)
+add_subdirectory(example)

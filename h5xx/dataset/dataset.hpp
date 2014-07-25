@@ -17,13 +17,11 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef H5XX_DATASET_DATASET_HPP
+#define H5XX_DATASET_DATASET_HPP
 
-#ifndef H5XX_DATASET_HPP
-#define H5XX_DATASET_HPP
+namespace h5xx {
 
-#include <h5xx/dataset/dataset.hpp>
+} // namespace h5xx
 
-//namespace h5xx {
-//} // namespace h5xx
-
-#endif /* ! H5XX_DATASET_HPP */
+#endif /* ! H5XX_DATASET_DATASET_HPP */

@@ -1,4 +1,5 @@
 /*
+ * Copyright © 2014 Felix Höfling
  * Copyright © 2014 Manuel Dibak
  *
  * This file is part of h5xx.
@@ -17,33 +18,30 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef H5XX_DATASET_UTILITY_HPP
-#define H5XX_DATASET_UTILITY_HPP
+#ifndef H5XX_DATASPACE_MULTI_ARRAY
+#define H5XX_DATASPACE_MULTI_ARRAY
 
-#include <h5xx/error.hpp>
-#include <h5xx/utility.hpp>
+#include <algorithm>
+
+#include <h5xx/dataspace.hpp>
+
+#include <boost/array.hpp>
+#include <boost/multi_array.hpp>
+#include <boost/utility/enable_if.hpp>
 
 namespace h5xx {
 
-/**
- * Check whether a dataset of the given name is attached to the h5xx object.
- */
-template <typename h5xxObject>
-inline bool exists_dataset(h5xxObject const& object, std::string const& name)
+template <typename T>
+/* inline */ typename boost::enable_if<is_multi_array<T>, dataspace>::type
+create_dataspace(T const& value)
 {
-    hid_t hid;
-    H5XX_PRINT( h5xx::get_name(object) );
-    H5XX_PRINT( name );
-    H5E_BEGIN_TRY {
-        hid = H5Dopen(object.hid(), name.c_str(), H5P_DEFAULT);
-        H5XX_PRINT( h5xx::get_name(hid) );
-        if (hid > 0) {
-            H5Dclose(hid);
-        }
-    } H5E_END_TRY
-    return (hid > 0);
+//    typedef typename T::element value_type;
+    enum { rank = T::dimensionality };
+    boost::array<hsize_t, rank> value_dims;
+    std::copy(value.shape(), value.shape() + rank, value_dims.begin());
+    return dataspace(value_dims);
 }
 
 } // namespace h5xx
 
-#endif /* ! H5XX_DATASET_UTILITY_HPP */
+#endif // ! H5XX_DATASPACE_MULTI_ARRAY

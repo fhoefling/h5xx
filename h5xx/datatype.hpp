@@ -1,5 +1,6 @@
 /*
- * Copyright © 2008-2011  Peter Colberg and Felix Höfling
+ * Copyright © 2014      Klaus Reuter
+ * Copyright © 2013-2014 Felix Höfling
  *
  * This file is part of h5xx.
  *
@@ -17,12 +18,9 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+#ifndef H5XX_DATATYPE_HPP
+#define H5XX_DATATYPE_HPP
 
-#ifndef H5XX_DATASET_HPP
-#define H5XX_DATASET_HPP
+#include <h5xx/datatype/datatype.hpp>
 
-#include <h5xx/dataset/dataset.hpp>
-#include <h5xx/dataset/utility.hpp>
-#include <h5xx/dataset/boost_multi_array.hpp>
-
-#endif /* ! H5XX_DATASET_HPP */
+#endif // ! H5XX_DATATYPE_HPP

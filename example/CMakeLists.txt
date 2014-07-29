@@ -14,11 +14,22 @@ include_directories("${H5XX_INCLUDE_DIR}")
 
 set(CMAKE_BUILD_TYPE "Release")
 
-add_executable(example
-    example.cpp
+add_executable(attribute
+    attribute.cpp
 )
 
-target_link_libraries(example
+add_executable(dataset
+    dataset.cpp
+)
+
+target_link_libraries(attribute
+    ${HDF5_CPP_LIBRARY}
+    ${HDF5_LIBRARY}
+    dl
+    z
+)
+
+target_link_libraries(dataset
     ${HDF5_CPP_LIBRARY}
     ${HDF5_LIBRARY}
     dl

@@ -65,7 +65,6 @@ void write_dataset(std::string const& filename, array_t const& array)
 {
     h5xx::file f(filename, h5xx::file::trunc);
     std::string name = "integer array";
-//    std::cout << h5xx::exists_dataset(f, name) << std::endl;
 
     h5xx::dataset d;
     h5xx::create_dataset(d, f, name, array);

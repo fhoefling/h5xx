@@ -22,8 +22,7 @@
 #define H5XX_DATASET_HPP
 
 #include <h5xx/dataset/dataset.hpp>
-
-//namespace h5xx {
-//} // namespace h5xx
+#include <h5xx/dataset/utility.hpp>
+#include <h5xx/dataset/boost_multi_array.hpp>
 
 #endif /* ! H5XX_DATASET_HPP */

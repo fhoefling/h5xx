@@ -36,8 +36,11 @@ template <typename h5xxObject>
 inline bool exists_dataset(h5xxObject const& object, std::string const& name)
 {
     hid_t hid;
+    H5XX_PRINT( h5xx::get_name(object) );
+    H5XX_PRINT( name );
     H5E_BEGIN_TRY {
         hid = H5Dopen(object.hid(), name.c_str(), H5P_DEFAULT);
+        H5XX_PRINT( h5xx::get_name(hid) );
         if (hid > 0) {
             H5Dclose(hid);
         }

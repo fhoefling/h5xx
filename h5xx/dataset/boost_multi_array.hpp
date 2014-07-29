@@ -70,75 +70,14 @@ write_dataset(
 )
 {
     typedef typename T::element value_type;
-//    enum { rank = T::dimensionality };
-//
-//    // create attribute with given dimensions
-//    boost::array<hsize_t, rank> dims;
-//    std::copy(value.shape(), value.shape() + rank, dims.begin());
     hid_t type_id = ctype<value_type>::hid();       // this ID must not be closed
-//
-//    dset.create(object, name, type_id, dataspace(dims));
+
     dset.write(type_id, value.origin());
 }
 
-
-///**
-//* write attribute of multi-dimensional array type
-//*/
-//template <typename h5xxObject, typename T>
-//inline typename boost::enable_if<is_multi_array<T>, void>::type
-//write_dataset(h5xxObject const& object, std::string const& name, T const& value)
-//{
-//    typedef typename T::element value_type;
-//    enum { rank = T::dimensionality };
-//
-//    // remove attribute if it exists
-////    delete_attribute(object, name);
-//
-//    // create attribute with given dimensions
-//    boost::array<hsize_t, rank> dims;
-//    std::copy(value.shape(), value.shape() + rank, dims.begin());
-//    hid_t type_id = ctype<value_type>::hid();       // this ID must not be closed
-//    attribute attr(object, name, type_id, dataspace(dims));
-//
-//    // write attribute
-//    attr.write(type_id, value.origin());
-//}
-
-///**
-//* read attribute of multi-dimensional array type
-//*/
-//template <typename T, typename h5xxObject>
-//inline typename boost::enable_if<is_multi_array<T>, T>::type
-//read_dataset(h5xxObject const& object, std::string const& name)
-//{
-//    typedef typename T::element value_type;
-//    enum { rank = T::dimensionality };
-//
-//    // open object
-//    attribute attr(object, name);
-//
-//    // check if rank of dataspace and rank of array to be returned are matching
-//    dataspace space(attr);
-//    if (!(space.rank() == rank)) {
-//        throw error("attribute \"" + name + "\" of object \"" + get_name(object) + "\" has mismatching dataspace");
-//    }
-//
-//    // get extents of dataspace
-//    boost::array<hsize_t, rank> dims = space.extents<rank>();
-//
-//    // create boost::multi_array of given extents for use as buffer
-//    boost::array<size_t, rank> shape;
-//    std::copy(dims.begin(), dims.begin() + rank, shape.begin());
-//    boost::multi_array<value_type, rank> value(shape);
-//
-//    // read attribute to buffer
-//    attr.read(ctype<value_type>::hid(), value.origin());
-//
-//    return value;
-//}
-
-
+/**
+ * read dataset of multi-dimensional array type
+ */
 template <typename T, typename h5xxObject>
 inline typename boost::enable_if<is_multi_array<T>, T>::type
 read_dataset(h5xxObject const& object, std::string const& name)
@@ -151,8 +90,8 @@ read_dataset(h5xxObject const& object, std::string const& name)
     // open object
     dataset dset(object, name);
 
-//    H5XX_CHKPT;
     H5XX_PRINT( h5xx::get_name(dset) );
+    H5XX_PRINT( dset.name() );
 
     // check if rank of dataspace and rank of array to be returned are matching
     dataspace space(dset);

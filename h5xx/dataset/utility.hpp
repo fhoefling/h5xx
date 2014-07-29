@@ -27,10 +27,6 @@ namespace h5xx {
 
 /**
  * Check whether a dataset of the given name is attached to the h5xx object.
- *
- * @param object    h5xx::group
- * @param name      attribute name
- * @returns         true if attribute exists
  */
 template <typename h5xxObject>
 inline bool exists_dataset(h5xxObject const& object, std::string const& name)
@@ -47,24 +43,6 @@ inline bool exists_dataset(h5xxObject const& object, std::string const& name)
     } H5E_END_TRY
     return (hid > 0);
 }
-
-///**
-// * Delete the dataset of the given name from the h5xx object. Non-existence
-// * of the dataset is not an error.
-// *
-// * @param object    one of h5xx::group
-// * @param name      attribute name
-// */
-//template <typename h5xxObject>
-//inline void delete_dataset(h5xxObject const& object, std::string const& name)
-//{
-//    if (exists_dataset(object, name)) {
-////        if (H5Adelete(object.hid(), name.c_str()) < 0) {
-////            throw error("deleting attribute \"" + name + "\" from HDF5 object \"" + get_name(object) + "\"");
-////        }
-//    /* DELETION OF AN HDF5 DATASET IS NOT SUPPORTED, SEE CHAPTER 5 OF THE HDF5 USER'S GUIDE */
-//    }
-//}
 
 } // namespace h5xx
 

@@ -28,8 +28,38 @@
 
 #include <test/ctest_full_output.hpp>
 
+#include <string>
+
+#undef NDEBUG
+
 BOOST_GLOBAL_FIXTURE( ctest_full_output )
 
+BOOST_AUTO_TEST_CASE( h5xx_dataset )
+{
+    const std::string filename = "test_h5xx_dataset.hdf5";
+    h5xx::file f(filename, h5xx::file::trunc);
+
+    // multi-array type
+    typedef boost::multi_array<int, 2> multi_array2;
+    int data2[] = {
+        99,98,97,96,
+        95,94,93,92,
+        91,90,89,88,
+    };
+    multi_array2 multi_array_value(boost::extents[3][4]);
+    multi_array_value.assign(data2, data2 + 3 * 4);
+    h5xx::dataset dset;
+    h5xx::create_dataset(dset, f, name, multi_array_value);
+    h5xx::write_dataset(dset, multi_array_value);
+
+#ifdef NDEBUG
+    f.close();
+    unlink(filename.c_str());
+#endif
+}
+
+
+/* --- unit tests for old version of dataset ---
 BOOST_AUTO_TEST_CASE( h5xx_dataset )
 {
     // store H5File object in shared_ptr to destroy it before re-opening the file
@@ -193,3 +223,4 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
     unlink(filename);
 #endif
 }
+--- end old unit tests --- */

@@ -22,7 +22,7 @@ endif(suffix STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 
 foreach(module
   attribute
-  #dataset
+  dataset
   #chunked_dataset
   file
   group

@@ -23,55 +23,13 @@
 
 typedef boost::multi_array<int, 3> array_t;
 
-void write_attribute(std::string const& filename, array_t const& array)
-{
-    // open group within HDF5 file
-    h5xx::file f(filename, h5xx::file::trunc); // truncate existing file
-    h5xx::group g(f, "group");
-
-    // attach string attribute to file root
-    h5xx::write_attribute(f, "location", "Here is the file root.");
-
-    // attach array data as attribute to group
-    h5xx::write_attribute(g, "integer array", array);
-
-    // file and group are closed when 'f' and 'g' go out of scope
-}
-
-void read_attribute(std::string const& filename)
-{
-    // open HDF5 file read-only
-    h5xx::file f(filename, h5xx::file::in);
-
-    // read and print string attribute
-    std::cout << h5xx::read_attribute<std::string>(f, "location") << std::endl;
-
-    // read array data from attribute
-    array_t array = h5xx::read_attribute<array_t>(h5xx::group(f, "group"), "integer array");
-
-    // close file explicitly
-    f.close();
-
-    // print array along second dimension
-    for (unsigned int i = 0; i < array.shape()[1]; ++i) {
-        std::cout << "/group/integer array[0, " << i << ", 0] = " << array[0][i][0] << std::endl;
-    }
-
-    // TODO read dataset of rank 3 by iterating over the first index (see master branch)
-}
-
-
 void write_dataset(std::string const& filename, array_t const& array)
 {
     h5xx::file f(filename, h5xx::file::trunc);
     std::string name = "integer array";
-
     h5xx::dataset d;
     h5xx::create_dataset(d, f, name, array);
-
     h5xx::write_dataset(d, array);
-
-    f.close();
 }
 
 void read_dataset(std::string const& filename)
@@ -99,11 +57,9 @@ int main(int argc, char** argv)
     array.assign(data, data + sizeof(data) / sizeof(int));
 
     // write to HDF5 file
-//    write_attribute(argv[1], array);
     write_dataset(argv[1], array);
 
     // read from HDF5 file
-//    read_attribute(argv[1]);
     read_dataset(argv[1]);
 
     return 0;

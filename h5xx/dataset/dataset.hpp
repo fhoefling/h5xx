@@ -88,14 +88,6 @@ public:
         hid_t dapl_id = H5P_DEFAULT
     );
 
-    template <typename h5xxObject> void
-    open(
-        h5xxObject const& object,
-        std::string const& name
-    );
-
-    void close();
-
     void write(hid_t type_id, void const* value);
 
     void read(hid_t type_id, void* buffer);
@@ -104,6 +96,11 @@ public:
 
 private:
     hid_t hid_;
+
+    template <typename h5xxObject>
+    void open(h5xxObject const& object, std::string const& name);
+
+    void close();
 
     template <typename h5xxObject>
     friend void swap(h5xxObject& left, h5xxObject& right);

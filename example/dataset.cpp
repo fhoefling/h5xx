@@ -25,11 +25,17 @@ typedef boost::multi_array<int, 3> array_t;
 
 void write_dataset(std::string const& filename, array_t const& array)
 {
-    h5xx::file f(filename, h5xx::file::trunc);
+    h5xx::file file(filename, h5xx::file::trunc);
     std::string name = "integer array";
-    h5xx::dataset d;
-    h5xx::create_dataset(d, f, name, array);
-    h5xx::write_dataset(d, array);
+
+//    h5xx::create_dataset(file, name, array);
+    h5xx::exists_dataset(file, name);
+
+//    h5xx::dataset d;
+//    h5xx::create_dataset(d, f, name, array);
+//    h5xx::write_dataset(d, array);
+//    h5xx::create_dataset(file, name, array);
+//    h5xx::write_dataset(file, name, array);
 }
 
 void read_dataset(std::string const& filename)
@@ -60,7 +66,7 @@ int main(int argc, char** argv)
     write_dataset(argv[1], array);
 
     // read from HDF5 file
-    read_dataset(argv[1]);
+//    read_dataset(argv[1]);
 
     return 0;
 }

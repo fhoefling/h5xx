@@ -60,6 +60,25 @@ create_dataset(
 }
 
 /**
+ * create dataset of multi-dimensional array type
+ */
+template <typename h5xxObject, typename T>
+inline typename boost::enable_if<is_multi_array<T>, void>::type
+create_dataset(
+        h5xxObject const& object,
+        std::string const& name,
+        T const& value)
+{
+    typedef typename T::element value_type;
+    hid_t type_id = ctype<value_type>::hid(); // this ID must not be closed
+    enum { rank = T::dimensionality };
+    boost::array<hsize_t, rank> dims;
+    std::copy(value.shape(), value.shape() + rank, dims.begin());
+    dataset dset;
+    dset.create(object, name, type_id, dataspace(dims));
+}
+
+/**
  * write dataset of multi-dimensional array type
  */
 template <typename T>
@@ -74,6 +93,25 @@ write_dataset(
 
     dset.write(type_id, value.origin());
 }
+
+/**
+ * write dataset of multi-dimensional array type
+ */
+template <typename h5xxObject, typename T>
+inline typename boost::enable_if<is_multi_array<T>, void>::type
+write_dataset(
+        h5xxObject const& object,
+        std::string const& name,
+        T const& value)
+{
+    typedef typename T::element value_type;
+    hid_t type_id = ctype<value_type>::hid();       // this ID must not be closed
+    if (! exists_dataset(object, name))
+        create_dataset(object, name, value);
+    dataset dset(object, name);
+    dset.write(type_id, value.origin());
+}
+
 
 /**
  * read dataset of multi-dimensional array type

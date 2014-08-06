@@ -67,8 +67,14 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
 
     double double_value = std::sqrt(2.L);
     std::string double_name = "double, scalar";
+//    BOOST_CHECK_NO_THROW(
+//            write_dataset(file, double_name, bool_value)  // cannot change datatype of dataset
+//    );
     BOOST_CHECK_NO_THROW(
-            write_dataset(file, double_name, double_value)
+            write_dataset(file, double_name, double_value)  // write double
+    );
+    BOOST_CHECK_NO_THROW(
+            write_dataset(file, double_name, 0.5*double_value)  // overwrite double
     );
     BOOST_CHECK_NO_THROW(
             read_dataset<double>(file, double_name)

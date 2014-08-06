@@ -20,29 +20,14 @@
 #ifndef H5XX_DATASET_UTILITY_HPP
 #define H5XX_DATASET_UTILITY_HPP
 
-#include <h5xx/dataset.hpp>
-#include <h5xx/dataset/dataset.hpp>
-#include <h5xx/dataspace.hpp>
-#include <h5xx/datatype.hpp>
+//#include <h5xx/dataset.hpp>
+//#include <h5xx/dataset/dataset.hpp>
+//#include <h5xx/dataspace.hpp>
+//#include <h5xx/datatype.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/utility.hpp>
 
 namespace h5xx {
-
-/**
- * create dataset of multi-dimensional array type
- */
-template <typename h5xxObject>
-void
-create_dataset(
-        h5xxObject const& object,
-        std::string const& name,
-        datatype const& dtype,
-        dataspace const& dspace)
-{
-//    dataset dset;
-//    dset.create(object, name, dtype.get_type_id(), dspace);
-}
 
 /**
  * Check whether a dataset of the given name is attached to the h5xx object.
@@ -59,7 +44,6 @@ inline bool exists_dataset(h5xxObject const& object, std::string const& name)
     } H5E_END_TRY
     return (hid > 0);
 }
-
 
 } // namespace h5xx
 

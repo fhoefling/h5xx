@@ -26,37 +26,25 @@
 
 namespace h5xx {
 
-
 /**
- * Represents an HDF5 dataset.
- *
+ * Template class to wrap the HDF5 dataset.
  */
 class dataset
 {
 public:
     dataset() : hid_(-1) {}
 
+    /** open existing dataset */
     template <typename h5xxObject>
-    dataset(h5xxObject const& object, std::string const& name) : hid_(-1)
-    {
-        this->open(object, name);
-    }
+    dataset(h5xxObject const& object, std::string const& name);
 
-    /** create dataset for given object */
+    /** create a new dataset */
     template <typename h5xxObject>
-    dataset(
-        h5xxObject const& object,
-        std::string const& name,
-        hid_t type_id,
-        dataspace const& space,
-        hid_t lcpl_id = H5P_DEFAULT,
-        hid_t dcpl_id = H5P_DEFAULT,
-        hid_t dapl_id = H5P_DEFAULT
-    );
+    dataset(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
+        hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
 
-    ~dataset() {
-        this->close();
-    }
+    /** destructor, implicitly closes the dataset's hid_ */
+    ~dataset();
 
     /**
      * deleted copy constructor
@@ -79,59 +67,80 @@ public:
     operator dataspace() const;
 
     /** return HDF5 object ID */
-    hid_t hid() const
-    {
-        return hid_;
-    }
+    hid_t hid() const;
 
     /** returns true if associated to a valid HDF5 object */
-    bool valid() const
-    {
-        return hid_ >= 0;
-    }
+    bool valid() const;
 
-    /** create dataset at given object */
+//    /** create dataset at the given object */
+//    template <typename h5xxObject> void
+//    create(h5xxObject const& object, std::string const& name, hid_t type_id, dataspace const& space,
+//        hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
+
+    /** create dataset at the given object */
     template <typename h5xxObject> void
-    create(
-        h5xxObject const& object,
-        std::string const& name,
-        hid_t type_id,
-        dataspace const& space,
-        hid_t lcpl_id = H5P_DEFAULT,
-        hid_t dcpl_id = H5P_DEFAULT,
-        hid_t dapl_id = H5P_DEFAULT
-    );
+    create(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
+        hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
 
-    /** create dataset at given object */
+    /** open dataset at the given object */
     template <typename h5xxObject> void
-    create(
-        h5xxObject const& object,
-        std::string const& name,
-        datatype const& type,
-        dataspace const& space,
-        hid_t lcpl_id = H5P_DEFAULT,
-        hid_t dcpl_id = H5P_DEFAULT,
-        hid_t dapl_id = H5P_DEFAULT
-    );
+    open(h5xxObject const& object, std::string const& name);
 
+    /** write value to the dataset */
     void write(hid_t type_id, void const* value);
 
+    /** read from the dataset into the buffer */
     void read(hid_t type_id, void* buffer);
 
+    /** get the name of the dataset */
     std::string name() const;
 
 private:
+    /** HDF5 handle of the dataset */
     hid_t hid_;
-
-    template <typename h5xxObject>
-    void open(h5xxObject const& object, std::string const& name);
-
-    void close();
 
     template <typename h5xxObject>
     friend void swap(h5xxObject& left, h5xxObject& right);
 };
 
+template <typename h5xxObject>
+dataset::dataset(h5xxObject const& object, std::string const& name)
+{
+    if (h5xx::exists_dataset(object, name))
+    {
+        this->open(object,name);
+    }
+    if (hid_ < 0)
+    {
+        throw error("opening dataset \"" + name + "\" at HDF5 object \"" + get_name(object) + "\"");
+    }
+}
+
+template <typename h5xxObject>
+dataset::dataset(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
+    hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
+{
+    dataset::create(object, name, type, space);
+}
+
+dataset::~dataset()
+{
+    if (hid_ >= 0) {
+        if(H5Dclose(hid_) < 0){
+            throw error("closing h5xx::dataset with ID " + boost::lexical_cast<std::string>(hid_));
+        }
+        hid_ = -1;
+    }
+}
+
+template <typename h5xxObject> void
+dataset::open(h5xxObject const& object, std::string const& name)
+{
+    hid_ = H5Dopen(object.hid(), name.c_str(), H5P_DEFAULT);
+    if (hid_ < 0){
+        throw error("opening dataset \"" + name + "\" at HDF5 object \"" + get_name(object) + "\"");
+    }
+}
 
 dataset::dataset(dataset const& other)
   : hid_(other.hid_)
@@ -140,21 +149,6 @@ dataset::dataset(dataset const& other)
     throw error("h5xx::dataset can not be copied. Copying must be elided by return value optimisation.");
     H5Iinc_ref(hid_);
 }
-
-template <typename h5xxObject>
-dataset::dataset(
-    h5xxObject const& object,
-    std::string const& name,
-    hid_t type_id,
-    dataspace const& space,
-    hid_t lcpl_id,
-    hid_t dcpl_id,
-    hid_t dapl_id
-)
-{
-    dataset::create(object, name, type_id, space);
-}
-
 
 dataset const& dataset::operator=(dataset other)
 {
@@ -175,46 +169,31 @@ dataset::operator dataspace() const
     return ds;
 }
 
-
 template <typename h5xxObject> void
-dataset::create(
-    h5xxObject const& object,
-    std::string const& name,
-    datatype const& type,
-    dataspace const& space,
-    hid_t lcpl_id,
-    hid_t dcpl_id,
-    hid_t dapl_id
+dataset::create( h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
+    hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id
 )
 {
-    dataset::create(object, name, type.get_type_id(), space);
-}
-
-
-template <typename h5xxObject> void
-dataset::create(
-    h5xxObject const& object,
-    std::string const& name,
-    hid_t type_id,
-    dataspace const& space,
-    hid_t lcpl_id,
-    hid_t dcpl_id,
-    hid_t dapl_id
-)
-{
-    // hid_t H5Dcreate2( hid_t loc_id, const char *name, hid_t dtype_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id )
-    if ((hid_ = H5Dcreate(
-                            object.hid(),   // hid_t loc_id IN: Location identifier
-                            name.c_str(),   // const char *name IN: Dataset name
-                            type_id,        // hid_t dtype_id IN: Datatype identifier
-                            space.hid(),    // hid_t space_id IN: Dataspace identifier
-                            lcpl_id,        // hid_t lcpl_id IN: Link creation property list
-                            dcpl_id,        // hid_t dcpl_id IN: Dataset creation property list
-                            dapl_id         // hid_t dapl_id IN: Dataset access property list
-                          )
-         ) < 0 )
+    if (h5xx::exists_dataset(object, name))
     {
-        throw error("creating dataset \"" + name + "\"");
+        throw error("dataset \"" + name + "\" already exists");
+    }
+    else
+    {
+        // hid_t H5Dcreate2( hid_t loc_id, const char *name, hid_t dtype_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id )
+        if ((hid_ = H5Dcreate(
+                                object.hid(),       // hid_t loc_id IN: Location identifier
+                                name.c_str(),       // const char *name IN: Dataset name
+                                type.get_type_id(), // hid_t dtype_id IN: Datatype identifier
+                                space.hid(),        // hid_t space_id IN: Dataspace identifier
+                                lcpl_id,            // hid_t lcpl_id IN: Link creation property list
+                                dcpl_id,            // hid_t dcpl_id IN: Dataset creation property list
+                                dapl_id             // hid_t dapl_id IN: Dataset access property list
+                              )
+             ) < 0 )
+        {
+            throw error("creating dataset \"" + name + "\"");
+        }
     }
 }
 
@@ -240,33 +219,30 @@ void dataset::read(hid_t type_id, void * buffer)
     }
 }
 
-template <typename h5xxObject> void
-dataset::open(
-    h5xxObject const& object,
-    std::string const& name
-)
-{
-    if (h5xx::exists_dataset(object, name) > 0) {
-        hid_ = H5Dopen(object.hid(), name.c_str(), H5P_DEFAULT);
-    }
-    if (hid_ < 0){
-        throw error("opening dataset \"" + name + "\" at HDF5 object \"" + get_name(object) + "\"");
-    }
-}
-
-void dataset::close()
-{
-    if (hid_ >= 0) {
-        if(H5Dclose(hid_) < 0){
-            throw error("closing h5xx::dataset with ID " + boost::lexical_cast<std::string>(hid_));
-        }
-        hid_ = -1;
-    }
-}
-
 std::string dataset::name() const
 {
     return h5xx::get_name(hid_);
+}
+
+hid_t dataset::hid() const
+{
+    return hid_;
+}
+
+bool dataset::valid() const
+{
+    return hid_ >= 0;
+}
+// --- END dataset class method implementations ---
+
+
+/**
+ * generic dataset creation function
+ */
+template <typename h5xxObject>
+void create_dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace)
+{
+    dataset data_set(object, name, dtype, dspace);
 }
 
 } // namespace h5xx

@@ -44,8 +44,18 @@ template <typename h5xxObject, typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_dataset(h5xxObject const& object, std::string const& name, T const& value)
 {
-//    delete_attribute(object, name);
-    dataset dset(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
+    dataset dset;
+    if (h5xx::exists_dataset(object, name))
+    {
+        dset.open(object, name);
+        if (!dataspace(dset).is_scalar()) {
+            throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" has non-scalar dataspace");
+        }
+    }
+    else
+    {
+        dset.create(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
+    }
     dset.write(ctype<T>::hid(), &value);
 }
 

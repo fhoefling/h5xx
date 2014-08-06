@@ -19,44 +19,99 @@
 
 #define BOOST_TEST_MODULE h5xx_dataset
 #include <boost/test/unit_test.hpp>
+#include <boost/shared_ptr.hpp>
 
 #include <h5xx/h5xx.hpp>
-
-#include <boost/shared_ptr.hpp>
-#include <cmath>
-#include <unistd.h>
-
 #include <test/ctest_full_output.hpp>
+#include <test/catch_boost_no_throw.hpp>
+#include <test/fixture.hpp>
 
+#include <unistd.h>
+#include <cmath>
 #include <string>
-
-#undef NDEBUG
 
 BOOST_GLOBAL_FIXTURE( ctest_full_output )
 
-BOOST_AUTO_TEST_CASE( h5xx_dataset )
+namespace fixture { // preferred over BOOST_FIXTURE_TEST_SUITE
+
+char filename[] = "test_h5xx_dataset.h5";
+typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
+
+using namespace h5xx;
+
+
+BOOST_AUTO_TEST_CASE( construction )
 {
-    const std::string filename = "test_h5xx_dataset.hdf5";
-    h5xx::file f(filename, h5xx::file::trunc);
-
-    // multi-array type
-    typedef boost::multi_array<int, 2> multi_array2;
-    int data2[] = {
-        99,98,97,96,
-        95,94,93,92,
-        91,90,89,88,
-    };
-    multi_array2 multi_array_value(boost::extents[3][4]);
-    multi_array_value.assign(data2, data2 + 3 * 4);
-    h5xx::dataset dset;
-    h5xx::create_dataset(dset, f, name, multi_array_value);
-    h5xx::write_dataset(dset, multi_array_value);
-
-#ifdef NDEBUG
-    f.close();
-    unlink(filename.c_str());
-#endif
+    BOOST_CHECK_NO_THROW( dataset() );                 // default constructor
 }
+
+BOOST_AUTO_TEST_CASE( scalar_fundamental )
+{
+    bool bool_value = true;
+    std::string bool_name = "bool, scalar";
+    BOOST_CHECK_NO_THROW(
+            write_dataset(file, bool_name, bool_value)
+    );
+    BOOST_CHECK_NO_THROW(
+            read_dataset<bool>(file, bool_name)
+    );
+    BOOST_CHECK(
+            read_dataset<bool>(file, bool_name) == bool_value
+    );
+    BOOST_CHECK(
+            exists_dataset(file, bool_name) == true
+    );
+    H5E_BEGIN_TRY{
+        BOOST_CHECK_THROW(read_attribute<bool>(file, "X"+bool_name), h5xx::error);
+    } H5E_END_TRY
+
+    double double_value = std::sqrt(2.L);
+    std::string double_name = "double, scalar";
+    BOOST_CHECK_NO_THROW(
+            write_dataset(file, double_name, double_value)
+    );
+    BOOST_CHECK_NO_THROW(
+            read_dataset<double>(file, double_name)
+    );
+    BOOST_CHECK(
+            exists_dataset(file, double_name) == true
+    );
+
+    uint64_t uint64_value = 9223372036854775783LLU;  // largest prime below 2^63
+    std::string uint64_name = "uint64, scalar";
+    BOOST_CHECK_NO_THROW(
+            write_dataset(file, uint64_name, uint64_value)
+    );
+    BOOST_CHECK_NO_THROW(
+            read_dataset<uint64_t>(file, uint64_name)
+    );
+    BOOST_CHECK(
+            exists_dataset(file, uint64_name) == true
+    );
+}
+
+//BOOST_AUTO_TEST_CASE( boost_multi_array )
+//{
+//    // multi-array type
+//    typedef boost::multi_array<int, 2> multi_array2;
+//    int data2[] = {
+//        99,98,97,96,
+//        95,94,93,92,
+//        91,90,89,88,
+//    };
+//    multi_array2 multi_array_value(boost::extents[3][4]);
+//    multi_array_value.assign(data2, data2 + 3 * 4);
+//    std::string name = "foo";
+//
+////    h5xx::dataset dset;
+////    h5xx::create_dataset(dset, f, name, multi_array_value);
+////    h5xx::write_dataset(dset, multi_array_value);
+//
+//#ifdef NDEBUG
+//    file.close();
+//    unlink(filename);
+//#endif
+//}
 
 
 /* --- unit tests for old version of dataset ---
@@ -224,3 +279,5 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 #endif
 }
 --- end old unit tests --- */
+
+} //namespace fixture

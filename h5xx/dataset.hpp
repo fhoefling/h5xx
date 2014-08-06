@@ -24,5 +24,6 @@
 #include <h5xx/dataset/dataset.hpp>
 #include <h5xx/dataset/utility.hpp>
 #include <h5xx/dataset/boost_multi_array.hpp>
+#include <h5xx/dataset/scalar.hpp>
 
 #endif /* ! H5XX_DATASET_HPP */

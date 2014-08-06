@@ -20,15 +20,16 @@
 
 #define BOOST_TEST_MODULE h5xx_attribute
 #include <boost/test/unit_test.hpp>
+#include <boost/array.hpp>
 
 #include <h5xx/attribute.hpp>
 #include <h5xx/group.hpp>
 #include <h5xx/policy/string.hpp>
 
-#include <boost/array.hpp>
 #include <test/ctest_full_output.hpp>
 #include <test/catch_boost_no_throw.hpp>
 #include <test/fixture.hpp>
+
 #include <stdio.h>
 
 BOOST_GLOBAL_FIXTURE( ctest_full_output )

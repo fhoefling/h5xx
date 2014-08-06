@@ -37,7 +37,7 @@
 #include <iostream>
 
 /** some useful macros for printf-style debugging */
-#define H5XX_DEBUG
+//#define H5XX_DEBUG
 //
 #define SEPARATOR \
     std::cout << "--------------------------------------------------------------------------------" << std::endl << std::flush;

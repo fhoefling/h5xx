@@ -2,6 +2,8 @@
 
 TODO
   * clean code, what is really necessary/wanted?
+    see the TODO document!
+    ==> hyperslabs for incremental / parallel writing
   * extend functionality beyond multi_array (see attribute)
   * create unit tests
   * create a brief report, check with feho

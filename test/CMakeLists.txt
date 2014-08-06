@@ -24,9 +24,9 @@ foreach(module
   attribute
   dataset
   #chunked_dataset
-  file
-  group
-)
+  #file
+  #group
+  )
   add_executable(test_h5xx_${module}
     ${module}.cpp
   )

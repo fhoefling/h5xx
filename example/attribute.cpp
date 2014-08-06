@@ -63,11 +63,14 @@ void read_attribute(std::string const& filename)
 
 int main(int argc, char** argv)
 {
-    // take filename from command line
-    if (argc <= 1) {
-        std::cout << "Usage: example file.h5" << std::endl;
-        return(-1);
-    }
+//    // take filename from command line
+//    if (argc <= 1) {
+//        std::cout << "Usage: example file.h5" << std::endl;
+//        return(-1);
+//    }
+
+    std::string filename = argv[0];
+    filename.append(".h5");
 
     // set-up data as Boost.MultiArray
     array_t array(boost::extents[2][3][2]);
@@ -75,10 +78,10 @@ int main(int argc, char** argv)
     array.assign(data, data + sizeof(data) / sizeof(int));
 
     // write to HDF5 file
-    write_attribute(argv[1], array);
+    write_attribute(filename, array);
 
     // read from HDF5 file
-    read_attribute(argv[1]);
+    read_attribute(filename);
 
     return 0;
 }

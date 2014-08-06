@@ -35,9 +35,11 @@
 #include <string>
 #include <list>
 #include <iostream>
+#include <vector>
+#include <algorithm>
 
 /** some useful macros for printf-style debugging */
-#define H5XX_DEBUG
+//#define H5XX_DEBUG
 //
 #define SEPARATOR \
     std::cout << "--------------------------------------------------------------------------------" << std::endl << std::flush;
@@ -84,20 +86,35 @@ inline std::string filename(h5xxObject const& obj)
 /**
  * Return the name (absolute path) of an h5xx object, or a general HDF5 object
  * given by its hid
- *
- * For attributes, return the name of the object to which that attribute is
- * attached.
  */
 inline std::string get_name(hid_t hid)
 {
-    ssize_t size = H5Iget_name(hid, NULL, 0);        // get size of string
+    ssize_t size = H5Iget_name(hid, NULL, 0); // get size of string
     if (size < 0) {
         throw error("failed to get name of HDF5 object with ID " + boost::lexical_cast<std::string>(hid));
     }
     std::vector<char> buffer;
-    buffer.resize(size + 1);                         // includes NULL terminator
+    buffer.resize(size + 1); // includes NULL terminator
     size = H5Iget_name(hid, &*buffer.begin(), buffer.size()); // get string data
-    return &*buffer.begin();                         // convert char* to std::string
+    // restore the standard behaviour for HDF5 attributes
+    if (H5Iget_type(hid) == H5I_ATTR)
+    {
+        // up to now, the buffer contains the name of the object to which the attribute is attached,
+        // so let's extend it with the attribute's name to form a full path to the attribute
+        ssize_t attr_size = H5Aget_name(hid, 0, NULL);
+        if (attr_size < 0) {
+            throw error("failed to get name of HDF5 attribute with ID " + boost::lexical_cast<std::string>(hid));
+        }
+        std::vector<char> attr_buffer;
+        attr_buffer.resize(attr_size + 1); // includes NULL terminator
+        attr_size = H5Aget_name(hid, attr_buffer.size(), &*attr_buffer.begin());
+        if (buffer.back() == '\0')
+            buffer.pop_back();
+        if (buffer.back() != '/')
+            buffer.push_back('/');
+        std::copy(attr_buffer.begin(), attr_buffer.end(), buffer.end());
+    }
+    return &*buffer.begin(); // convert char* to std::string
 }
 
 template <typename h5xxObject>

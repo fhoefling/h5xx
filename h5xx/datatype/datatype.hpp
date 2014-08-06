@@ -30,36 +30,36 @@
 
 namespace h5xx {
 
+/**
+ * Wrapper class for the HDF5 datatype.
+ */
 class datatype
 {
 public:
+    /** default constructor */
     datatype() : type_id_(-1) {}
 
+    /** create datatype object from a HDF5 type_id */
+    datatype(hid_t type_id) : type_id_(type_id) {}
+
+    /** create datatype object from a Boost multi_array */
     template <class T>
     datatype(T array, typename boost::enable_if<is_multi_array<T> >::type* dummy = 0);
 
+    /** return the HDF5 type ID */
     hid_t get_type_id() const;
+
 protected:
+    /** HDF5 type ID */
     hid_t type_id_;
 };
-
 
 template <class T>
 datatype::datatype(T array, typename boost::enable_if<is_multi_array<T> >::type* dummy)
 {
     typedef typename T::element value_type;
-    type_id_ = ctype<value_type>::hid(); // this ID must not be closed
+    type_id_ = ctype<value_type>::hid();
 }
-
-
-
-//datatype::datatype(boost::multi_array array)
-//datatype::datatype(int foo)
-//{
-//    typedef typename array::element value_type;
-//    type_id_ = ctype<value_type>::hid(); // this ID must not be closed
-//}
-
 
 hid_t datatype::get_type_id() const
 {

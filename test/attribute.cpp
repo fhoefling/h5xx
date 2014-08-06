@@ -20,15 +20,16 @@
 
 #define BOOST_TEST_MODULE h5xx_attribute
 #include <boost/test/unit_test.hpp>
+#include <boost/array.hpp>
 
 #include <h5xx/attribute.hpp>
 #include <h5xx/group.hpp>
 #include <h5xx/policy/string.hpp>
 
-#include <boost/array.hpp>
 #include <test/ctest_full_output.hpp>
 #include <test/catch_boost_no_throw.hpp>
 #include <test/fixture.hpp>
+
 #include <stdio.h>
 
 BOOST_GLOBAL_FIXTURE( ctest_full_output )
@@ -48,8 +49,10 @@ BOOST_AUTO_TEST_CASE( construction )
     BOOST_CHECK_NO_THROW(attribute(file, "foo"));      // open existing attribute on-the-fly
 
     attribute foo(file, "foo");
-    BOOST_CHECK_EQUAL(get_name(foo), "/");             // path of the object the attribute is attached to
-    BOOST_CHECK_EQUAL(foo.name(), "foo");              // name of the attribute
+//    BOOST_CHECK_EQUAL(get_name(foo), "/");           // path of the object the attribute is attached to
+//    BOOST_CHECK_EQUAL(foo.name(), "foo");            // name of the attribute
+    BOOST_CHECK_EQUAL(get_name(foo), "/foo");          // NEW: full path of the attribute
+    BOOST_CHECK_EQUAL(foo.name(), "/foo");             // NEW: full path of the attribute
     BOOST_CHECK(foo.valid());
 
     hid_t hid = foo.hid();

@@ -28,14 +28,20 @@ void write_dataset(std::string const& filename, array_t const& array)
     h5xx::file file(filename, h5xx::file::trunc);
     std::string name = "integer array";
 
-//    h5xx::create_dataset(file, name, array);
-    h5xx::exists_dataset(file, name);
+    // create dataset from a multiarray variable,
+    // dataspace and datatype are determined internally
+    h5xx::create_dataset(file, name, array);
+    h5xx::write_dataset(file, name, array);
 
-//    h5xx::dataset d;
-//    h5xx::create_dataset(d, f, name, array);
-//    h5xx::write_dataset(d, array);
-//    h5xx::create_dataset(file, name, array);
-//    h5xx::write_dataset(file, name, array);
+    name = "clone of integer array";
+    // construct dataspace from a multiarray variable
+//    h5xx::dataspace data_space = h5xx::create_dataspace(array);
+    h5xx::dataspace data_space(array);
+    // pull datatype from a multiarray variable
+    h5xx::datatype data_type(array);
+    // create dataset using d'type and d'space
+    h5xx::create_dataset(file, name, data_type, data_space);
+    h5xx::write_dataset(file, name, array);
 }
 
 void read_dataset(std::string const& filename)
@@ -51,11 +57,14 @@ void read_dataset(std::string const& filename)
 
 int main(int argc, char** argv)
 {
-    // take filename from command line
-    if (argc <= 1) {
-        std::cout << "Usage: example file.h5" << std::endl;
-        return(-1);
-    }
+//    // take filename from command line
+//    if (argc <= 1) {
+//        std::cout << "Usage: example file.h5" << std::endl;
+//        return(-1);
+//    }
+
+    std::string filename = argv[0];
+    filename.append(".h5");
 
     // set-up data as Boost.MultiArray
     array_t array(boost::extents[2][3][2]);
@@ -63,10 +72,10 @@ int main(int argc, char** argv)
     array.assign(data, data + sizeof(data) / sizeof(int));
 
     // write to HDF5 file
-    write_dataset(argv[1], array);
+    write_dataset(filename, array);
 
     // read from HDF5 file
-//    read_dataset(argv[1]);
+    read_dataset(filename);
 
     return 0;
 }

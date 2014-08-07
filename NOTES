@@ -7,17 +7,3 @@ TODO
   * extend functionality beyond multi_array (see attribute)
   * create unit tests
   * create a brief report, check with feho
-
-
-14/07/31
-
-notes on the implementation of dataset
-
-create_dataset
-   policy flag overwrite
-      if dataset exists, either return or overwrite
-
-write_dataset
-   if dataset does not exist, overwrite it
-
-read_dataset

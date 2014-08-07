@@ -23,6 +23,8 @@
 #include <h5xx/dataset/utility.hpp>
 #include <h5xx/dataspace.hpp>
 #include <h5xx/datatype.hpp>
+#include <h5xx/policy/filter.hpp>
+#include <h5xx/policy/storage.hpp>
 
 namespace h5xx {
 

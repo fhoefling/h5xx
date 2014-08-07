@@ -95,6 +95,9 @@ public:
     /** get the name of the dataset */
     std::string name() const;
 
+    /** return copy of dataset's type */
+    hid_t get_type();
+
 private:
     /** HDF5 handle of the dataset */
     hid_t hid_;
@@ -219,9 +222,19 @@ void dataset::read(hid_t type_id, void * buffer)
     }
 }
 
+hid_t dataset::get_type()
+{
+    hid_t type_id = H5Dget_type(hid_);
+    if (type_id < 0)
+    {
+        throw error("failed to obtain type_id of dataset \"" + name() + "\"");
+    }
+    return type_id;
+}
+
 std::string dataset::name() const
 {
-    return h5xx::get_name(hid_);
+    return get_name(hid_);
 }
 
 hid_t dataset::hid() const
@@ -231,7 +244,7 @@ hid_t dataset::hid() const
 
 bool dataset::valid() const
 {
-    return hid_ >= 0;
+    return (hid_ >= 0);
 }
 // --- END dataset class method implementations ---
 

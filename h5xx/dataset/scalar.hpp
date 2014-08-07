@@ -38,8 +38,8 @@
 namespace h5xx {
 
 /**
-*create and write fundamental type dataset on h5xx objects
-*/
+ * create and write fundamental type dataset at h5xx object
+ */
 template <typename h5xxObject, typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 write_dataset(h5xxObject const& object, std::string const& name, T const& value)
@@ -60,19 +60,18 @@ write_dataset(h5xxObject const& object, std::string const& name, T const& value)
 }
 
 /**
- * read fundamental type dataset of a given h5xx::object
+ * read fundamental type dataset from a given h5xx object
  */
 template <typename T, typename h5xxObject>
 inline typename boost::enable_if<boost::is_fundamental<T>, T>::type
 read_dataset(h5xxObject const& object, std::string const& name)
 {
-    // open attribute and check dataspace
+    // open dataset and check dataspace
     dataset dset(object, name);
     if (!dataspace(dset).is_scalar()) {
         throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" has non-scalar dataspace");
     }
-
-    // read attribute
+    // read dataset
     T value;
     dset.read(ctype<T>::hid(), &value);
     return value;

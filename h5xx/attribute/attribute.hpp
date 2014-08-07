@@ -203,17 +203,20 @@ hid_t attribute::get_type()
     return type_id;
 }
 
-
 std::string attribute::name() const
 {
-    ssize_t size = H5Aget_name(hid_, 0, NULL);        // get size of string
-    if (size < 0) {
-        throw error("failed to get name of HDF5 attribute with ID " + boost::lexical_cast<std::string>(hid_));
-    }
-    std::vector<char> buffer;
-    buffer.resize(size + 1);                         // includes NULL terminator
-    size = H5Aget_name(hid_, buffer.size(), &*buffer.begin()); // get string data
-    return &*buffer.begin();                         // convert char* to std::string
+// --- code returning attribute name without full path ---
+//    ssize_t size = H5Aget_name(hid_, 0, NULL);        // get size of string
+//    if (size < 0) {
+//        throw error("failed to get name of HDF5 attribute with ID " + boost::lexical_cast<std::string>(hid_));
+//    }
+//    std::vector<char> buffer;
+//    buffer.resize(size + 1);                         // includes NULL terminator
+//    size = H5Aget_name(hid_, buffer.size(), &*buffer.begin()); // get string data
+//    return &*buffer.begin();                         // convert char* to std::string
+// --- END code returning attribute name without full path ---
+    // NEW : return full path
+    return get_name(hid_);
 }
 
 } // namespace h5xx

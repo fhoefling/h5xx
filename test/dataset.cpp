@@ -43,6 +43,27 @@ using namespace h5xx;
 BOOST_AUTO_TEST_CASE( construction )
 {
     BOOST_CHECK_NO_THROW( dataset() );                 // default constructor
+
+    write_dataset(file, "foo", 1);                     // create dataset in a file's root group
+    BOOST_CHECK_NO_THROW(dataset(file, "foo"));        // open existing attribute on-the-fly
+
+    dataset foo(file, "foo");
+    BOOST_CHECK_EQUAL(get_name(foo), "/foo");          // full path of the dataset
+    BOOST_CHECK_EQUAL(foo.name(), "/foo");             // full path of the dataset
+    BOOST_CHECK(foo.valid());
+
+    // TODO recheck, taken from the attribute unit test program
+    hid_t hid = foo.hid();
+    dataset bar;
+    BOOST_CHECK_THROW(bar = foo, h5xx::error);         // assignment is not allowed (it makes a copy)
+    BOOST_CHECK_NO_THROW(bar = move(foo));             // move assignment
+    BOOST_CHECK_EQUAL(bar.hid(), hid);
+    BOOST_CHECK(!foo.valid());
+
+    // TODO recheck, taken from the attribute unit test program
+    BOOST_CHECK_THROW(dataset g(bar), h5xx::error);  // copying is not allowed
+    BOOST_CHECK_NO_THROW(dataset g(move(bar)));      // copying from temporary is allowed (with move semantics)
+    BOOST_CHECK(!bar.valid());
 }
 
 BOOST_AUTO_TEST_CASE( scalar_fundamental )
@@ -96,29 +117,24 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     );
 }
 
-//BOOST_AUTO_TEST_CASE( boost_multi_array )
-//{
-//    // multi-array type
-//    typedef boost::multi_array<int, 2> multi_array2;
-//    int data2[] = {
-//        99,98,97,96,
-//        95,94,93,92,
-//        91,90,89,88,
-//    };
-//    multi_array2 multi_array_value(boost::extents[3][4]);
-//    multi_array_value.assign(data2, data2 + 3 * 4);
-//    std::string name = "foo";
-//
-////    h5xx::dataset dset;
-////    h5xx::create_dataset(dset, f, name, multi_array_value);
-////    h5xx::write_dataset(dset, multi_array_value);
-//
-//#ifdef NDEBUG
-//    file.close();
-//    unlink(filename);
-//#endif
-//}
+BOOST_AUTO_TEST_CASE( boost_multi_array)
+{
+    typedef boost::multi_array<int, 3> multi_array3;
+    int data3[] = {99,98,97,96,95,94,93,92,91,90,89,88,87,86,85,84,83,82,81,80,79,78,77,76};
+    multi_array3 multi_array_value(boost::extents[2][3][4]);
+    multi_array_value.assign(data3, data3 + 2 * 3 * 4);
+    multi_array3 read(boost::extents[2][3][4]);
 
+    BOOST_CHECK_NO_THROW(
+            write_dataset(file, "boost multi array, int", multi_array_value)
+    );
+    BOOST_CHECK_NO_THROW(
+            read = read_dataset<multi_array3>(file, "boost multi array, int")
+    );
+    BOOST_CHECK(
+            read == multi_array_value
+    );
+}
 
 /* --- unit tests for old version of dataset ---
 BOOST_AUTO_TEST_CASE( h5xx_dataset )

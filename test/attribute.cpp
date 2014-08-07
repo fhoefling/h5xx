@@ -49,8 +49,10 @@ BOOST_AUTO_TEST_CASE( construction )
     BOOST_CHECK_NO_THROW(attribute(file, "foo"));      // open existing attribute on-the-fly
 
     attribute foo(file, "foo");
-    BOOST_CHECK_EQUAL(get_name(foo), "/");             // path of the object the attribute is attached to
-    BOOST_CHECK_EQUAL(foo.name(), "foo");              // name of the attribute
+//    BOOST_CHECK_EQUAL(get_name(foo), "/");           // path of the object the attribute is attached to
+//    BOOST_CHECK_EQUAL(foo.name(), "foo");            // name of the attribute
+    BOOST_CHECK_EQUAL(get_name(foo), "/foo");          // NEW: full path of the attribute
+    BOOST_CHECK_EQUAL(foo.name(), "/foo");             // NEW: full path of the attribute
     BOOST_CHECK(foo.valid());
 
     hid_t hid = foo.hid();

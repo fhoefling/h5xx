@@ -163,10 +163,7 @@ dataset const& dataset::operator=(dataset other)
 
 dataset::operator dataspace() const
 {
-    H5XX_CHKPT;
-    H5XX_PRINT( h5xx::get_name(hid_) );
     hid_t hid = H5Dget_space(hid_);
-    H5XX_CHKPT;
     if(hid < 0 ) {
         throw error("dataset +\"" + name() + "\" has invalid dataspace");
     }

@@ -31,6 +31,15 @@ namespace policy {
 namespace filter {
 
 /**
+ * virtual base class to allow handling of filter policy classes in vectors
+ */
+class generic
+{
+public:
+    virtual void set_filter(hid_t plist) const = 0;
+};
+
+/**
  * policy class to enable gzip compression of a chunked dataset layout
  *
  * The compression level corresponds to the values of the GNU gzip tool.
@@ -39,7 +48,7 @@ namespace filter {
  * the input, then the compression filter returns failure and the uncompressed
  * data is stored in the file.
  */
-class deflate
+class deflate : public generic
 {
 public:
     deflate(unsigned int level=6, bool optional=true)
@@ -49,7 +58,7 @@ public:
     /** set deflate filter for given property list */
     void set_filter(hid_t plist) const
     {
-        if (H5Pset_filter(plist, H5Z_FILTER_DEFLATE, flags, 1, &level_) < 0) {
+        if (H5Pset_filter(plist, H5Z_FILTER_DEFLATE, flags_, 1, &level_) < 0) {
             throw error("setting data compression filter (gzip) failed");
         }
     }
@@ -74,13 +83,13 @@ private:
  * the input, then the compression filter returns failure and the uncompressed
  * data is stored in the file.
  */
-class szip
+class szip : public generic
 {
 public:
     enum coding_t {
         entropy                 /* entropy coding method: best suited for preprocessed data and small numbers   */
       , nearest_neighbour       /* nearest neighbor coding method: preprocess data, then apply entropy coding */
-    }
+    };
 
     szip(unsigned int block_size=16, coding_t coding=nearest_neighbour, bool optional=true)
       : flags_(optional ? H5Z_FLAG_OPTIONAL : 0)
@@ -95,7 +104,7 @@ public:
     /** set szip filter for given property list */
     void set_filter(hid_t plist) const
     {
-        if (H5Pset_filter(plist, H5Z_FILTER_SZIP, flags, 2, param_) < 0) {
+        if (H5Pset_filter(plist, H5Z_FILTER_SZIP, flags_, 2, param_) < 0) {
             throw error("setting data compression filter (SZIP) failed");
         }
     }
@@ -110,7 +119,7 @@ private:
 /**
  * policy class to set data shuffling filter for a chunked dataset layout
  */
-class shuffle
+class shuffle : public generic
 {
 public:
     shuffle(bool optional=false)
@@ -120,7 +129,7 @@ public:
     /** set data shuffling filter for given property list */
     void set_filter(hid_t plist) const
     {
-        if (H5Pset_filter(plist, H5Z_FILTER_SHUFFLE, flags, 0, NULL) < 0) {
+        if (H5Pset_filter(plist, H5Z_FILTER_SHUFFLE, flags_, 0, NULL) < 0) {
             throw error("setting data shuffling filter failed");
         }
     }
@@ -135,7 +144,7 @@ private:
  *
  * The filter can not be made optional.
  */
-struct fletcher32
+struct fletcher32 : public generic
 {
     fletcher32() {}
 

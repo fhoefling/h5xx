@@ -25,6 +25,7 @@
 
 #include <h5xx/error.hpp>
 #include <h5xx/h5xx.hpp>
+#include <h5xx/policy/filter.hpp>
 
 namespace h5xx {
 namespace policy {
@@ -72,7 +73,7 @@ template <std::size_t N>
 class chunked
 {
 public:
-    typedef std::vector<h5xx::policy::filter> filter_pipeline_t;
+    typedef std::vector<h5xx::policy::filter::generic> filter_pipeline_t;
 
     /**
      * specify the size, in dataset elements, of a chunk in each dimension

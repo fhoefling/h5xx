@@ -1,6 +1,5 @@
 /*
  * Copyright © 2014 Felix Höfling
- * Copyright © 2014 Manuel Dibak
  *
  * This file is part of h5xx.
  *
@@ -18,29 +17,13 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef H5XX_DATASPACE_MULTI_ARRAY
-#define H5XX_DATASPACE_MULTI_ARRAY
+#ifndef H5XX_POLICY_HPP
+#define H5XX_POLICY_HPP
 
-#include <algorithm>
+#include <h5xx/policy/policy.hpp>
+#include <h5xx/policy/filter.hpp>
+#include <h5xx/policy/storage.hpp>
+#include <h5xx/policy/string.hpp>
 
-#include <h5xx/dataspace.hpp>
+#endif // ! H5XX_POLICY_HPP
 
-#include <boost/array.hpp>
-#include <boost/multi_array.hpp>
-#include <boost/utility/enable_if.hpp>
-
-namespace h5xx {
-
-template <typename T>
-/* inline */ typename boost::enable_if<is_multi_array<T>, dataspace>::type
-create_dataspace(T const& value)
-{
-    enum { rank = T::dimensionality };
-    boost::array<hsize_t, rank> value_dims;
-    std::copy(value.shape(), value.shape() + rank, value_dims.begin());
-    return dataspace(value_dims);
-}
-
-} // namespace h5xx
-
-#endif // ! H5XX_DATASPACE_MULTI_ARRAY

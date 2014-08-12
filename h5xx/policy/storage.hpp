@@ -25,7 +25,6 @@
 
 #include <h5xx/error.hpp>
 #include <h5xx/h5xx.hpp>
-#include <h5xx/policy/filter.hpp>
 
 namespace h5xx {
 namespace policy {
@@ -34,12 +33,12 @@ namespace storage {
 /**
  * policy class to specify a contiguous dataset layout
  */
-struct contiguous
+struct contiguous : public h5xx::policy::dataset_creation_property
 {
     contiguous() {}
 
     /** set compact storage for given property list */
-    void set_storage(hid_t plist) const
+    void set(hid_t plist) const
     {
         if (H5Pset_layout(plist, H5D_CONTIGUOUS) < 0) {
             throw error("setting contiguous dataset layout failed");
@@ -50,67 +49,46 @@ struct contiguous
 /**
  * policy class to specify a compact dataset layout
  */
-struct compact
+struct compact : public h5xx::policy::dataset_creation_property
 {
     compact() {}
 
     /** set compact storage for given property list */
-    void set_storage(hid_t plist) const
+    void set(hid_t plist) const
     {
-        if (H5Pset_layout(plist, H5D_CHUNKED) < 0) {
+        if (H5Pset_layout(plist, H5D_COMPACT) < 0) {
             throw error("setting compact dataset layout failed");
         }
     }
 };
 
-/**
- * policy class to specify a chunked dataset layout of given size, optionally
- * along with a filter pipeline (for, e.g., data compression).
- *
- * The parameter N must equal the rank of the dataset.
- */
-template <std::size_t N>
-class chunked
+class chunked : public h5xx::policy::dataset_creation_property
 {
 public:
-    typedef std::vector<h5xx::policy::filter::generic> filter_pipeline_t;
-
     /**
      * specify the size, in dataset elements, of a chunk in each dimension
      */
-    chunked(boost::array<hsize_t, N> const& dims)
+    chunked(std::vector <hsize_t> const& dims)
       : dims_(dims) {}
 
     /**
      * specify the size, in dataset elements, of a chunk in each dimension
      * and the filter pipeline
      */
-    chunked(boost::array<hsize_t, N> const& dims, filter_pipeline_t const& filter)
-      : dims_(dims), filter_(filter) {}
 
     /** set chunked storage layout for given property list */
-    void set_storage(hid_t plist) const
+    void set(hid_t plist) const
     {
         bool err = false;
         err |= H5Pset_layout(plist, H5D_CHUNKED) < 0;
-        err |= H5Pset_chunk(plist, N, dims_.data()) < 0;
+        err |= H5Pset_chunk(plist, dims_.size(), &dims_[0]) < 0;
         if (err) {
             throw error("setting chunked dataset layout failed");
-        }
-
-        // add filter pipeline to property list
-        typename filter_pipeline_t::const_iterator f;
-        for (f = filter_.begin(); f != filter_.end(); ++f) {
-            f->set_filter(plist);
         }
     }
 
 private:
-    // chunk dimensions
-    boost::array<hsize_t, N> dims_;
-
-    // filter pipeline
-    filter_pipeline_t filter_;
+    std::vector<hsize_t> dims_;
 };
 
 } //namespace storage

@@ -105,6 +105,9 @@ public:
     /** returns true if dataspace is of simple type */
     bool is_simple() const;
 
+    /** simple hyperslab selection */
+    void select_hyperslab(std::vector<hsize_t> const& offset, std::vector<hsize_t> const& count);
+
 private:
     /** HDF5 object ID */
     hid_t hid_;
@@ -211,6 +214,13 @@ bool dataspace::is_simple() const
         return false;
     }
     return H5Sget_simple_extent_type(hid_) == H5S_SIMPLE;
+}
+
+void dataspace::select_hyperslab(std::vector<hsize_t> const& offset, std::vector<hsize_t> const& count)
+{
+    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0) {
+        throw error("selecting hyperslab");
+    }
 }
 
 } // namespace h5xx

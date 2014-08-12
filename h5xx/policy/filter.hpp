@@ -23,21 +23,14 @@
 #include <boost/array.hpp>
 #include <vector>
 
+#include <h5xx/policy/policy.hpp>
+
 #include <h5xx/error.hpp>
 #include <h5xx/h5xx.hpp>
 
 namespace h5xx {
 namespace policy {
 namespace filter {
-
-/**
- * virtual base class to allow handling of filter policy classes in vectors
- */
-class generic
-{
-public:
-    virtual void set_filter(hid_t plist) const = 0;
-};
 
 /**
  * policy class to enable gzip compression of a chunked dataset layout
@@ -48,7 +41,7 @@ public:
  * the input, then the compression filter returns failure and the uncompressed
  * data is stored in the file.
  */
-class deflate : public generic
+class deflate : public h5xx::policy::dataset_creation_property
 {
 public:
     deflate(unsigned int level=6, bool optional=true)
@@ -56,7 +49,7 @@ public:
     {}
 
     /** set deflate filter for given property list */
-    void set_filter(hid_t plist) const
+    void set(hid_t plist) const
     {
         if (H5Pset_filter(plist, H5Z_FILTER_DEFLATE, flags_, 1, &level_) < 0) {
             throw error("setting data compression filter (gzip) failed");
@@ -83,7 +76,7 @@ private:
  * the input, then the compression filter returns failure and the uncompressed
  * data is stored in the file.
  */
-class szip : public generic
+class szip : public h5xx::policy::dataset_creation_property
 {
 public:
     enum coding_t {
@@ -102,7 +95,7 @@ public:
     }
 
     /** set szip filter for given property list */
-    void set_filter(hid_t plist) const
+    void set(hid_t plist) const
     {
         if (H5Pset_filter(plist, H5Z_FILTER_SZIP, flags_, 2, param_) < 0) {
             throw error("setting data compression filter (SZIP) failed");
@@ -119,7 +112,7 @@ private:
 /**
  * policy class to set data shuffling filter for a chunked dataset layout
  */
-class shuffle : public generic
+class shuffle : public h5xx::policy::dataset_creation_property
 {
 public:
     shuffle(bool optional=false)
@@ -127,7 +120,7 @@ public:
     {}
 
     /** set data shuffling filter for given property list */
-    void set_filter(hid_t plist) const
+    void set(hid_t plist) const
     {
         if (H5Pset_filter(plist, H5Z_FILTER_SHUFFLE, flags_, 0, NULL) < 0) {
             throw error("setting data shuffling filter failed");
@@ -144,12 +137,12 @@ private:
  *
  * The filter can not be made optional.
  */
-struct fletcher32 : public generic
+struct fletcher32 : public h5xx::policy::dataset_creation_property
 {
     fletcher32() {}
 
     /** set fletcher32 filter for given property list */
-    void set_filter(hid_t plist) const
+    void set(hid_t plist) const
     {
         if (H5Pset_filter(plist, H5Z_FILTER_FLETCHER32, 0, 0, NULL) < 0) {
             throw error("setting Fletcher32 checksum filter failed");

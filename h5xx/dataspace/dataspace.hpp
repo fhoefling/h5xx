@@ -105,12 +105,20 @@ public:
     /** returns true if dataspace is of simple type */
     bool is_simple() const;
 
-    /** simple hyperslab selection */
+    /** simple hyperslab selection, offsets and counts are given as std::vector */
     void select_hyperslab(std::vector<hsize_t> const& offset, std::vector<hsize_t> const& count);
+
+    /** simple hyperslab selection, offsets and counts are given as boost::array */
+    template <std::size_t N>
+    void select_hyperslab(boost::array<hsize_t,N> const& offset, boost::array<hsize_t,N> const& count);
+
 
 private:
     /** HDF5 object ID */
     hid_t hid_;
+
+    /** simple hyperslab selection, offset and count arrays are given as pointers */
+    void select_hyperslab(hsize_t const* offset, hsize_t const* count);
 
     template <typename h5xxObject>
     friend void swap(h5xxObject& left, h5xxObject& right);
@@ -216,12 +224,24 @@ bool dataspace::is_simple() const
     return H5Sget_simple_extent_type(hid_) == H5S_SIMPLE;
 }
 
+template <std::size_t N>
+void dataspace::select_hyperslab(boost::array<hsize_t,N> const& offset, boost::array<hsize_t,N> const& count)
+{
+    this->select_hyperslab(&offset[0], &count[0]);
+}
+
 void dataspace::select_hyperslab(std::vector<hsize_t> const& offset, std::vector<hsize_t> const& count)
 {
-    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0) {
+    this->select_hyperslab(&offset[0], &count[0]);
+}
+
+void dataspace::select_hyperslab(hsize_t const* offset, hsize_t const* count)
+{
+    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, offset, NULL, count, NULL) < 0) {
         throw error("selecting hyperslab");
     }
 }
+
 
 } // namespace h5xx
 

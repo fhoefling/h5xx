@@ -23,8 +23,7 @@
 #include <h5xx/dataset/utility.hpp>
 #include <h5xx/dataspace.hpp>
 #include <h5xx/datatype.hpp>
-#include <h5xx/policy/filter.hpp>
-#include <h5xx/policy/storage.hpp>
+#include <h5xx/policy.hpp>
 
 namespace h5xx {
 
@@ -89,10 +88,11 @@ public:
     open(h5xxObject const& object, std::string const& name);
 
     /** write value to the dataset */
-    void write(hid_t type_id, void const* value);
+    void write(hid_t type_id, void const* value, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
 
     /** read from the dataset into the buffer */
-    void read(hid_t type_id, void* buffer);
+    void read(hid_t type_id, void* buffer, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
+//    void read(hid_t type_id, void* buffer) {}
 
     /** get the name of the dataset */
     std::string name() const;
@@ -111,6 +111,7 @@ private:
 template <typename h5xxObject>
 dataset::dataset(h5xxObject const& object, std::string const& name)
 {
+    hid_ = -1;
     if (h5xx::exists_dataset(object, name))
     {
         this->open(object,name);
@@ -125,6 +126,7 @@ template <typename h5xxObject>
 dataset::dataset(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
     hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
 {
+    hid_ = -1;
     dataset::create(object, name, type, space);
 }
 
@@ -182,7 +184,6 @@ dataset::create( h5xxObject const& object, std::string const& name, datatype con
     }
     else
     {
-        // hid_t H5Dcreate2( hid_t loc_id, const char *name, hid_t dtype_id, hid_t space_id, hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id )
         if ((hid_ = H5Dcreate(
                                 object.hid(),       // hid_t loc_id IN: Location identifier
                                 name.c_str(),       // const char *name IN: Dataset name
@@ -199,22 +200,16 @@ dataset::create( h5xxObject const& object, std::string const& name, datatype con
     }
 }
 
-void dataset::write(hid_t type_id, void const* value)
+void dataset::write(hid_t type_id, void const* value, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)
 {
-    hid_t mem_space_id = H5S_ALL;
-    hid_t file_space_id = H5S_ALL;
-    hid_t xfer_plist_id = H5P_DEFAULT;
     if (H5Dwrite(hid_, type_id, mem_space_id, file_space_id, xfer_plist_id, value) < 0)
     {
         throw error("writing dataset");
     }
 }
 
-void dataset::read(hid_t type_id, void * buffer)
+void dataset::read(hid_t type_id, void * buffer, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)
 {
-    hid_t mem_space_id = H5S_ALL;
-    hid_t file_space_id = H5S_ALL;
-    hid_t xfer_plist_id = H5P_DEFAULT;
     if (H5Dread(hid_, type_id, mem_space_id, file_space_id, xfer_plist_id, buffer) < 0)
     {
         throw error("reading dataset");
@@ -249,12 +244,17 @@ bool dataset::valid() const
 
 
 /**
- * generic dataset creation function
+ * free function to create datasets
  */
 template <typename h5xxObject>
-void create_dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace)
+void create_dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
+               h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list)
 {
-    dataset data_set(object, name, dtype, dspace);
+    hid_t lcpl_id = H5P_DEFAULT;
+    hid_t dcpl_id = H5P_DEFAULT;
+    hid_t dapl_id = H5P_DEFAULT;
+    dcpl_id = dcpl.get();
+    dataset data_set(object, name, dtype, dspace, lcpl_id, dcpl_id, dapl_id);
 }
 
 } // namespace h5xx

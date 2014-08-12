@@ -31,9 +31,9 @@ const int NJ=NI;
 
 void print_array(array_2d_t const& array)
 {
-    for (int j = 0; j < array.shape()[1]; j++)
+    for (unsigned int j = 0; j < array.shape()[1]; j++)
     {
-        for (int i = 0; i < array.shape()[0]; i++)
+        for (unsigned int i = 0; i < array.shape()[0]; i++)
         {
             printf("%2d ", array[j][i]);
         }
@@ -43,7 +43,7 @@ void print_array(array_2d_t const& array)
 
 void print_array(array_1d_t const& array)
 {
-    for (int i = 0; i < array.shape()[0]; i++)
+    for (unsigned int i = 0; i < array.shape()[0]; i++)
     {
         printf("%2d ", array[i]);
     }
@@ -92,10 +92,14 @@ void read_dataset(std::string const& filename)
 
 
     // (2) select a 2D hyperslab and read it into a 2x2 array
-    static const hsize_t offset_[] = {1,1};
-    static const hsize_t count_[] = {2,2};
-    std::vector<hsize_t> offset(offset_, offset_ + sizeof(offset_)/sizeof(offset_[0]));;
-    std::vector<hsize_t> count(count_, count_ + sizeof(count_)/sizeof(count_[0]));
+    // --- offsets and counts for hyperslab selection, can use either std::vector
+//    static const hsize_t offset_[] = {1,1};
+//    static const hsize_t count_[] = {2,2};
+//    std::vector<hsize_t> offset(offset_, offset_ + sizeof(offset_)/sizeof(offset_[0]));;
+//    std::vector<hsize_t> count(count_, count_ + sizeof(count_)/sizeof(count_[0]));
+    // --- ... or boost::arrays
+    boost::array<hsize_t,2> offset = {{1,1}};
+    boost::array<hsize_t,2> count = {{2,2}};
     {
         h5xx::dataset data_set(f, name);
         // create file dataspace from dataset and select hyperslab from the dataset
@@ -134,7 +138,7 @@ int main(int argc, char** argv)
     std::string filename = argv[0];
     filename.append(".h5");
 
-    // set-up data as Boost.MultiArray
+    // set-up data as 2D Boost.MultiArray
     array_2d_t array(boost::extents[NJ][NI]);
     const int nelem = NI*NJ;
     int data[nelem];
@@ -142,10 +146,10 @@ int main(int argc, char** argv)
         data[i] = i;
     array.assign(data, data + nelem);
 
-    // write to HDF5 file
+    // write array to HDF5 file
     write_dataset(filename, array);
 
-    // read from HDF5 file
+    // read data from HDF5 file, test hyperslab selection
     read_dataset(filename);
 
     return 0;

@@ -40,7 +40,7 @@ namespace h5xx {
 /**
  * create dataset of fundamental type at h5xx object
  */
-template <typename h5xxObject, typename T>
+template <typename T, typename h5xxObject>
 inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
 create_dataset(h5xxObject const& object, std::string const& name)
 {

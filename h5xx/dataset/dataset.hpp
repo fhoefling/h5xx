@@ -92,7 +92,6 @@ public:
 
     /** read from the dataset into the buffer */
     void read(hid_t type_id, void* buffer, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
-//    void read(hid_t type_id, void* buffer) {}
 
     /** get the name of the dataset */
     std::string name() const;

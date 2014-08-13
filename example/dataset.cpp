@@ -53,34 +53,65 @@ void print_array(array_1d_t const& array)
 void write_dataset(std::string const& filename, array_2d_t const& array)
 {
     h5xx::file file(filename, h5xx::file::trunc);
-    std::string name = "integer array";
+    std::string name;
 
-    // set chunking and compression
-    h5xx::policy::dataset_creation_property_list dcpl;
-    std::vector<hsize_t> chunk_dims(2, 2);
-    dcpl.add( h5xx::policy::storage::chunked(chunk_dims) );
-    dcpl.add( h5xx::policy::filter::deflate() );
+    // (1) write chunked and compressed dataset
+    {
+        name = "integer array";
 
-    // create dataset from a Boost multi_array,
-    // dataspace and datatype are determined internally
-    h5xx::create_dataset(file, name, array, dcpl /* optional argument */);
-    h5xx::write_dataset(file, name, array);
+        h5xx::policy::dataset_creation_property_list dcpl;
+        std::vector<hsize_t> chunk_dims(2, 2);
+        dcpl.add( h5xx::policy::storage::chunked(chunk_dims) );
+        dcpl.add( h5xx::policy::filter::deflate() );
 
-    name = "another integer array";
-    // construct dataspace from a Boost multi_array
-    h5xx::dataspace data_space(array);
-    // pull datatype from a Boost multi_array
-    h5xx::datatype data_type(array);
-    // create dataset using d'type and d'space
-    h5xx::create_dataset(file, name, data_type, data_space,  dcpl /* optional */);
-    h5xx::write_dataset(file, name, array);
+        // derive dataspace and datatype from the array internally
+        h5xx::create_dataset(file, name, array, dcpl /* optional argument */);
+
+        h5xx::write_dataset(file, name, array);
+    }
+
+    // (2) write dataset using defaults
+    {
+        name = "integer array, 2";
+
+        // construct dataspace from a Boost multi_array
+        h5xx::dataspace dataspace(array);
+        // pull datatype from a Boost multi_array
+        h5xx::datatype datatype(array);
+
+        h5xx::create_dataset(file, name, datatype, dataspace);
+
+        h5xx::write_dataset(file, name, array);
+    }
+
+    // (3) overwrite part of dataset (1) using a hyperslab
+    {
+        name = "integer array";
+
+        h5xx::dataset dataset(file, name);
+        h5xx::dataspace filespace(dataset);
+        boost::array<hsize_t,2> offset = {{4,4}};
+        boost::array<hsize_t,2> count = {{2,2}};
+        filespace.select_hyperslab(offset, count);
+
+        // construct a 2x2 array and fill it with negative numbers
+        boost::array<size_t, 2> hyperslab_extents = {{2,2}};
+        array_2d_t hyperslab_data(hyperslab_extents);
+        const int nelem = 4;
+        int data[nelem];
+        for (int i = 0; i < nelem; i++)
+            data[i] = -1*(i+1);
+        hyperslab_data.assign(data, data + nelem);
+        h5xx::dataspace memspace = h5xx::create_dataspace(hyperslab_data);
+
+        h5xx::write_dataset(dataset, hyperslab_data, memspace, filespace);
+    }
 }
 
 void read_dataset(std::string const& filename)
 {
     h5xx::file f(filename, h5xx::file::in);
     std::string name = "integer array";
-
 
     // (1) read and print the 2D array w/o modification
     {
@@ -90,47 +121,44 @@ void read_dataset(std::string const& filename)
         printf("\n");
     }
 
-
     // (2) select a 2D hyperslab and read it into a 2x2 array
     // --- offsets and counts for hyperslab selection, can use either std::vector
 //    static const hsize_t offset_[] = {1,1};
 //    static const hsize_t count_[] = {2,2};
 //    std::vector<hsize_t> offset(offset_, offset_ + sizeof(offset_)/sizeof(offset_[0]));;
 //    std::vector<hsize_t> count(count_, count_ + sizeof(count_)/sizeof(count_[0]));
-    // --- ... or boost::arrays
+    // --- ... OR boost::arrays
     boost::array<hsize_t,2> offset = {{1,1}};
     boost::array<hsize_t,2> count = {{2,2}};
     {
-        h5xx::dataset data_set(f, name);
+        h5xx::dataset dataset(f, name);
         // create file dataspace from dataset and select hyperslab from the dataset
-        h5xx::dataspace data_space(data_set);
-        data_space.select_hyperslab(offset, count);
+        h5xx::dataspace filespace(dataset);
+        filespace.select_hyperslab(offset, count);
 
         // create memory dataspace
         boost::array<hsize_t, 2> extents = {{2,2}};
-        h5xx::dataspace mem_space(extents);
+        h5xx::dataspace memspace(extents);
 
-        array_2d_t array = h5xx::read_dataset<array_2d_t>(data_set, data_space, mem_space);
+        array_2d_t array = h5xx::read_dataset<array_2d_t>(dataset, memspace, filespace);
         printf("hyperslab of the integer array, copied to an array w/ reduced extents\n");
         print_array(array);
         printf("\n");
     }
 
-
     // (3) select a 2D hyperslab and read it into a 1D array
     {
-        h5xx::dataset data_set(f, name);
-        h5xx::dataspace data_space(data_set);
-        data_space.select_hyperslab(offset, count);
+        h5xx::dataset dataset(f, name);
+        h5xx::dataspace filespace(dataset);
+        filespace.select_hyperslab(offset, count);
 
         boost::array<hsize_t, 1> extents_1D = {{4}};
-        h5xx::dataspace mem_space_1D(extents_1D);
+        h5xx::dataspace memspace_1D(extents_1D);
 
-        array_1d_t array = h5xx::read_dataset<array_1d_t>(data_set, data_space, mem_space_1D);
+        array_1d_t array = h5xx::read_dataset<array_1d_t>(dataset, memspace_1D, filespace);
         printf("the same 2D hyperslab of the integer array, copied to a 1D array\n");
         print_array(array);
     }
-
 }
 
 int main(int argc, char** argv)

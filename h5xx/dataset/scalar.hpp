@@ -38,7 +38,25 @@
 namespace h5xx {
 
 /**
- * create and write fundamental type dataset at h5xx object
+ * create dataset of fundamental type at h5xx object
+ */
+template <typename T, typename h5xxObject>
+inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
+create_dataset(h5xxObject const& object, std::string const& name)
+{
+    if (h5xx::exists_dataset(object, name))
+    {
+        throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does already exist");
+    }
+    else
+    {
+        dataset dset;
+        dset.create(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
+    }
+}
+
+/**
+ * write fundamental type dataset at h5xx object
  */
 template <typename h5xxObject, typename T>
 inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
@@ -54,7 +72,8 @@ write_dataset(h5xxObject const& object, std::string const& name, T const& value)
     }
     else
     {
-        dset.create(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
+        //dset.create(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
+        throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does not exist");
     }
     dset.write(ctype<T>::hid(), &value);
 }

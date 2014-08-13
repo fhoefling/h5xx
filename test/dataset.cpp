@@ -42,10 +42,19 @@ using namespace h5xx;
 
 BOOST_AUTO_TEST_CASE( construction )
 {
-    BOOST_CHECK_NO_THROW( dataset() );                 // default constructor
+    BOOST_CHECK_NO_THROW(
+        dataset();                                      // default constructor
+    );
 
-    write_dataset(file, "foo", 1);                     // create dataset in a file's root group
-    BOOST_CHECK_NO_THROW(dataset(file, "foo"));        // open existing attribute on-the-fly
+    BOOST_CHECK_NO_THROW(
+            create_dataset<int>(file, "foo");
+    );
+    BOOST_CHECK_NO_THROW(
+            write_dataset(file, "foo", 1);              // create dataset in a file's root group
+    );
+    BOOST_CHECK_NO_THROW(
+            dataset(file, "foo");                       // open existing attribute on-the-fly
+    );
 
     dataset foo(file, "foo");
     BOOST_CHECK_EQUAL(get_name(foo), "/foo");          // full path of the dataset
@@ -71,10 +80,13 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     bool bool_value = true;
     std::string bool_name = "bool, scalar";
     BOOST_CHECK_NO_THROW(
-            write_dataset(file, bool_name, bool_value)
+            create_dataset<bool>(file, bool_name);
     );
     BOOST_CHECK_NO_THROW(
-            read_dataset<bool>(file, bool_name)
+            write_dataset(file, bool_name, bool_value);
+    );
+    BOOST_CHECK_NO_THROW(
+            read_dataset<bool>(file, bool_name);
     );
     BOOST_CHECK(
             read_dataset<bool>(file, bool_name) == bool_value
@@ -92,6 +104,9 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
 //            write_dataset(file, double_name, bool_value)  // cannot change datatype of dataset
 //    );
     BOOST_CHECK_NO_THROW(
+            create_dataset<double>(file, double_name)
+    );
+    BOOST_CHECK_NO_THROW(
             write_dataset(file, double_name, double_value)  // write double
     );
     BOOST_CHECK_NO_THROW(
@@ -107,6 +122,9 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     uint64_t uint64_value = 9223372036854775783LLU;  // largest prime below 2^63
     std::string uint64_name = "uint64, scalar";
     BOOST_CHECK_NO_THROW(
+            create_dataset<uint64_t> (file, uint64_name)
+    );
+    BOOST_CHECK_NO_THROW(
             write_dataset(file, uint64_name, uint64_value)
     );
     BOOST_CHECK_NO_THROW(
@@ -117,7 +135,7 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     );
 }
 
-BOOST_AUTO_TEST_CASE( boost_multi_array)
+BOOST_AUTO_TEST_CASE( boost_multi_array )
 {
     typedef boost::multi_array<int, 3> multi_array3;
     int data3[] = {99,98,97,96,95,94,93,92,91,90,89,88,87,86,85,84,83,82,81,80,79,78,77,76};
@@ -125,6 +143,9 @@ BOOST_AUTO_TEST_CASE( boost_multi_array)
     multi_array_value.assign(data3, data3 + 2 * 3 * 4);
     multi_array3 read(boost::extents[2][3][4]);
 
+    BOOST_CHECK_NO_THROW(
+            create_dataset(file, "boost multi array, int", multi_array_value)
+    );
     BOOST_CHECK_NO_THROW(
             write_dataset(file, "boost multi array, int", multi_array_value)
     );

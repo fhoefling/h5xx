@@ -55,7 +55,7 @@ void write_dataset(std::string const& filename, array_2d_t const& array)
     h5xx::file file(filename, h5xx::file::trunc);
     std::string name;
 
-    // (1) write chunked and compressed dataset
+    // (1) create and write chunked and compressed dataset
     {
         name = "integer array";
 
@@ -70,7 +70,8 @@ void write_dataset(std::string const& filename, array_2d_t const& array)
         h5xx::write_dataset(file, name, array);
     }
 
-    // (2) write dataset using defaults
+    // (2) create and write a dataset, using default settings,
+    //     explicitly derive dataspace and datatype from input arrray
     {
         name = "integer array, 2";
 

@@ -41,7 +41,7 @@ namespace h5xx {
 
 /**
  * Create dataset of multi-dimensional array type,
- * dataset object is instantiated temporarily.
+ * dataset object is instantiated temporarily inside.
  */
 template <typename h5xxObject, typename T>
 inline typename boost::enable_if<is_multi_array<T>, void>::type
@@ -108,6 +108,7 @@ write_dataset(dataset& dset, T const& value, dataspace const& memspace, dataspac
 
 /**
  * Write multi_array (value) to a dataset labeled "name" located at "object".
+ * dataset is opened internally.
  */
 template <typename h5xxObject, typename T>
 inline typename boost::enable_if<is_multi_array<T>, void>::type
@@ -122,6 +123,23 @@ write_dataset(h5xxObject const& object, std::string const& name, T const& value)
     write_dataset(dset, value);
 }
 
+/**
+ * Write multi_array (value) to a dataset labeled "name" located at "object".
+ * The dataset is opened internally.
+ */
+template <typename h5xxObject, typename T>
+inline typename boost::enable_if<is_multi_array<T>, void>::type
+write_dataset(h5xxObject const& object, std::string const& name, T const& value,
+              dataspace const& memspace, dataspace const& filespace)
+{
+    if (! exists_dataset(object, name))
+    {
+        throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does not exist");
+//        create_dataset(object, name, value);
+    }
+    dataset dset(object, name);
+    write_dataset(dset, value, memspace, filespace);
+}
 
 
 /**

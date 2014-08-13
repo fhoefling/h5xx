@@ -41,7 +41,12 @@ public:
 
     /** create a new dataset */
     template <typename h5xxObject>
-    dataset(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
+    dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
+               h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list);
+
+    /** create a new dataset, raw hdf5 property lists are accepted */
+    template <typename h5xxObject>
+    dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
         hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
 
     /** destructor, implicitly closes the dataset's hid_ */
@@ -72,11 +77,6 @@ public:
 
     /** returns true if associated to a valid HDF5 object */
     bool valid() const;
-
-//    /** create dataset at the given object */
-//    template <typename h5xxObject> void
-//    create(h5xxObject const& object, std::string const& name, hid_t type_id, dataspace const& space,
-//        hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
 
     /** create dataset at the given object */
     template <typename h5xxObject> void
@@ -122,11 +122,23 @@ dataset::dataset(h5xxObject const& object, std::string const& name)
 }
 
 template <typename h5xxObject>
-dataset::dataset(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
+dataset::dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
+               h5xx::policy::dataset_creation_property_list dcpl)
+{
+    hid_ = -1;
+    hid_t lcpl_id = H5P_DEFAULT;
+    hid_t dcpl_id = H5P_DEFAULT;
+    hid_t dapl_id = H5P_DEFAULT;
+    dcpl_id = dcpl.get();
+    this->create(object, name, dtype, dspace, lcpl_id, dcpl_id, dapl_id);
+}
+
+template <typename h5xxObject>
+dataset::dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
     hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
 {
     hid_ = -1;
-    dataset::create(object, name, type, space);
+    this->create(object, name, dtype, dspace, lcpl_id, dcpl_id, dapl_id);
 }
 
 dataset::~dataset()

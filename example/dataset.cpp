@@ -1,5 +1,6 @@
 /*
  * Copyright © 2013-2014 Felix Höfling
+ * Copyright © 2014      Klaus Reuter
  *
  * This file is part of h5xx.
  *
@@ -29,6 +30,7 @@ typedef boost::multi_array<int, 1> array_1d_t;
 const int NI=10;
 const int NJ=NI;
 
+
 void print_array(array_2d_t const& array)
 {
     for (unsigned int j = 0; j < array.shape()[1]; j++)
@@ -49,6 +51,7 @@ void print_array(array_1d_t const& array)
     }
     printf("\n");
 }
+
 
 void write_dataset(std::string const& filename, array_2d_t const& array)
 {
@@ -109,6 +112,7 @@ void write_dataset(std::string const& filename, array_2d_t const& array)
     }
 }
 
+
 void read_dataset(std::string const& filename)
 {
     h5xx::file f(filename, h5xx::file::in);
@@ -117,7 +121,7 @@ void read_dataset(std::string const& filename)
     // (1) read and print the 2D array w/o modification
     {
         array_2d_t array = h5xx::read_dataset<array_2d_t>(f, name);
-        printf("original integer array as read from file\n");
+        printf("original integer array as read from file, negative number patch was written using a hyperslab\n");
         print_array(array);
         printf("\n");
     }
@@ -162,6 +166,7 @@ void read_dataset(std::string const& filename)
     }
 }
 
+
 int main(int argc, char** argv)
 {
     std::string filename = argv[0];
@@ -178,7 +183,7 @@ int main(int argc, char** argv)
     // write array to HDF5 file
     write_dataset(filename, array);
 
-    // read data from HDF5 file, test hyperslab selection
+    // read data from HDF5 file
     read_dataset(filename);
 
     return 0;

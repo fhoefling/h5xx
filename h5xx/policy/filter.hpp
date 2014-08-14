@@ -1,5 +1,6 @@
 /*
  * Copyright © 2014 Felix Höfling
+ * Copyright © 2014 Klaus Reuter
  *
  * This file is part of h5xx.
  *

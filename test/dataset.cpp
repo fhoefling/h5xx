@@ -1,5 +1,6 @@
 /*
  * Copyright © 2010-2013  Felix Höfling
+ * Copyright © 2014       Klaus Reuter
  *
  * This file is part of h5xx.
  *
@@ -135,27 +136,142 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     );
 }
 
-BOOST_AUTO_TEST_CASE( boost_multi_array )
+BOOST_AUTO_TEST_CASE( boost_multi_array_simple )
 {
     typedef boost::multi_array<int, 3> multi_array3;
     int data3[] = {99,98,97,96,95,94,93,92,91,90,89,88,87,86,85,84,83,82,81,80,79,78,77,76};
     multi_array3 multi_array_value(boost::extents[2][3][4]);
     multi_array_value.assign(data3, data3 + 2 * 3 * 4);
     multi_array3 read(boost::extents[2][3][4]);
-
+    const std::string name = "boost multi array, int";
     BOOST_CHECK_NO_THROW(
-            create_dataset(file, "boost multi array, int", multi_array_value)
+            create_dataset(file, name, multi_array_value)
     );
     BOOST_CHECK_NO_THROW(
-            write_dataset(file, "boost multi array, int", multi_array_value)
+            write_dataset(file, name, multi_array_value)
     );
     BOOST_CHECK_NO_THROW(
-            read = read_dataset<multi_array3>(file, "boost multi array, int")
+            read = read_dataset<multi_array3>(file, name)
     );
     BOOST_CHECK(
             read == multi_array_value
     );
 }
+
+BOOST_AUTO_TEST_CASE( boost_multi_array_hyperslab_simple )
+{
+    typedef boost::multi_array<int, 2> array_2d_t;
+    typedef boost::multi_array<int, 1> array_1d_t;
+    const int NI=10;
+    const int NJ=NI;
+    array_2d_t array(boost::extents[NJ][NI]);
+    {
+        const int nelem = NI*NJ;
+        int data[nelem];
+        for (int i = 0; i < nelem; i++)
+            data[i] = i;
+        array.assign(data, data + nelem);
+    }
+    const std::string name = "boost multi array, hyperslabbed, int";
+    array_2d_t read(boost::extents[NJ][NI]);
+
+    // make the dataset chunked and compressed
+    h5xx::policy::dataset_creation_property_list dcpl;
+    std::vector<hsize_t> chunk_dims(2, 2);
+    dcpl.add( h5xx::policy::storage::chunked(chunk_dims) );
+    dcpl.add( h5xx::policy::filter::deflate() );
+
+    BOOST_CHECK_NO_THROW(
+            create_dataset(file, name, array, dcpl)
+    );
+    BOOST_CHECK_NO_THROW(
+            write_dataset(file, name, array)
+    );
+    BOOST_CHECK_NO_THROW(
+            read = read_dataset<array_2d_t>(file, name)
+    );
+    BOOST_CHECK(
+            read == array
+    );
+
+    // overwrite part of the dataset, read it back in and check the result
+    {
+        // select a 2x2 patch in the center of the array
+        h5xx::dataset dataset(file, name);
+        h5xx::dataspace filespace(dataset);
+        boost::array<hsize_t,2> offset = {{4,4}};
+        boost::array<hsize_t,2> count = {{2,2}};
+        filespace.select_hyperslab(offset, count);
+
+        // construct a 2x2 array and fill it with negative numbers
+        array_2d_t hyperslab_data(boost::extents[2][2]);
+        {
+            const int nelem = 4;
+            int data[nelem];
+            for (int i = 0; i < nelem; i++)
+                data[i] = -1*(i+1);
+            hyperslab_data.assign(data, data + nelem);
+        }
+        h5xx::dataspace memspace = h5xx::create_dataspace(hyperslab_data);
+
+        BOOST_CHECK_NO_THROW(
+                h5xx::write_dataset(dataset, hyperslab_data, memspace, filespace);
+        )
+        BOOST_CHECK_NO_THROW(
+                read = read_dataset<array_2d_t>(file, name)
+        );
+        BOOST_CHECK(
+                read != array
+        );
+
+        // manipulate array such that it is equal to the original array with the hyperslab applied
+        {
+            int neg = -1;
+            for (int j = 0; j < count[0]; j++)
+            {
+                for (int i = 0; i < count[1]; i++)
+                {
+                    array[ j+offset[0] ][ i+offset[1] ] = neg;
+                    neg--;
+                }
+            }
+        }
+
+        BOOST_CHECK(
+                read == array
+        );
+    }
+
+    // read part of the array
+    {
+        // select a 4x1 column of the dataset
+        h5xx::dataset dataset(file, name);
+        h5xx::dataspace filespace(dataset);
+        boost::array<hsize_t,2> offset = {{1,1}};
+        boost::array<hsize_t,2> count = {{4,1}};
+        filespace.select_hyperslab(offset, count);
+
+        array_1d_t read(boost::extents[4]);
+        h5xx::dataspace memspace = h5xx::create_dataspace(read);
+
+        BOOST_CHECK_NO_THROW(
+                read = read_dataset<array_1d_t>(dataset, memspace, filespace)
+        );
+
+        array_1d_t check(boost::extents[4]);
+        {
+            int data[] = {11,21,31,41};
+            int nelem = sizeof(data)/sizeof(data[0]);
+            check.assign(data, data+nelem);
+        }
+
+        BOOST_CHECK(
+                read == check
+        );
+    }
+}
+
+
 
 /* --- unit tests for old version of dataset ---
 BOOST_AUTO_TEST_CASE( h5xx_dataset )

@@ -1,4 +1,4 @@
-/*
+/**
  * Copyright © 2013-2014 Felix Höfling
  * Copyright © 2014      Klaus Reuter
  *

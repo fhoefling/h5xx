@@ -66,7 +66,7 @@ write_dataset(h5xxObject const& object, std::string const& name, T const& value)
     dataset dset;
     if (h5xx::exists_dataset(object, name))
     {
-        dset.open(object, name);
+        dset = dataset(object, name);
         if (!dataspace(dset).is_scalar()) {
             throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" has non-scalar dataspace");
         }

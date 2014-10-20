@@ -38,7 +38,7 @@ public:
 
     /** open existing dataset */
     template <typename h5xxObject>
-    dataset(h5xxObject const& object, std::string const& name);
+    dataset(h5xxObject const& object, std::string const& name, hid_t dapl_id = H5P_DEFAULT);
 
     /** create a new dataset */
     template <typename h5xxObject>
@@ -84,10 +84,6 @@ public:
     create(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
         hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
 
-    /** open dataset at the given object */
-    template <typename h5xxObject> void
-    open(h5xxObject const& object, std::string const& name);
-
     /** write value to the dataset */
     void write(hid_t type_id, void const* value, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
 
@@ -109,12 +105,12 @@ private:
 };
 
 template <typename h5xxObject>
-dataset::dataset(h5xxObject const& object, std::string const& name)
+dataset::dataset(h5xxObject const& object, std::string const& name, hid_t dapl_id)
+  : hid_(-1)
 {
-    hid_ = -1;
     if (h5xx::exists_dataset(object, name))
     {
-        this->open(object,name);
+        hid_ = H5Dopen(object.hid(), name.c_str(), dapl_id);
     }
     if (hid_ < 0)
     {
@@ -149,15 +145,6 @@ dataset::~dataset()
             throw error("closing h5xx::dataset with ID " + boost::lexical_cast<std::string>(hid_));
         }
         hid_ = -1;
-    }
-}
-
-template <typename h5xxObject> void
-dataset::open(h5xxObject const& object, std::string const& name)
-{
-    hid_ = H5Dopen(object.hid(), name.c_str(), H5P_DEFAULT);
-    if (hid_ < 0){
-        throw error("opening dataset \"" + name + "\" at HDF5 object \"" + get_name(object) + "\"");
     }
 }
 

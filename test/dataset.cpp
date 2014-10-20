@@ -1,6 +1,6 @@
 /*
- * Copyright © 2010-2013  Felix Höfling
- * Copyright © 2014       Klaus Reuter
+ * Copyright © 2010-2014 Felix Höfling
+ * Copyright © 2014      Klaus Reuter
  *
  * This file is part of h5xx.
  *
@@ -176,13 +176,12 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_hyperslab_simple )
     array_2d_t read(boost::extents[NJ][NI]);
 
     // make the dataset chunked and compressed
-    h5xx::policy::dataset_creation_property_list dcpl;
-    std::vector<hsize_t> chunk_dims(2, 2);
-    dcpl.add( h5xx::policy::storage::chunked(chunk_dims) );
-    dcpl.add( h5xx::policy::filter::deflate() );
+    boost::array<hsize_t, 2> chunk_dims = {{2, 2}};
+    h5xx::policy::storage::chunked storage_policy(chunk_dims);
+    storage_policy.add(h5xx::policy::filter::deflate());
 
     BOOST_CHECK_NO_THROW(
-            create_dataset(file, name, array, dcpl)
+            create_dataset(file, name, array, storage_policy)
     );
     BOOST_CHECK_NO_THROW(
             write_dataset(file, name, array)

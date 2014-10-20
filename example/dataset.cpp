@@ -62,13 +62,14 @@ void write_dataset(std::string const& filename, array_2d_t const& array)
     {
         name = "integer array";
 
-        h5xx::policy::dataset_creation_property_list dcpl;
-        std::vector<hsize_t> chunk_dims(2, 2);
-        dcpl.add( h5xx::policy::storage::chunked(chunk_dims) );
-        dcpl.add( h5xx::policy::filter::deflate() );
+        hsize_t chunk_dims[] = {2, 2};
 
         // derive dataspace and datatype from the array internally
-        h5xx::create_dataset(file, name, array, dcpl /* optional argument */);
+        h5xx::create_dataset(file, name, array
+          , h5xx::policy::storage::chunked(2, chunk_dims)  /* optional argument */
+                .add(h5xx::policy::filter::shuffle())
+                .add(h5xx::policy::filter::deflate())
+        );
 
         h5xx::write_dataset(file, name, array);
     }

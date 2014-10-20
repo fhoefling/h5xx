@@ -24,13 +24,13 @@
 
 #include <algorithm>
 
-#include <h5xx/dataset/dataset.hpp>
 #include <h5xx/ctype.hpp>
+#include <h5xx/dataset/dataset.hpp>
 #include <h5xx/dataspace.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/exception.hpp>
+#include <h5xx/policy/storage.hpp>
 #include <h5xx/utility.hpp>
-#include <h5xx/policy.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/and.hpp>
@@ -43,10 +43,12 @@ namespace h5xx {
 /**
  * Create and return dataset of multi-dimensional array type.
  */
-template <typename h5xxObject, typename T>
+template <typename h5xxObject, typename T, typename StoragePolicy>
 inline typename boost::enable_if<is_multi_array<T>, dataset>::type
-create_dataset(h5xxObject const& object, std::string const& name, T const& value,
-               h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list)
+create_dataset(
+    h5xxObject const& object, std::string const& name, T const& value
+  , StoragePolicy const& storage_policy = StoragePolicy()
+)
 {
     typedef typename T::element value_type;
     hid_t type_id = ctype<value_type>::hid(); // this ID must not be closed
@@ -54,9 +56,17 @@ create_dataset(h5xxObject const& object, std::string const& name, T const& value
     boost::array<hsize_t, rank> dims;
     std::copy(value.shape(), value.shape() + rank, dims.begin());
 
-    return dataset(object, name, type_id, dataspace(dims), dcpl);
+    return dataset(object, name, type_id, dataspace(dims), storage_policy);
 }
 
+template <typename h5xxObject, typename T>
+inline typename boost::enable_if<is_multi_array<T>, dataset>::type
+create_dataset(
+    h5xxObject const& object, std::string const& name, T const& value
+)
+{
+    return create_dataset(object, name, value, h5xx::policy::storage::contiguous());
+}
 
 /**
  * Write multi_array (value) to dataset (dset).

@@ -22,14 +22,15 @@
 #ifndef H5XX_DATASET_SCALAR
 #define H5XX_DATASET_SCALAR
 
-#include <h5xx/dataset/dataset.hpp>
 #include <h5xx/ctype.hpp>
+#include <h5xx/dataset/dataset.hpp>
+#include <h5xx/dataset/utility.hpp>
 #include <h5xx/dataspace.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/exception.hpp>
-#include <h5xx/utility.hpp>
-#include <h5xx/dataset/utility.hpp>
 #include <h5xx/policy/string.hpp>
+#include <h5xx/policy/storage.hpp>
+#include <h5xx/utility.hpp>
 
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/and.hpp>
@@ -49,7 +50,7 @@ create_dataset(h5xxObject const& object, std::string const& name)
     {
         throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does already exist");
     }
-    return dataset(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
+    return dataset(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR), h5xx::policy::storage::compact());
 }
 
 /**

@@ -42,13 +42,12 @@ public:
 
     /** create a new dataset */
     template <typename h5xxObject>
-    dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
-               h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list);
-
-    /** create a new dataset, raw hdf5 property lists are accepted */
-    template <typename h5xxObject>
-    dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
-        hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
+    dataset(
+        h5xxObject const& object, std::string const& name
+      , datatype const& dtype, dataspace const& dspace
+      , h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list
+      , hid_t lcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT
+    );
 
     /** destructor, implicitly closes the dataset's hid_ */
     ~dataset();
@@ -78,11 +77,6 @@ public:
 
     /** returns true if associated to a valid HDF5 object */
     bool valid() const;
-
-    /** create dataset at the given object */
-    template <typename h5xxObject> void
-    create(h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
-        hid_t lcpl_id = H5P_DEFAULT, hid_t dcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT);
 
     /** write value to the dataset */
     void write(hid_t type_id, void const* value, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
@@ -119,23 +113,45 @@ dataset::dataset(h5xxObject const& object, std::string const& name, hid_t dapl_i
 }
 
 template <typename h5xxObject>
-dataset::dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
-               h5xx::policy::dataset_creation_property_list dcpl)
+dataset::dataset(
+    h5xxObject const& object, std::string const& name
+  , datatype const& dtype, dataspace const& dspace
+  , h5xx::policy::dataset_creation_property_list dcpl
+  , hid_t lcpl_id, hid_t dapl_id
+)
+  : hid_(-1)
 {
-    hid_ = -1;
-    hid_t lcpl_id = H5P_DEFAULT;
-    hid_t dcpl_id = H5P_DEFAULT;
-    hid_t dapl_id = H5P_DEFAULT;
-    dcpl_id = dcpl.get();
-    this->create(object, name, dtype, dspace, lcpl_id, dcpl_id, dapl_id);
-}
+    if (h5xx::exists_dataset(object, name))
+    {
+        throw error("dataset \"" + name + "\" already exists");
+    }
 
-template <typename h5xxObject>
-dataset::dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
-    hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id)
-{
-    hid_ = -1;
-    this->create(object, name, dtype, dspace, lcpl_id, dcpl_id, dapl_id);
+    // link creation property list
+    if (lcpl_id != H5P_DEFAULT) {
+        // create missing intermediate groups
+        H5Pset_create_intermediate_group(lcpl_id, 1);
+        // TODO derive encoding of dataset name from string 'name'
+        // H5Pset_char_encoding(lcpl_id, ...);
+    }
+
+    // dataset creation property list: evaluate policies
+    // storage, filters, fillvalue, tracking times
+    hid_t dcpl_id = dcpl.get();
+
+    // create dataset
+    hid_ = H5Dcreate(
+        object.hid(),       // hid_t loc_id IN: Location identifier
+        name.c_str(),       // const char *name IN: Dataset name
+        dtype.get_type_id(), // hid_t dtype_id IN: Datatype identifier
+        dspace.hid(),        // hid_t space_id IN: Dataspace identifier
+        lcpl_id,            // hid_t lcpl_id IN: Link creation property list
+        dcpl_id,            // hid_t dcpl_id IN: Dataset creation property list
+        dapl_id             // dataset access property list: size of chunk cache
+    );
+    if (hid_ < 0)
+    {
+        throw error("creating dataset \"" + name + "\"");
+    }
 }
 
 dataset::~dataset()
@@ -170,33 +186,6 @@ dataset::operator dataspace() const
     }
     dataspace ds(hid);
     return ds;
-}
-
-template <typename h5xxObject> void
-dataset::create( h5xxObject const& object, std::string const& name, datatype const& type, dataspace const& space,
-    hid_t lcpl_id, hid_t dcpl_id, hid_t dapl_id
-)
-{
-    if (h5xx::exists_dataset(object, name))
-    {
-        throw error("dataset \"" + name + "\" already exists");
-    }
-    else
-    {
-        if ((hid_ = H5Dcreate(
-                                object.hid(),       // hid_t loc_id IN: Location identifier
-                                name.c_str(),       // const char *name IN: Dataset name
-                                type.get_type_id(), // hid_t dtype_id IN: Datatype identifier
-                                space.hid(),        // hid_t space_id IN: Dataspace identifier
-                                lcpl_id,            // hid_t lcpl_id IN: Link creation property list
-                                dcpl_id,            // hid_t dcpl_id IN: Dataset creation property list
-                                dapl_id             // hid_t dapl_id IN: Dataset access property list
-                              )
-             ) < 0 )
-        {
-            throw error("creating dataset \"" + name + "\"");
-        }
-    }
 }
 
 void dataset::write(hid_t type_id, void const* value, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)
@@ -246,14 +235,15 @@ bool dataset::valid() const
  * free function to create datasets
  */
 template <typename h5xxObject>
-void create_dataset(h5xxObject const& object, std::string const& name, datatype const& dtype, dataspace const& dspace,
-               h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list)
+dataset create_dataset(
+    h5xxObject const& object
+  , std::string const& name
+  , datatype const& dtype
+  , dataspace const& dspace
+  , h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list
+)
 {
-    hid_t lcpl_id = H5P_DEFAULT;
-    hid_t dcpl_id = H5P_DEFAULT;
-    hid_t dapl_id = H5P_DEFAULT;
-    dcpl_id = dcpl.get();
-    dataset data_set(object, name, dtype, dspace, lcpl_id, dcpl_id, dapl_id);
+    return dataset(object, name, dtype, dspace, dcpl);
 }
 
 } // namespace h5xx

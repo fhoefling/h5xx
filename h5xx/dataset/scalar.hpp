@@ -42,18 +42,14 @@ namespace h5xx {
  * create dataset of fundamental type at h5xx object
  */
 template <typename T, typename h5xxObject>
-inline typename boost::enable_if<boost::is_fundamental<T>, void>::type
+inline typename boost::enable_if<boost::is_fundamental<T>, dataset>::type
 create_dataset(h5xxObject const& object, std::string const& name)
 {
     if (h5xx::exists_dataset(object, name))
     {
         throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does already exist");
     }
-    else
-    {
-        dataset dset;
-        dset.create(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
-    }
+    return dataset(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR));
 }
 
 /**

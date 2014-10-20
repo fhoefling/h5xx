@@ -41,26 +41,11 @@
 namespace h5xx {
 
 /**
- * Create dataset of multi-dimensional array type,
- * dataset object is instantiated temporarily inside.
+ * Create and return dataset of multi-dimensional array type.
  */
 template <typename h5xxObject, typename T>
-inline typename boost::enable_if<is_multi_array<T>, void>::type
+inline typename boost::enable_if<is_multi_array<T>, dataset>::type
 create_dataset(h5xxObject const& object, std::string const& name, T const& value,
-               h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list)
-{
-    dataset dset;
-    create_dataset(dset, object, name, value, dcpl);
-}
-
-/**
- * Create dataset of multi-dimensional array type,
- * dataset object is instantiated externally and
- * passed by reference ("dset").
- */
-template <typename h5xxObject, typename T>
-inline typename boost::enable_if<is_multi_array<T>, void>::type
-create_dataset(dataset& dset, h5xxObject const& object, std::string const& name, T const& value,
                h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list)
 {
     typedef typename T::element value_type;
@@ -68,13 +53,8 @@ create_dataset(dataset& dset, h5xxObject const& object, std::string const& name,
     enum { rank = T::dimensionality };
     boost::array<hsize_t, rank> dims;
     std::copy(value.shape(), value.shape() + rank, dims.begin());
-    // ---
-    hid_t lcpl_id = H5P_DEFAULT;
-    hid_t dcpl_id = H5P_DEFAULT;
-    hid_t dapl_id = H5P_DEFAULT;
-    dcpl_id = dcpl.get();
-    // ---
-    dset.create(object, name, type_id, dataspace(dims), lcpl_id, dcpl_id, dapl_id);
+
+    return dataset(object, name, type_id, dataspace(dims), dcpl);
 }
 
 

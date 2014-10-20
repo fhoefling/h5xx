@@ -21,7 +21,6 @@
 #ifndef H5XX_POLICY_HPP
 #define H5XX_POLICY_HPP
 
-#include <h5xx/policy/policy.hpp>
 #include <h5xx/policy/filter.hpp>
 #include <h5xx/policy/storage.hpp>
 #include <h5xx/policy/string.hpp>

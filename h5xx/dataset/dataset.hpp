@@ -24,7 +24,7 @@
 #include <h5xx/dataset/utility.hpp>
 #include <h5xx/dataspace.hpp>
 #include <h5xx/datatype.hpp>
-#include <h5xx/policy.hpp>
+#include <h5xx/policy/storage.hpp>
 
 namespace h5xx {
 
@@ -41,11 +41,11 @@ public:
     dataset(h5xxObject const& object, std::string const& name, hid_t dapl_id = H5P_DEFAULT);
 
     /** create a new dataset */
-    template <typename h5xxObject>
+    template <typename h5xxObject, typename StoragePolicy>
     dataset(
         h5xxObject const& object, std::string const& name
       , datatype const& dtype, dataspace const& dspace
-      , h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list
+      , StoragePolicy storage_policy = StoragePolicy()
       , hid_t lcpl_id = H5P_DEFAULT, hid_t dapl_id = H5P_DEFAULT
     );
 
@@ -112,11 +112,11 @@ dataset::dataset(h5xxObject const& object, std::string const& name, hid_t dapl_i
     }
 }
 
-template <typename h5xxObject>
+template <typename h5xxObject, typename StoragePolicy>
 dataset::dataset(
     h5xxObject const& object, std::string const& name
   , datatype const& dtype, dataspace const& dspace
-  , h5xx::policy::dataset_creation_property_list dcpl
+  , StoragePolicy storage_policy
   , hid_t lcpl_id, hid_t dapl_id
 )
   : hid_(-1)
@@ -126,20 +126,24 @@ dataset::dataset(
         throw error("dataset \"" + name + "\" already exists");
     }
 
+    bool err = false;
+
     // link creation property list
     if (lcpl_id != H5P_DEFAULT) {
         // create missing intermediate groups
-        H5Pset_create_intermediate_group(lcpl_id, 1);
+        err |= H5Pset_create_intermediate_group(lcpl_id, 1) < 0;
         // TODO derive encoding of dataset name from string 'name'
         // H5Pset_char_encoding(lcpl_id, ...);
     }
 
     // dataset creation property list: evaluate policies
-    // storage, filters, fillvalue, tracking times
-    hid_t dcpl_id = dcpl.get();
+    hid_t dcpl_id = H5Pcreate(H5P_DATASET_CREATE);
+    storage_policy.set_storage(dcpl_id);    // set storage and filters
+    // TODO fill value
+    // TODO tracking times
 
     // create dataset
-    hid_ = H5Dcreate(
+    err |= (hid_ = H5Dcreate(
         object.hid(),       // hid_t loc_id IN: Location identifier
         name.c_str(),       // const char *name IN: Dataset name
         dtype.get_type_id(), // hid_t dtype_id IN: Datatype identifier
@@ -147,8 +151,10 @@ dataset::dataset(
         lcpl_id,            // hid_t lcpl_id IN: Link creation property list
         dcpl_id,            // hid_t dcpl_id IN: Dataset creation property list
         dapl_id             // dataset access property list: size of chunk cache
-    );
-    if (hid_ < 0)
+    )) < 0;
+    err |= H5Pclose(dcpl_id) < 0;
+
+    if (err)
     {
         throw error("creating dataset \"" + name + "\"");
     }
@@ -181,7 +187,7 @@ dataset const& dataset::operator=(dataset other)
 dataset::operator dataspace() const
 {
     hid_t hid = H5Dget_space(hid_);
-    if(hid < 0 ) {
+    if (hid < 0) {
         throw error("dataset +\"" + name() + "\" has invalid dataspace");
     }
     dataspace ds(hid);
@@ -234,16 +240,27 @@ bool dataset::valid() const
 /**
  * free function to create datasets
  */
+template <typename h5xxObject, typename StoragePolicy>
+dataset create_dataset(
+    h5xxObject const& object
+  , std::string const& name
+  , datatype const& dtype
+  , dataspace const& dspace
+  , StoragePolicy storage_policy = StoragePolicy()
+)
+{
+    return dataset(object, name, dtype, dspace, storage_policy);
+}
+
 template <typename h5xxObject>
 dataset create_dataset(
     h5xxObject const& object
   , std::string const& name
   , datatype const& dtype
   , dataspace const& dspace
-  , h5xx::policy::dataset_creation_property_list dcpl = h5xx::policy::default_dataset_creation_property_list
 )
 {
-    return dataset(object, name, dtype, dspace, dcpl);
+    return dataset(object, name, dtype, dspace, h5xx::policy::storage::contiguous());
 }
 
 } // namespace h5xx

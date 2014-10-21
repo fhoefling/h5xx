@@ -183,12 +183,15 @@ dataset const& dataset::operator=(dataset other)
 
 dataset::operator dataspace() const
 {
-    hid_t hid = H5Dget_space(hid_);
-    if (hid < 0) {
+    if (hid_ < 0) {
+        throw error("retrieving dataspace from invalid dataset");
+    }
+
+    dataspace dspace;
+    if((dspace.hid_ = H5Dget_space(hid_)) < 0) {      // we're friend
         throw error("dataset +\"" + get_name(*this) + "\" has invalid dataspace");
     }
-    dataspace ds(hid);
-    return ds;
+    return dspace;
 }
 
 void dataset::write(hid_t type_id, void const* value, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)

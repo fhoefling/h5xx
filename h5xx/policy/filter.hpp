@@ -25,7 +25,11 @@
 #include <vector>
 
 #include <h5xx/error.hpp>
+#include <h5xx/ctype.hpp>
 #include <h5xx/h5xx.hpp>
+
+#include <boost/type_traits.hpp>
+#include <boost/utility/enable_if.hpp>
 
 namespace h5xx {
 namespace policy {
@@ -39,7 +43,7 @@ namespace filter {
 class filter_base
 {
 public:
-    virtual void set_filter(hid_t plist) const {}
+    virtual void set_filter(hid_t) const = 0;
 };
 
 /**
@@ -150,9 +154,10 @@ private:
  *
  * The filter can not be made optional.
  */
-struct fletcher32
+class fletcher32
   : public filter_base
 {
+public:
     fletcher32() {}
 
     /** set fletcher32 filter for given property list */
@@ -163,6 +168,84 @@ struct fletcher32
         }
     }
 };
+
+/**
+ * policy class to set the scaleoffset filter for a chunked dataset layout
+ */
+template <typename T>
+class scaleoffset
+  : public filter_base
+{
+public:
+
+//    /** enable D-Scaling for floats, passing a scale factor is mandatory */
+//    scaleoffset(int scale_factor_,
+//                typename boost::enable_if<boost::is_floating_point<T> >::type* dummy = 0)
+//        : scale_type(H5Z_SO_FLOAT_DSCALE), scale_factor(scale_factor_)
+//    { T dog; }
+
+//    /** enable scaling for integers, scale factor is optional (default: automatic determination) */
+//    scaleoffset(int scale_factor_ = H5Z_SO_INT_MINBITS_DEFAULT,
+//                typename boost::enable_if<boost::is_integral<T> >::type* dummy = 0)
+//        : scale_type(H5Z_SO_INT), scale_factor(scale_factor_)
+//    { T dog; }
+
+    /** Temporary workaround, resolution errors pop up when using
+     *  enable_if in the constructor implementations above. ??? */
+    scaleoffset(int scale_factor_ = 0, bool optional = true)
+      : flags_(optional ? H5Z_FLAG_OPTIONAL : 0)
+    {
+        if ((typeid(T) == typeid(double)) || (typeid(T) == typeid(float)))
+            param_[0] = H5Z_SO_FLOAT_DSCALE;
+        else if (typeid(T) == typeid(int))
+            param_[0] = H5Z_SO_INT;
+        else
+            throw error("attempting to use an unsupported datatype with the scaleoffset filter");
+        // ---
+        param_[1] = (unsigned)scale_factor_;
+    }
+
+    /** set scaleoffset filter for given property list */
+    virtual void set_filter(hid_t plist) const
+    {
+        // see the HDF5 source file H5Pdcpl.c for a reference on how to to the following call
+        if ( H5Pset_filter(plist, H5Z_FILTER_SCALEOFFSET, flags_, (size_t)2, param_) < 0) {
+            throw error("setting scaleoffset filter failed");
+        }
+    }
+private:
+//    H5Z_SO_scale_type_t scale_type;
+//    int scale_factor;
+    // filter flags as a bit mask
+    unsigned int flags_;
+    // compression parameters
+    unsigned int param_[2];
+};
+
+/**
+ * policy class to set the nbit filter for a chunked dataset layout
+ */
+class nbit
+  : public filter_base
+{
+public:
+    nbit(bool optional=false)
+      : flags_(optional ? H5Z_FLAG_OPTIONAL : 0)
+    {}
+
+    /** set nbit filter for given property list */
+    virtual void set_filter(hid_t plist) const
+    {
+        if (H5Pset_filter(plist, H5Z_FILTER_NBIT, flags_, 0, NULL) < 0) {
+            throw error("setting nbit filter failed");
+        }
+    }
+
+private:
+    // filter flags as a bit mask
+    unsigned int flags_;
+};
+
 
 } //namespace filter
 } //namespace policy

@@ -59,7 +59,6 @@ BOOST_AUTO_TEST_CASE( construction )
 
     dataset foo(file, "foo");
     BOOST_CHECK_EQUAL(get_name(foo), "/foo");          // full path of the dataset
-    BOOST_CHECK_EQUAL(foo.name(), "/foo");             // full path of the dataset
     BOOST_CHECK(foo.valid());
 
     // TODO recheck, taken from the attribute unit test program

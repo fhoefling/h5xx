@@ -84,9 +84,6 @@ public:
     /** read from the dataset into the buffer */
     void read(hid_t type_id, void* buffer, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
 
-    /** get the name of the dataset */
-    std::string name() const;
-
     /** return copy of dataset's type */
     hid_t get_type();
 
@@ -188,7 +185,7 @@ dataset::operator dataspace() const
 {
     hid_t hid = H5Dget_space(hid_);
     if (hid < 0) {
-        throw error("dataset +\"" + name() + "\" has invalid dataspace");
+        throw error("dataset +\"" + get_name(*this) + "\" has invalid dataspace");
     }
     dataspace ds(hid);
     return ds;
@@ -215,14 +212,9 @@ hid_t dataset::get_type()
     hid_t type_id = H5Dget_type(hid_);
     if (type_id < 0)
     {
-        throw error("failed to obtain type_id of dataset \"" + name() + "\"");
+        throw error("failed to obtain type_id of dataset \"" + get_name(*this) + "\"");
     }
     return type_id;
-}
-
-std::string dataset::name() const
-{
-    return get_name(hid_);
 }
 
 hid_t dataset::hid() const

@@ -41,16 +41,26 @@ namespace h5xx {
 
 /**
  * create dataset of fundamental type at h5xx object
+ *
+ * Use compact storage by default.
  */
-template <typename T, typename h5xxObject>
+template <typename T, typename h5xxObject, typename StoragePolicy>
 inline typename boost::enable_if<boost::is_fundamental<T>, dataset>::type
-create_dataset(h5xxObject const& object, std::string const& name)
+create_dataset(h5xxObject const& object, std::string const& name, StoragePolicy const& storage_policy = StoragePolicy())
 {
     if (h5xx::exists_dataset(object, name))
     {
         throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does already exist");
     }
-    return dataset(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR), h5xx::policy::storage::compact());
+    return dataset(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR), storage_policy);
+}
+
+// default value for template parameter StoragePolicy not supported in C++98
+template <typename T, typename h5xxObject>
+inline typename boost::enable_if<boost::is_fundamental<T>, dataset>::type
+create_dataset(h5xxObject const& object, std::string const& name)
+{
+    return create_dataset(object, name, ctype<T>::hid(), dataspace(H5S_SCALAR), policy::storage::compact());
 }
 
 /**

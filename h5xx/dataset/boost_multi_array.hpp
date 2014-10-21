@@ -171,7 +171,7 @@ read_dataset(dataset & dset)
     dataspace dspace(dset);
 
     if (!(dspace.rank() == rank)) {
-        throw error("dataset \"" + dset.name() + "\" has mismatching dataspace");
+        throw error("dataset \"" + get_name(dset) + "\" has mismatching dataspace");
     }
 
     boost::array<hsize_t, rank> dims = dspace.extents<rank>();
@@ -200,7 +200,7 @@ read_dataset(dataset & dset, dataspace const& memspace, dataspace const& filespa
 {
     enum { rank = T::dimensionality };
     if (!(memspace.rank() == rank)) {
-        throw error("dataset \"" + dset.name() + "\" has mismatching dataspace");
+        throw error("dataset \"" + get_name(dset) + "\" has mismatching dataspace");
     }
 
     boost::array<hsize_t, rank> dims = memspace.extents<rank>();

@@ -34,6 +34,10 @@
 
 namespace h5xx {
 
+// forward declarations
+class attribute;
+class dataset;
+
 /**
  * Represents an HDF5 dataspace.
  *
@@ -43,9 +47,6 @@ class dataspace
 public:
     /** default constructor */
     dataspace() : hid_(-1) {}
-
-    /** construct dataspace from HDF5 handle */
-    dataspace(hid_t hid) : hid_(hid) {}
 
     /** construct dataspace of rank zero */
     dataspace(H5S_class_t type);
@@ -123,6 +124,9 @@ private:
 
     template <typename h5xxObject>
     friend void swap(h5xxObject& left, h5xxObject& right);
+
+    friend class h5xx::attribute; // method "operator dataspace()"
+    friend class h5xx::dataset;   // method "operator dataspace()"
 };
 
 dataspace::dataspace(dataspace const& other)
@@ -242,7 +246,6 @@ void dataspace::select_hyperslab(hsize_t const* offset, hsize_t const* count)
         throw error("selecting hyperslab");
     }
 }
-
 
 } // namespace h5xx
 

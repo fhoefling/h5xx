@@ -169,12 +169,15 @@ attribute::~attribute()
 
 attribute::operator dataspace() const
 {
-    hid_t hid = H5Aget_space(hid_);
-    if(hid < 0 ) {
+    if (hid_ < 0) {
+        throw error("retrieving dataspace from invalid attribute");
+    }
+
+    dataspace dspace;
+    if((dspace.hid_ = H5Aget_space(hid_)) < 0) {      // we're friend
         throw error("attribute +\"" + name() + "\" has invalid dataspace");
     }
-    dataspace ds(hid);
-    return ds;
+    return dspace;
 }
 
 void attribute::write(hid_t mem_type_id, void const* value)

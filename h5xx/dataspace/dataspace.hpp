@@ -59,9 +59,6 @@ public:
     template <std::size_t N>
     dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t, N> const& max_dims);
 
-    template <class T>
-    dataspace(T value, typename boost::enable_if<is_multi_array<T> >::type* dummy = 0);
-
     /**
      * deleted copy constructor
      *
@@ -107,20 +104,16 @@ public:
     /** returns true if dataspace is of simple type */
     bool is_simple() const;
 
-    /** simple hyperslab selection, offsets and counts are given as std::vector */
-    void select_hyperslab(std::vector<hsize_t> const& offset, std::vector<hsize_t> const& count);
-
-    /** simple hyperslab selection, offsets and counts are given as boost::array */
-    template <std::size_t N>
-    void select_hyperslab(boost::array<hsize_t,N> const& offset, boost::array<hsize_t,N> const& count);
-
+    /**
+     * simple hyperslab selection, offsets and counts are given as some array
+     * type (e.g., boost::array or std::vector)
+     */
+    template <typename ArrayType>
+    void select_hyperslab(ArrayType const& offset, ArrayType const& count);
 
 private:
     /** HDF5 object ID */
     hid_t hid_;
-
-    /** simple hyperslab selection, offset and count arrays are given as pointers */
-    void select_hyperslab(hsize_t const* offset, hsize_t const* count);
 
     template <typename h5xxObject>
     friend void swap(h5xxObject& left, h5xxObject& right);
@@ -162,18 +155,6 @@ template <std::size_t N>
 dataspace::dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t, N> const& max_dims)
 {
     if ((hid_ = H5Screate_simple(N, &*dims.begin(), &*max_dims.begin())) < 0) {
-        throw error("creating simple dataspace");
-    }
-}
-
-template <class T>
-dataspace::dataspace(T value, typename boost::enable_if<is_multi_array<T> >::type* dummy)
-{
-    enum { rank = T::dimensionality };
-    boost::array<hsize_t, rank> dims;
-    std::copy(value.shape(), value.shape() + rank, dims.begin());
-    std::size_t N = rank;
-    if ((hid_ = H5Screate_simple(N, &*dims.begin(), &*dims.begin())) < 0) {
         throw error("creating simple dataspace");
     }
 }
@@ -229,20 +210,15 @@ bool dataspace::is_simple() const
     return H5Sget_simple_extent_type(hid_) == H5S_SIMPLE;
 }
 
-template <std::size_t N>
-void dataspace::select_hyperslab(boost::array<hsize_t,N> const& offset, boost::array<hsize_t,N> const& count)
+template <typename ArrayType>
+void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count)
 {
-    this->select_hyperslab(&offset[0], &count[0]);
-}
+    if (offset.size() != count.size() || offset.size() != rank())
+    {
+        throw error("hyperslab specification has mismatching size");
+    }
 
-void dataspace::select_hyperslab(std::vector<hsize_t> const& offset, std::vector<hsize_t> const& count)
-{
-    this->select_hyperslab(&offset[0], &count[0]);
-}
-
-void dataspace::select_hyperslab(hsize_t const* offset, hsize_t const* count)
-{
-    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, offset, NULL, count, NULL) < 0) {
+    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0) {
         throw error("selecting hyperslab");
     }
 }

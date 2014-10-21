@@ -32,7 +32,7 @@
 namespace h5xx {
 
 template <typename T>
-/* inline */ typename boost::enable_if<is_multi_array<T>, dataspace>::type
+typename boost::enable_if<is_multi_array<T>, dataspace>::type
 create_dataspace(T const& value)
 {
     enum { rank = T::dimensionality };

@@ -80,7 +80,7 @@ void write_dataset(std::string const& filename, array_2d_t const& array)
         name = "integer array, 2";
 
         // construct dataspace from a Boost multi_array
-        h5xx::dataspace dataspace(array);
+        h5xx::dataspace dataspace = h5xx::create_dataspace(array);
         // pull datatype from a Boost multi_array
         h5xx::datatype datatype(array);
 

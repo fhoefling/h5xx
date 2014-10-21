@@ -21,6 +21,9 @@
 #ifndef H5XX_HPP
 #define H5XX_HPP
 
+#define TRACE {std::cout << __PRETTY_FUNCTION__ << " " << __LINE__ << std::endl;}
+//#define TRACE {}
+
 namespace h5xx {
     enum { compression_level = 6 };
 }

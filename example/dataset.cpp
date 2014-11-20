@@ -349,6 +349,14 @@ void write_dbl_data(std::string const& filename, array_2d_dbl_t const& array)
         );
         h5xx::write_dataset(file, name, array);
     }
+
+    {
+        name = "J -- double array, (default), fill_value";
+        h5xx::create_dataset(file, name, array
+          , h5xx::policy::storage::fill_value(42.667)
+        );
+//        h5xx::write_dataset(file, name, array);
+    }
 }
 
 

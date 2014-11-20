@@ -52,7 +52,7 @@ namespace storage {
 class storage_modifier_base
 {
 public:
-    virtual void set_modifier(hid_t plist) const = 0;
+    virtual void set_storage(hid_t) const = 0;
 };
 
 /**
@@ -73,7 +73,7 @@ public:
     }
 
     /** set fill_value for given property list */
-    virtual void set_modifier(hid_t plist) const
+    virtual void set_storage(hid_t plist) const
     {
         // Preferred a call to H5Pset_fill_value() instead of H5Pset_filter()
         // because of the internal checking it does, cf H5Pdcpl.c
@@ -100,7 +100,7 @@ public:
     {}
 
     /** activate track_times for given property list */
-    virtual void set_modifier(hid_t plist) const
+    virtual void set_storage(hid_t plist) const
     {
         if (H5Pset_obj_track_times( plist, (hbool_t)true ) < 0)
             if (!optional)
@@ -133,7 +133,7 @@ public:
     {
         typename modifier_set_t::const_iterator m;
         for (m = modifier_.begin(); m != modifier_.end(); ++m) {
-            (*m)->set_modifier(plist); // dereference operator required due to shared_ptr usage
+            (*m)->set_storage(plist); // dereference operator required due to shared_ptr usage
         }
     }
 

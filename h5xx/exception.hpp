@@ -34,7 +34,7 @@ public:
         H5::Exception::dontPrint();
     }
 
-    ~no_autoprint()
+    ~no_autoprint() throw()
     {
         H5::Exception::setAutoPrint(func, client_data);
     }

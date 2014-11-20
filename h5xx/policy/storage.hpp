@@ -141,7 +141,7 @@ public:
     virtual void set_storage(hid_t) const = 0;
 
 protected:
-    // modifier set
+    // vector to hold the set of modifiers we want to have applied
     modifier_set_t modifier_;
 };
 

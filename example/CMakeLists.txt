@@ -17,7 +17,7 @@ set(CMAKE_BUILD_TYPE "Release")
 foreach(module
   attribute
   dataset
-  hyperslab
+  slice
   )
   add_executable(${module}
     ${module}.cpp

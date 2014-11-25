@@ -18,45 +18,40 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
-#ifndef H5XX_HYPERSLAB_HPP
-#define H5XX_HYPERSLAB_HPP
+#ifndef H5XX_SLICE_HPP
+#define H5XX_SLICE_HPP
 
-//#include <h5xx/hdf5_compat.hpp>
-//#include <h5xx/error.hpp>
-//#include <h5xx/utility.hpp>
-//
-//#include <boost/lexical_cast.hpp>
-//#include <string>
 #include <algorithm>
 #include <iterator>
 #include <vector>
 
+// TODO  slice -> slice
 
 namespace h5xx {
 
-class hyperslab {
+class slice {
 public:
-    hyperslab();
+    slice();
 
     template <class ArrayType>
-    hyperslab(ArrayType offset, ArrayType count);
+    slice(ArrayType offset, ArrayType count);
 
     template <class ArrayType>
-    hyperslab(ArrayType offset, ArrayType count, ArrayType stride, ArrayType block);
+    slice(ArrayType offset, ArrayType count, ArrayType stride, ArrayType block);
 
 private:
     std::vector<int> offset_, count_, stride_, block_;
 };
 
 template <class ArrayType>
-hyperslab::hyperslab(ArrayType offset, ArrayType count)
+slice::slice(ArrayType offset, ArrayType count)
 {
     std::copy(offset.begin(), offset.end(), std::back_inserter(offset_));
     std::copy(count.begin(),  count.end(),  std::back_inserter(count_));
 }
 
 template <class ArrayType>
-hyperslab::hyperslab(ArrayType offset, ArrayType count, ArrayType stride, ArrayType block)
+slice::slice(ArrayType offset, ArrayType count, ArrayType stride, ArrayType block)
 {
     std::copy(offset.begin(), offset.end(), std::back_inserter(offset_));
     std::copy(count.begin(),  count.end(),  std::back_inserter(count_));
@@ -67,4 +62,4 @@ hyperslab::hyperslab(ArrayType offset, ArrayType count, ArrayType stride, ArrayT
 } // namespace h5xx
 
 
-#endif // ! H5XX_HYPERSLAB_HPP
+#endif // ! H5XX_SLICE_HPP

@@ -148,6 +148,7 @@ public:
      */
     void select(slice const& selection, int mode = SET);
 
+    hssize_t get_select_npoints() const;
 
 private:
     /** HDF5 object ID */
@@ -266,6 +267,10 @@ bool dataspace::is_simple() const
 template <typename ArrayType>
 void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count)
 {
+    if (!valid())
+    {
+        throw error("invalid dataspace");
+    }
     if (offset.size() != count.size() || offset.size() != rank())
     {
         throw error("hyperslab specification has mismatching size");
@@ -278,6 +283,10 @@ void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count
 
 void dataspace::select(slice const& selection, int mode)
 {
+    if (!valid())
+    {
+        throw error("invalid dataspace");
+    }
     if (selection.rank() != rank())
     {
         throw error("dataspace and slice have mismatching rank");
@@ -291,6 +300,15 @@ void dataspace::select(slice const& selection, int mode)
                               ) < 0) {
         throw error("H5Sselect_hyperslab");
     }
+}
+
+hssize_t dataspace::get_select_npoints() const
+{
+    if (!valid())
+    {
+        throw error("invalid dataspace");
+    }
+    return H5Sget_select_npoints(hid_);
 }
 
 } // namespace h5xx

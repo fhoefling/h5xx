@@ -89,9 +89,14 @@ void write_int_data(std::string const& filename, array_2d_t const& array)
 
         h5xx::dataset dataset(file, name);
         h5xx::dataspace filespace(dataset);
+        std::cout << "points contained in dataspace \"filespace\" before hyperslab selection : "
+                << filespace.get_select_npoints() << std::endl;
+
         boost::array<hsize_t,2> offset = {{4,4}};
         boost::array<hsize_t,2> count = {{2,2}};
         filespace.select_hyperslab(offset, count);
+        std::cout << "points contained in dataspace \"filespace\" after hyperslab selection : "
+                        << filespace.get_select_npoints() << std::endl;
 
         // construct a 2x2 array and fill it with negative numbers
         boost::array<size_t, 2> hyperslab_extents = {{2,2}};

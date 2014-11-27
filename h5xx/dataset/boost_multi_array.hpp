@@ -306,12 +306,12 @@ read_dataset(dataset & data_set, T & array)
     }
     boost::array<hsize_t, array_rank> file_dims = file_space.extents<array_rank>();
 
-    // --- clear array
+    // --- clear array - TODO check if this feature is necessary
     boost::array<size_t, array_rank> array_zero;
     array_zero.assign(0);
     array.resize(array_zero);
 
-    // --- resize array to match the dataset
+    // --- resize array to match the dataset - TODO check if this feature is necessary
     boost::array<size_t, array_rank> array_shape;
     std::copy(file_dims.begin(), file_dims.begin() + array_rank, array_shape.begin());
     array.resize(array_shape);
@@ -323,6 +323,53 @@ read_dataset(dataset & data_set, T & array)
     data_set.read(ctype<value_type>::hid(), array.origin(), mem_space_id, file_space_id, xfer_plist_id);
 }
 
+
+template <typename h5xxObject, typename T>
+typename boost::enable_if<is_multi_array<T>, void>::type
+read_dataset(h5xxObject const& object, std::string const& name, T & array, slice const& file_slice)
+{
+    if (! exists_dataset(object, name))
+    {
+        throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does not exist");
+    }
+    dataset data_set(object, name);
+    read_dataset(data_set, array, file_slice);
+}
+
+template <typename T>
+typename boost::enable_if<is_multi_array<T>, void>::type
+read_dataset(dataset & data_set, T & array, slice const& file_slice)
+{
+    // --- create memory dataspace for the complete input array
+    h5xx::dataspace memspace = h5xx::create_dataspace(array);
+    // --- create file dataspace and select the slice (hyperslab) from it
+    h5xx::dataspace filespace(data_set);
+    filespace.select(file_slice);
+    // ---
+    read_dataset(data_set, array, memspace, filespace);
+}
+
+template <typename T>
+typename boost::enable_if<is_multi_array<T>, void>::type
+read_dataset(dataset & data_set, T & array, dataspace const& memspace, dataspace const& filespace)
+{
+    // --- disabled this check, it is orthogonal to a useful feature (eg read from 2D dataset into 1D array)
+//    const int array_rank = T::dimensionality;
+//    if (!(memspace.rank() == array_rank)) {
+//        throw error("memory dataspace and array rank do not match");
+//    }
+
+    if (static_cast<hsize_t>(filespace.get_select_npoints()) > array.num_elements()) {
+        throw error("memory dataspace contains more elements than target array");
+    }
+
+    hid_t mem_space_id = memspace.hid(); //H5S_ALL;
+    hid_t file_space_id = filespace.hid();
+    hid_t xfer_plist_id = H5P_DEFAULT;
+
+    typedef typename T::element value_type;
+    data_set.read(ctype<value_type>::hid(), array.origin(), mem_space_id, file_space_id, xfer_plist_id);
+}
 
 
 } // namespace h5xx

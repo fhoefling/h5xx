@@ -33,7 +33,7 @@ namespace h5xx {
 #include <h5xx/dataset.hpp>
 #include <h5xx/datatype.hpp>
 #include <h5xx/dataspace.hpp>
-#include <h5xx/hyperslab.hpp>
+#include <h5xx/slice.hpp>
 //#include <h5xx/chunked_dataset.hpp>
 #include <h5xx/exception.hpp>
 #include <h5xx/file.hpp>

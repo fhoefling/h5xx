@@ -108,11 +108,36 @@ write_dataset(h5xxObject const& object, std::string const& name, T const& value)
     if (! exists_dataset(object, name))
     {
         throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does not exist");
-//        create_dataset(object, name, value);
     }
     dataset dset(object, name);
     write_dataset(dset, value);
 }
+
+
+/**
+ * Write multi_array (value) to a dataset labeled "name" located at "object".
+ * dataset is opened internally.
+ */
+template <typename h5xxObject, typename T>
+inline typename boost::enable_if<is_multi_array<T>, void>::type
+write_dataset(h5xxObject const& object, std::string const& name, T const& value, slice const& file_slice)
+{
+    if (! exists_dataset(object, name))
+    {
+        throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" does not exist");
+    }
+    dataset dset(object, name);
+
+    // --- create memory dataspace for the complete input array
+    h5xx::dataspace memspace = h5xx::create_dataspace(value);
+
+    // --- create file dataspace and select the slice (hyperslab) from it
+    h5xx::dataspace filespace(dset);
+    filespace.select(file_slice);
+
+    write_dataset(dset, value, memspace, filespace);
+}
+
 
 /**
  * Write multi_array (value) to a dataset labeled "name" located at "object".
@@ -133,61 +158,68 @@ write_dataset(h5xxObject const& object, std::string const& name, T const& value,
 }
 
 
-/**
- * Read a dataset labeled "name" to a Boost multi_array and return it.
- */
-template <typename T, typename h5xxObject>
-inline typename boost::enable_if<is_multi_array<T>, T>::type
-read_dataset(h5xxObject const& object, std::string const& name)
-{
-    dataset dset(object, name);
-    dataspace space(dset);
-    enum { rank = T::dimensionality };
-    if (!(space.rank() == rank)) {
-        throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" has mismatching dataspace");
-    }
-
-    boost::array<hsize_t, rank> dims = space.extents<rank>();
-    boost::array<size_t, rank> shape;
-    std::copy(dims.begin(), dims.begin() + rank, shape.begin());
-    typedef typename T::element value_type;
-    boost::multi_array<value_type, rank> value(shape);
-
-    dset.read(ctype<value_type>::hid(), value.origin());
-
-    return value;
-}
 
 
-/**
- * Read a dataset to a Boost multi_array and return it.
- */
-template <typename T>
-inline typename boost::enable_if<is_multi_array<T>, T>::type
-read_dataset(dataset & dset)
-{
-    enum { rank = T::dimensionality };
+// === Read routines below, returning multi arrays.  What we want is call/return by reference, though. ===
 
-    dataspace dspace(dset);
-
-    if (!(dspace.rank() == rank)) {
-        throw error("dataset \"" + get_name(dset) + "\" has mismatching dataspace");
-    }
-
-    boost::array<hsize_t, rank> dims = dspace.extents<rank>();
-    boost::array<size_t, rank> shape;
-    std::copy(dims.begin(), dims.begin() + rank, shape.begin());
-    typedef typename T::element value_type;
-
-    boost::multi_array<value_type, rank> value(shape);
-
-    hid_t mem_space_id = H5S_ALL;
-    hid_t file_space_id = H5S_ALL;
-    hid_t xfer_plist_id = H5P_DEFAULT;
-    dset.read(ctype<value_type>::hid(), value.origin(), mem_space_id, file_space_id, xfer_plist_id);
-
-    return value;
-}
+///**
+// * Read a dataset labeled "name" to a Boost multi_array and return it.
+// */
+//template <typename T, typename h5xxObject>
+//inline typename boost::enable_if<is_multi_array<T>, T>::type
+//read_dataset(h5xxObject const& object, std::string const& name)
+//{
+//    dataset dset(object, name);
+//
+////    dataspace space(dset);
+////    enum { rank = T::dimensionality };
+////    if (!(space.rank() == rank)) {
+////        throw error("dataset \"" + name + "\" of object \"" + get_name(object) + "\" has mismatching dataspace");
+////    }
+////
+////    boost::array<hsize_t, rank> dims = space.extents<rank>();
+////    boost::array<size_t, rank> shape;
+////    std::copy(dims.begin(), dims.begin() + rank, shape.begin());
+////    typedef typename T::element value_type;
+////    boost::multi_array<value_type, rank> value(shape);
+////
+////    dset.read(ctype<value_type>::hid(), value.origin());
+////
+////    return value;
+//
+//    return read_dataset<T>(dset);
+//}
+//
+//
+///**
+// * Read a dataset to a Boost multi_array and return it.
+// */
+//template <typename T>
+//inline typename boost::enable_if<is_multi_array<T>, T>::type
+//read_dataset(dataset & dset)
+//{
+//    enum { rank = T::dimensionality };
+//
+//    dataspace dspace(dset);
+//
+//    if (!(dspace.rank() == rank)) {
+//        throw error("dataset \"" + get_name(dset) + "\" has mismatching dataspace");
+//    }
+//
+//    boost::array<hsize_t, rank> dims = dspace.extents<rank>();
+//    boost::array<size_t, rank> shape;
+//    std::copy(dims.begin(), dims.begin() + rank, shape.begin());
+//    typedef typename T::element value_type;
+//
+//    boost::multi_array<value_type, rank> value(shape);
+//
+//    hid_t mem_space_id = H5S_ALL;
+//    hid_t file_space_id = H5S_ALL;
+//    hid_t xfer_plist_id = H5P_DEFAULT;
+//    dset.read(ctype<value_type>::hid(), value.origin(), mem_space_id, file_space_id, xfer_plist_id);
+//
+//    return value;
+//}
 
 
 /**
@@ -216,6 +248,82 @@ read_dataset(dataset & dset, dataspace const& memspace, dataspace const& filespa
 
     return value;
 }
+
+
+//template <typename T, typename h5xxObject>
+//inline typename boost::enable_if<is_multi_array<T>, T>::type
+//read_dataset(h5xxObject const& object, std::string const& name, dataspace const& memspace, dataspace const& filespace))
+//{
+//    dataset dset(object, name);
+//    return read_dataset<T>(dset, memspace, filespace);
+//}
+
+
+template <typename T, typename h5xxObject>
+inline typename boost::enable_if<is_multi_array<T>, T>::type
+read_dataset(h5xxObject const& object, std::string const& name, slice const& file_slice)
+{
+    dataset dset(object, name);
+
+    // --- create memory dataspace for the complete input array
+    h5xx::dataspace memspace; // = h5xx::create_dataspace(value);
+
+    // WARNING : memspace is not functional, routine obsolete, though ...
+
+    // --- create file dataspace and select the slice (hyperslab) from it
+    h5xx::dataspace filespace(dset);
+    filespace.select(file_slice);
+
+    return read_dataset<T>(dset, memspace, filespace);
+}
+
+
+
+
+// ===
+// === read routines using return by reference are implemented below.
+// ===
+
+template <typename h5xxObject, typename T>
+typename boost::enable_if<is_multi_array<T>, void>::type
+read_dataset(h5xxObject const& object, std::string const& name, T & array)
+{
+    dataset dset(object, name);
+    read_dataset(dset, array);
+}
+
+template <typename T>
+typename boost::enable_if<is_multi_array<T>, void>::type
+read_dataset(dataset & data_set, T & array)
+{
+    const int array_rank = T::dimensionality;
+    typedef typename T::element value_type;
+
+    // --- use temporary dataspace object to get the shape of the dataset
+    dataspace file_space(data_set);
+    if (!(file_space.rank() == array_rank)) {
+        throw error("dataset \"" + get_name(data_set) + "\" and target array have mismatching dimensions");
+    }
+    boost::array<hsize_t, array_rank> file_dims = file_space.extents<array_rank>();
+
+    // --- clear array
+    boost::array<size_t, array_rank> array_zero;
+    array_zero.assign(0);
+    array.resize(array_zero);
+
+    // --- resize array to match the dataset
+    boost::array<size_t, array_rank> array_shape;
+    std::copy(file_dims.begin(), file_dims.begin() + array_rank, array_shape.begin());
+    array.resize(array_shape);
+
+    hid_t mem_space_id = H5S_ALL;
+    hid_t file_space_id = H5S_ALL;
+    hid_t xfer_plist_id = H5P_DEFAULT;
+
+    data_set.read(ctype<value_type>::hid(), array.origin(), mem_space_id, file_space_id, xfer_plist_id);
+}
+
+
 
 } // namespace h5xx
 

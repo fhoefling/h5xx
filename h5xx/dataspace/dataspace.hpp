@@ -31,6 +31,7 @@
 #include <h5xx/hdf5_compat.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/utility.hpp>
+#include <h5xx/slice.hpp>
 
 namespace h5xx {
 
@@ -51,13 +52,27 @@ public:
     /** construct dataspace of rank zero */
     dataspace(H5S_class_t type);
 
-    /** construct simple dataspace of given extents */
+    /** construct simple dataspace of given extents, boost::array version */
     template <std::size_t N>
     dataspace(boost::array<hsize_t, N> const& dims);
 
-    /** construct simple dataspace of given extents and maximal extents */
+    /** construct simple dataspace of given extents, std::vector version */
+    dataspace(std::vector<hsize_t> const& dims);
+
+    /** construct simple dataspace of given extents and maximal extents, boost::array version */
     template <std::size_t N>
     dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t, N> const& max_dims);
+
+    /** construct simple dataspace of given extents and maximal extents, std::vector version */
+    dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims);
+
+//    /** construct simple dataspace of given extents */
+//    template <class ArrayType>
+//    dataspace(ArrayType const& dims);
+//
+//    /** construct simple dataspace of given extents and maximal extents */
+//    template <class ArrayType>
+//    dataspace(ArrayType const& dims, ArrayType const& max_dims);
 
     /**
      * deleted copy constructor
@@ -94,7 +109,10 @@ public:
     /** returns rank/dimensionality of simple dataspace */
     int rank() const;
 
-    /** returns extents/dimensions of simple dataspace, optionally the maximal dimensions are returned in maxdims */
+    /** returns extents/dimensions of simple dataspace, optionally the maximal
+    *   dimensions are returned in maxdims
+    *   TODO : introduce generic array type
+    */
     template <std::size_t N>
     boost::array<hsize_t, N> extents(hsize_t *maxdims = NULL) const;
 
@@ -105,11 +123,31 @@ public:
     bool is_simple() const;
 
     /**
+     * TODO : obsolete
      * simple hyperslab selection, offsets and counts are given as some array
      * type (e.g., boost::array or std::vector)
      */
     template <typename ArrayType>
     void select_hyperslab(ArrayType const& offset, ArrayType const& count);
+
+    /**
+     * flags for slice (hyperslab) selection
+     */
+    enum mode
+    {
+        SET = H5S_SELECT_SET
+      , OR = H5S_SELECT_OR
+      , AND = H5S_SELECT_AND
+      , XOR = H5S_SELECT_XOR
+      , NOTB = H5S_SELECT_NOTB
+      , NOTA = H5S_SELECT_NOTA
+    };
+
+    /**
+     * slice/hyperslab selection (to replace select_hyperslab())
+     */
+    void select(slice const& selection, int mode = SET);
+
 
 private:
     /** HDF5 object ID */
@@ -146,7 +184,7 @@ dataspace::dataspace(H5S_class_t type)
 template <std::size_t N>
 dataspace::dataspace(boost::array<hsize_t, N> const& dims)
 {
-    if ((hid_ = H5Screate_simple(N, &*dims.begin(), &*dims.begin())) < 0) {
+    if ((hid_ = H5Screate_simple(N, &*dims.begin(), NULL)) < 0) {
         throw error("creating simple dataspace");
     }
 }
@@ -158,6 +196,21 @@ dataspace::dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t,
         throw error("creating simple dataspace");
     }
 }
+
+dataspace::dataspace(std::vector<hsize_t> const& dims)
+{
+    if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), NULL)) < 0) {
+        throw error("creating simple dataspace");
+    }
+}
+
+dataspace::dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims)
+{
+    if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), &*max_dims.begin())) < 0) {
+        throw error("creating simple dataspace");
+    }
+}
+
 
 dataspace::~dataspace()
 {
@@ -220,6 +273,23 @@ void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count
 
     if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0) {
         throw error("selecting hyperslab");
+    }
+}
+
+void dataspace::select(slice const& selection, int mode)
+{
+    if (selection.rank() != rank())
+    {
+        throw error("dataspace and slice have mismatching rank");
+    }
+    if (H5Sselect_hyperslab(    hid_
+                                 , (H5S_seloper_t)mode
+                                 , &*selection.get_offset().begin()
+                                 , selection.get_stride().size() > 0 ? &*selection.get_stride().begin() : NULL
+                                 , &*selection.get_count().begin()
+                                 , selection.get_block().size() > 0 ? &*selection.get_block().begin() : NULL
+                              ) < 0) {
+        throw error("H5Sselect_hyperslab");
     }
 }
 

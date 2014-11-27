@@ -204,12 +204,13 @@ void write_int_data_2(std::string const& filename, array_2d_t const& array)
 
 void read_int_data(std::string const& filename)
 {
-    h5xx::file f(filename, h5xx::file::in);
+    h5xx::file file(filename, h5xx::file::in);
     std::string name = "integer array";
 
     // (1) read and print the 2D array w/o modification
     {
-        array_2d_t array = h5xx::read_dataset<array_2d_t>(f, name);
+        array_2d_t array;
+        h5xx::read_dataset(file, name, array);
         printf("original integer array as read from file, negative number patch was written using a hyperslab\n");
         print_array(array);
         printf("\n");
@@ -225,7 +226,7 @@ void read_int_data(std::string const& filename)
     boost::array<hsize_t,2> offset = {{1,1}};
     boost::array<hsize_t,2> count = {{2,2}};
     {
-        h5xx::dataset dataset(f, name);
+        h5xx::dataset dataset(file, name);
         // create file dataspace from dataset and select hyperslab from the dataset
         h5xx::dataspace filespace(dataset);
         filespace.select_hyperslab(offset, count);
@@ -242,7 +243,7 @@ void read_int_data(std::string const& filename)
 
     // (3) select a 2D hyperslab and read it into a 1D array
     {
-        h5xx::dataset dataset(f, name);
+        h5xx::dataset dataset(file, name);
         h5xx::dataspace filespace(dataset);
         filespace.select_hyperslab(offset, count);
 

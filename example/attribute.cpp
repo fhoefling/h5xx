@@ -26,14 +26,14 @@ typedef boost::multi_array<int, 3> array_t;
 void write_attribute(std::string const& filename, array_t const& array)
 {
     // open group within HDF5 file
-    h5xx::file f(filename, h5xx::file::trunc); // truncate existing file
-    h5xx::group g(f, "group");
+    h5xx::file file(filename, h5xx::file::trunc); // truncate existing file
+    h5xx::group group(file, "group");
 
     // attach string attribute to file root
-    h5xx::write_attribute(f, "location", "Here is the file root.");
+    h5xx::write_attribute(file, "location", "Here is the file root.");
 
     // attach array data as attribute to group
-    h5xx::write_attribute(g, "integer array", array);
+    h5xx::write_attribute(group, "integer array", array);
 
     // file and group are closed when 'f' and 'g' go out of scope
 }
@@ -41,16 +41,16 @@ void write_attribute(std::string const& filename, array_t const& array)
 void read_attribute(std::string const& filename)
 {
     // open HDF5 file read-only
-    h5xx::file f(filename, h5xx::file::in);
+    h5xx::file file(filename, h5xx::file::in);
 
     // read and print string attribute
-    std::cout << h5xx::read_attribute<std::string>(f, "location") << std::endl;
+    std::cout << h5xx::read_attribute<std::string>(file, "location") << std::endl;
 
     // read array data from attribute
-    array_t array = h5xx::read_attribute<array_t>(h5xx::group(f, "group"), "integer array");
+    array_t array = h5xx::read_attribute<array_t>(h5xx::group(file, "group"), "integer array");
 
     // close file explicitly
-    f.close();
+    file.close();
 
     // print array along second dimension
     for (unsigned int i = 0; i < array.shape()[1]; ++i) {
@@ -63,12 +63,6 @@ void read_attribute(std::string const& filename)
 
 int main(int argc, char** argv)
 {
-//    // take filename from command line
-//    if (argc <= 1) {
-//        std::cout << "Usage: example file.h5" << std::endl;
-//        return(-1);
-//    }
-
     std::string filename = argv[0];
     filename.append(".h5");
 

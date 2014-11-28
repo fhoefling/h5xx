@@ -136,8 +136,6 @@ dataset::dataset(
     // dataset creation property list: evaluate policies
     hid_t dcpl_id = H5Pcreate(H5P_DATASET_CREATE);
     storage_policy.set_storage(dcpl_id);    // set storage and filters
-    // TODO fill value
-    // TODO tracking times
 
     // create dataset
     err |= (hid_ = H5Dcreate(

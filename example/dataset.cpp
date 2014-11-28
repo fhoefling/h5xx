@@ -84,19 +84,20 @@ void write_int_data(std::string const& filename, array_2d_t const& array)
     }
 
     // (3) overwrite part of dataset (1) using a hyperslab
+    //     UPDATE : obsolete, see slice.cpp
     {
         name = "integer array";
 
         h5xx::dataset dataset(file, name);
         h5xx::dataspace filespace(dataset);
-        std::cout << "points contained in dataspace \"filespace\" before hyperslab selection : "
-                << filespace.get_select_npoints() << std::endl;
+//        std::cout << "points contained in dataspace \"filespace\" before hyperslab selection : "
+//                << filespace.get_select_npoints() << std::endl;
 
         boost::array<hsize_t,2> offset = {{4,4}};
         boost::array<hsize_t,2> count = {{2,2}};
         filespace.select_hyperslab(offset, count);
-        std::cout << "points contained in dataspace \"filespace\" after hyperslab selection : "
-                        << filespace.get_select_npoints() << std::endl;
+//        std::cout << "points contained in dataspace \"filespace\" after hyperslab selection : "
+//                        << filespace.get_select_npoints() << std::endl;
 
         // construct a 2x2 array and fill it with negative numbers
         boost::array<size_t, 2> hyperslab_extents = {{2,2}};
@@ -112,6 +113,7 @@ void write_int_data(std::string const& filename, array_2d_t const& array)
     }
 }
 
+// --- try various storage layouts and filters, integer
 void write_int_data_2(std::string const& filename, array_2d_t const& array)
 {
     h5xx::file file(filename, h5xx::file::out);
@@ -222,12 +224,7 @@ void read_int_data(std::string const& filename)
     }
 
     // (2) select a 2D hyperslab and read it into a 2x2 array
-    // --- offsets and counts for hyperslab selection, can use either std::vector
-//    static const hsize_t offset_[] = {1,1};
-//    static const hsize_t count_[] = {2,2};
-//    std::vector<hsize_t> offset(offset_, offset_ + sizeof(offset_)/sizeof(offset_[0]));;
-//    std::vector<hsize_t> count(count_, count_ + sizeof(count_)/sizeof(count_[0]));
-    // --- ... OR boost::arrays
+    //     UPDATE : obsolete, see slice.cpp
     boost::array<hsize_t,2> offset = {{1,1}};
     boost::array<hsize_t,2> count = {{2,2}};
     {
@@ -240,13 +237,18 @@ void read_int_data(std::string const& filename)
         boost::array<hsize_t, 2> extents = {{2,2}};
         h5xx::dataspace memspace(extents);
 
-        array_2d_t array = h5xx::read_dataset<array_2d_t>(dataset, memspace, filespace);
+        // allocate memory for the data
+        array_2d_t array;
+        array.resize(extents);
+
+        h5xx::read_dataset(dataset, array, memspace, filespace);
         printf("hyperslab of the integer array, copied to an array w/ reduced extents\n");
         print_array(array);
         printf("\n");
     }
 
     // (3) select a 2D hyperslab and read it into a 1D array
+    //     UPDATE : obsolete, see slice.cpp
     {
         h5xx::dataset dataset(file, name);
         h5xx::dataspace filespace(dataset);
@@ -255,13 +257,16 @@ void read_int_data(std::string const& filename)
         boost::array<hsize_t, 1> extents_1D = {{4}};
         h5xx::dataspace memspace_1D(extents_1D);
 
-        array_1d_t array = h5xx::read_dataset<array_1d_t>(dataset, memspace_1D, filespace);
+        array_1d_t array;
+        array.resize(extents_1D);
+
+        h5xx::read_dataset(dataset, array, memspace_1D, filespace);
         printf("the same 2D hyperslab of the integer array, copied to a 1D array\n");
         print_array(array);
     }
 }
 
-
+// --- try various storage layouts and filters, double precision
 void write_dbl_data(std::string const& filename, array_2d_dbl_t const& array)
 {
     h5xx::file file(filename, h5xx::file::out);

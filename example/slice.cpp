@@ -62,12 +62,12 @@ void write_int_data(std::string const& filename, array_2d_t const& array)
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (hyperslab) to specify the location to be overwritten in the dataset
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         std::vector<int> offset; int offset_raw[2] = {4,4}; offset.assign(offset_raw, offset_raw + 2);
         std::vector<int> count;  int count_raw[2] = {2,2}; count.assign(count_raw, count_raw + 2);
         h5xx::slice slice(offset, count);
 
-        // --- dummy data to be written to the patch (negative values)
+        // --- data to be written to the slice (negative values)
         array_1d_t data(boost::extents[4]);
         int data_raw[4] = {-1,-2,-3,-4};
         data.assign(data_raw, data_raw+4);
@@ -75,7 +75,6 @@ void write_int_data(std::string const& filename, array_2d_t const& array)
         // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
-
 }
 
 
@@ -116,7 +115,6 @@ void read_int_data(std::string const& filename)
     // read a 2D subset of the dataset into a 1D array
     {
         array_1d_t array;
-
 //        std::cout << array.num_elements() << std::endl; // 0
 
         // --- create a slice object (aka hyperslab) to specify the patch to be read from the dataset
@@ -128,7 +126,6 @@ void read_int_data(std::string const& filename)
         std::vector<int> total_count;
         total_count.push_back(count[0]*count[1]);
         array.resize(total_count);
-
 //        std::cout << array.num_elements() << std::endl; // 16
 
         h5xx::read_dataset(file, name, array, slice);

@@ -37,14 +37,34 @@
 #include <iostream>
 #include <vector>
 #include <algorithm>
+#include <sstream>
 
-/** some useful macros for printf-style debugging */
-//#define H5XX_DEBUG
-//
+
+
 #define SEPARATOR \
     std::cout << "--------------------------------------------------------------------------------" << std::endl << std::flush;
+
 #define H5XX_WHERE \
     std::cout << __FILE__ << ":" << __LINE__ << std::endl << __PRETTY_FUNCTION__<< std::endl << std::flush;
+
+#define H5XX_THROW(MSG) \
+    { \
+        std::string message; \
+        message.append(__FILE__); \
+        message.append(":"); \
+        std::ostringstream oss; \
+        oss << __LINE__; \
+        message.append(oss.str()); \
+        message.append(":"); \
+        message.append(__FUNCTION__); \
+        message.append("(): "); \
+        message.append(MSG); \
+        throw error(message); \
+    }
+
+/** some macros for printf-style debugging */
+//#define H5XX_DEBUG
+//
 #ifdef H5XX_DEBUG
 #define H5XX_CHKPT \
     SEPARATOR; \

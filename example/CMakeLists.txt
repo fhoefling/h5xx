@@ -16,8 +16,9 @@ set(CMAKE_BUILD_TYPE "Release")
 
 foreach(module
   attribute
-  dataset
-  slice
+  dataset_multiarray
+  slice_multiarray
+  slice_std_vector
   )
   add_executable(${module}
     ${module}.cpp

@@ -58,7 +58,7 @@ create_dataset(h5xxObject const& object, std::string const& name, T const& value
 }
 
 /**
- * create dataset from a std::vector of fundamental type
+ * create dataset from a std::vector of fundamental type, using default storage layout
  **/
 template <typename h5xxObject, typename T>
 inline typename boost::enable_if< boost::mpl::and_< is_vector<T>, boost::is_fundamental<typename T::value_type> >, dataset>::type
@@ -92,72 +92,65 @@ write_dataset(dataset& dset, T const& value)
     dset.write(type_id, &*value.begin());
 }
 
+/**
+ * Write std::vector data to an existing dataset specified by location and name,
+ * memory and file locations (hyperslabs) are passed via the dataspace objects.
+ */
+template <typename h5xxObject, typename T>
+inline typename boost::enable_if< boost::mpl::and_< is_vector<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+write_dataset(h5xxObject const& object, std::string const& name, T const& value,
+                  dataspace const& memspace, dataspace const& filespace)
+{
+    dataset dset(object, name);
+    write_dataset(dset, value, memspace, filespace);
+}
+
+/**
+ * Write std::vector data, memory and file locations (hyperslabs) are passed via
+ * the dataspace objects.
+ */
+template <typename T>
+inline typename boost::enable_if< boost::mpl::and_< is_vector<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+write_dataset(dataset& dset, T const& value, dataspace const& memspace, dataspace const& filespace)
+{
+    typedef typename T::value_type value_type;
+    hid_t type_id = ctype<value_type>::hid();
+    hid_t mem_space_id = memspace.hid(); //H5S_ALL;
+    hid_t file_space_id = filespace.hid();
+    hid_t xfer_plist_id = H5P_DEFAULT;
+    dset.write(type_id, &*value.begin(), mem_space_id, file_space_id, xfer_plist_id);
+}
+
+/**
+ * Write std::vector data to an existing dataset specified its location and
+ * name, only the file location (hyperslab) is given via a slice object.
+ */
+template <typename h5xxObject, typename T>
+inline typename boost::enable_if< boost::mpl::and_< is_vector<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+write_dataset(h5xxObject const& object, std::string const& name, T const& value, slice const& file_slice)
+{
+    dataset dset(object, name);
+    write_dataset(dset, value, file_slice);
+}
+
+/**
+ * Write std::vector data to an existing dataset, only the file location
+ * (hyperslab) is given via a slice object.
+ */
+template <typename T>
+inline typename boost::enable_if< boost::mpl::and_< is_vector<T>, boost::is_fundamental<typename T::value_type> >, void>::type
+write_dataset(dataset& dset, T const& value, slice const& file_slice)
+{
+    // --- create memory dataspace for the complete input array
+    h5xx::dataspace memspace = h5xx::create_dataspace(value);
+    // --- create file dataspace and select the slice (hyperslab) from it
+    h5xx::dataspace filespace(dset);
+    filespace.select(file_slice);
+    write_dataset(dset, value, memspace, filespace);
+}
 
 
 
-
-
-
-///**
-// * Write multiarray data to an existing dataset specified its location and name,
-// * memory and file locations (hyperslabs) are passed via the dataspace objects.
-// */
-//template <typename h5xxObject, typename T>
-//inline typename boost::enable_if<is_multi_array<T>, void>::type
-//write_dataset(h5xxObject const& object, std::string const& name, T const& value,
-//              dataspace const& memspace, dataspace const& filespace)
-//{
-//    dataset dset(object, name);
-//    write_dataset(dset, value, memspace, filespace);
-//}
-//
-///**
-// * Write multiarray data to dataset, memory and file locations (hyperslabs)
-// * are passed via the dataspace objects.
-// */
-//template <typename T>
-//inline typename boost::enable_if<is_multi_array<T>, void>::type
-//write_dataset(dataset& dset, T const& value, dataspace const& memspace, dataspace const& filespace)
-//{
-//    typedef typename T::element value_type;
-//    hid_t type_id = ctype<value_type>::hid();
-//    hid_t mem_space_id = memspace.hid(); //H5S_ALL;
-//    hid_t file_space_id = filespace.hid();
-//    hid_t xfer_plist_id = H5P_DEFAULT;
-//    dset.write(type_id, value.origin(), mem_space_id, file_space_id, xfer_plist_id);
-//}
-//
-///**
-// * Write multiarray data to dataset specified its location and name, only the
-// * file location (hyperslab) is given via a slice object.
-// */
-//template <typename h5xxObject, typename T>
-//inline typename boost::enable_if<is_multi_array<T>, void>::type
-//write_dataset(h5xxObject const& object, std::string const& name, T const& value, slice const& file_slice)
-//{
-//    dataset dset(object, name);
-//    write_dataset(dset, value, file_slice);
-//}
-//
-///**
-// * Write multiarray data to dataset, only the file location (hyperslab) is given
-// * via a slice object.
-// */
-//template <typename T>
-//inline typename boost::enable_if<is_multi_array<T>, void>::type
-//write_dataset(dataset& dset, T const& value, slice const& file_slice)
-//{
-//    // --- create memory dataspace for the complete input array
-//    h5xx::dataspace memspace = h5xx::create_dataspace(value);
-//    // --- create file dataspace and select the slice (hyperslab) from it
-//    h5xx::dataspace filespace(dset);
-//    filespace.select(file_slice);
-//    write_dataset(dset, value, memspace, filespace);
-//}
-//
-//
-//
-//
 //template <typename h5xxObject, typename T>
 //typename boost::enable_if<is_multi_array<T>, void>::type
 //read_dataset(h5xxObject const& object, std::string const& name, T & array)

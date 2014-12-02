@@ -45,18 +45,18 @@ void write_int_data(std::string const& filename, std::vector<int> const& array)
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-//        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
-//        std::vector<int> offset; int offset_raw[2] = {4,4}; offset.assign(offset_raw, offset_raw + 2);
-//        std::vector<int> count;  int count_raw[2] = {2,2}; count.assign(count_raw, count_raw + 2);
-//        h5xx::slice slice(offset, count);
-//
-//        // --- data to be written to the slice (negative values)
-//        array_1d_t data(boost::extents[4]);
-//        int data_raw[4] = {-1,-2,-3,-4};
-//        data.assign(data_raw, data_raw+4);
-//
-//        // --- overwrite part of the dataset as specified by slice
-//        h5xx::write_dataset(file, name, data, slice);
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
+        std::vector<int> offset; int offset_raw[2] = {4}; offset.assign(offset_raw, offset_raw + 1);
+        std::vector<int> count;  int count_raw[2] = {2}; count.assign(count_raw, count_raw + 1);
+        h5xx::slice slice(offset, count);
+
+        // --- data to be written to the slice (negative values)
+        std::vector<int> data;
+        data.push_back(-1);
+        data.push_back(-2);
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
     }
 }
 

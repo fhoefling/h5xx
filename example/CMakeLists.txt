@@ -18,6 +18,7 @@ foreach(module
   attribute
   dataset_multiarray
   slice_multiarray
+  slice_array
   slice_std_vector
   )
   add_executable(${module}

@@ -20,6 +20,8 @@
 
 #include <h5xx/ctype.hpp>
 
+#include <vector>
+
 #include <boost/array.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits.hpp>
@@ -46,6 +48,14 @@ public:
     template <class T>
     datatype(T array, typename boost::enable_if<is_multi_array<T> >::type* dummy = 0);
 
+    /** create datatype object from a Boost array */
+    template <class T>
+    datatype(T array, typename boost::enable_if<is_array<T> >::type* dummy = 0);
+
+    /** create datatype object from a std::vector */
+    template <class T>
+    datatype(T vector, typename boost::enable_if< boost::mpl::and_< is_vector<T>, boost::is_fundamental<typename T::value_type> > >::type* dummy = 0);
+
     /** return the HDF5 type ID */
     hid_t get_type_id() const;
 
@@ -58,6 +68,20 @@ template <class T>
 datatype::datatype(T array, typename boost::enable_if<is_multi_array<T> >::type* dummy)
 {
     typedef typename T::element value_type;
+    type_id_ = ctype<value_type>::hid();
+}
+
+template <class T>
+datatype::datatype(T array, typename boost::enable_if<is_array<T> >::type* dummy)
+{
+    typedef typename T::value_type value_type;
+    type_id_ = ctype<value_type>::hid();
+}
+
+template <class T>
+datatype::datatype(T vector, typename boost::enable_if< boost::mpl::and_< is_vector<T>, boost::is_fundamental<typename T::value_type> > >::type* dummy)
+{
+    typedef typename T::value_type value_type;
     type_id_ = ctype<value_type>::hid();
 }
 

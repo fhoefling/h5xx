@@ -66,34 +66,34 @@ void read_int_data(std::string const& filename)
     h5xx::file file(filename, h5xx::file::in);
     std::string name = "integer array";
 
-//    // read and print the full dataset
-//    {
-//        array_2d_t array;
-//        // --- read the complete dataset into array, the array is resized and overwritten internally
-//        h5xx::read_dataset(file, name, array);
-//        printf("original integer array read from file, negative number patch was written using a slice\n");
-//        print_array(array);
-//        printf("\n");
-//    }
-//
-//    // read and print a subset of the dataset
-//    {
-//        array_2d_t array;
-//
-//        // --- create a slice object (aka hyperslab) to specify the patch to be read from the dataset
-//        std::vector<int> offset; int offset_raw[2] = {3,3}; offset.assign(offset_raw, offset_raw + 2);
-//        std::vector<int> count;  int count_raw[2] = {4,4}; count.assign(count_raw, count_raw + 2);
-//        h5xx::slice slice(offset, count);
-//
-//        // --- allocate memory for the slice (user's responsibility, this is not done internally)
-//        array.resize(count);
-//
-//        h5xx::read_dataset(file, name, array, slice);
-//
-//        printf("2D slice of the integer array, zoom on the negative number patch\n");
-//        print_array(array);
-//        printf("\n");
-//    }
+    // read and print the full dataset
+    {
+        std::vector<int> data;
+        // --- read the complete dataset into data, the vector is resized and overwritten internally
+        h5xx::read_dataset(file, name, data);
+        printf("original integer array read from file, negative number patch was written using a slice\n");
+        print_array(data);
+        printf("\n");
+    }
+
+    // read and print a subset of the dataset
+    {
+        std::vector<int> data;
+
+        // --- create a slice object (aka hyperslab) to specify the patch to be read from the dataset
+        std::vector<int> offset; int offset_raw[2] = {2}; offset.assign(offset_raw, offset_raw + 1);
+        std::vector<int> count;  int count_raw[2] = {6}; count.assign(count_raw, count_raw + 1);
+        h5xx::slice slice(offset, count);
+
+        // --- allocate memory for the slice (user's responsibility, is not done by read_dataset if slicing is used)
+        data.resize(count[0]);
+
+        h5xx::read_dataset(file, name, data, slice);
+
+        printf("1D slice of the integer array, zoom on the negative number patch\n");
+        print_array(data);
+        printf("\n");
+    }
 }
 
 

@@ -21,7 +21,6 @@
 #ifndef H5XX_DATASPACE_STD_VECTOR
 #define H5XX_DATASPACE_STD_VECTOR
 
-#include <algorithm>
 #include <vector>
 
 #include <h5xx/dataspace.hpp>

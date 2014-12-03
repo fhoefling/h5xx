@@ -66,6 +66,7 @@ public:
     /** construct simple dataspace of given extents and maximal extents, std::vector version */
     dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims);
 
+// --- generic array versions, cannot be resolved by the compiler currently ---
 //    /** construct simple dataspace of given extents */
 //    template <class ArrayType>
 //    dataspace(ArrayType const& dims);
@@ -111,10 +112,14 @@ public:
 
     /** returns extents/dimensions of simple dataspace, optionally the maximal
     *   dimensions are returned in maxdims
-    *   TODO : introduce generic array type
     */
     template <std::size_t N>
     boost::array<hsize_t, N> extents(hsize_t *maxdims = NULL) const;
+
+    /** returns extents/dimensions of simple dataspace, optionally the maximal
+    *   dimensions are returned in maxdims
+    */
+    std::vector<hsize_t> extents(hsize_t *maxdims = NULL) const;
 
     /** returns true if dataspace is of scalar type */
     bool is_scalar() const;
@@ -123,7 +128,7 @@ public:
     bool is_simple() const;
 
     /**
-     * TODO : obsolete
+     * TODO : obsolete, use the method "select" in combination with slices
      * simple hyperslab selection, offsets and counts are given as some array
      * type (e.g., boost::array or std::vector)
      */
@@ -144,10 +149,13 @@ public:
     };
 
     /**
-     * slice/hyperslab selection (to replace select_hyperslab())
+     * slice/hyperslab selection interface
      */
     void select(slice const& selection, int mode = SET);
 
+    /**
+     * return the number of elements currently selected from the dataspace
+     */
     hssize_t get_select_npoints() const;
 
 private:
@@ -248,6 +256,16 @@ boost::array<hsize_t, N> dataspace::extents(hsize_t *maxdims) const
     return dims;
 }
 
+std::vector<hsize_t> dataspace::extents(hsize_t *maxdims) const
+{
+    std::vector<hsize_t> dims( rank() );
+    if (H5Sget_simple_extent_dims(hid_, &*dims.begin(), maxdims) < 0) {
+        throw error("determining extents");
+    }
+    return dims;
+}
+
+
 bool dataspace::is_scalar() const
 {
     if (!valid()) {
@@ -264,33 +282,24 @@ bool dataspace::is_simple() const
     return H5Sget_simple_extent_type(hid_) == H5S_SIMPLE;
 }
 
+// --- routine is obsolete
 template <typename ArrayType>
 void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count)
 {
     if (!valid())
-    {
         throw error("invalid dataspace");
-    }
     if (offset.size() != count.size() || offset.size() != rank())
-    {
         throw error("hyperslab specification has mismatching size");
-    }
-
-    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0) {
+    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0)
         throw error("selecting hyperslab");
-    }
 }
 
 void dataspace::select(slice const& selection, int mode)
 {
     if (!valid())
-    {
         throw error("invalid dataspace");
-    }
     if (selection.rank() != rank())
-    {
         throw error("dataspace and slice have mismatching rank");
-    }
     if (H5Sselect_hyperslab(    hid_
                                  , (H5S_seloper_t)mode
                                  , &*selection.get_offset().begin()
@@ -305,9 +314,7 @@ void dataspace::select(slice const& selection, int mode)
 hssize_t dataspace::get_select_npoints() const
 {
     if (!valid())
-    {
         throw error("invalid dataspace");
-    }
     return H5Sget_select_npoints(hid_);
 }
 

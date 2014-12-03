@@ -156,6 +156,10 @@ write_dataset(dataset& dset, T const& value, slice const& file_slice)
 
 
 
+/**
+ * Read multiarray data from an existing dataset specified by location and name.
+ * The vector data is resized and overwritten internally.
+ */
 template <typename h5xxObject, typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
 read_dataset(h5xxObject const& object, std::string const& name, T & array)
@@ -164,6 +168,10 @@ read_dataset(h5xxObject const& object, std::string const& name, T & array)
     read_dataset(dset, array);
 }
 
+/**
+ * Read multiarray data from an existing dataset.
+ * The vector data is resized and overwritten internally.
+ */
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
 read_dataset(dataset & data_set, T & array)
@@ -196,6 +204,11 @@ read_dataset(dataset & data_set, T & array)
 }
 
 
+/**
+ * Read multiarray data from an existing dataset specified by location and name,
+ * a slice specifies the data locations to be read in file space.  The array
+ * is not resized internally, the user must resize it in advance to fit the slice.
+ */
 template <typename h5xxObject, typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
 read_dataset(h5xxObject const& object, std::string const& name, T & array, slice const& file_slice)
@@ -204,6 +217,11 @@ read_dataset(h5xxObject const& object, std::string const& name, T & array, slice
     read_dataset(data_set, array, file_slice);
 }
 
+/**
+ * Read multiarray data from an existing dataset, a slice specifies the data
+ * locations to be read in file space.  The array is not resized internally, the
+ * user must resize it in advance to fit the slice.
+ */
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
 read_dataset(dataset & data_set, T & array, slice const& file_slice)
@@ -217,6 +235,12 @@ read_dataset(dataset & data_set, T & array, slice const& file_slice)
     read_dataset(data_set, array, memspace, filespace);
 }
 
+/**
+ * Read multiarray data from an existing dataset, dataspace objects for both
+ * memory and file allow to specify the locations of the data.  The array is
+ * not resized internally, the user must resize it in advance to fit the
+ * dataspace.
+ */
 template <typename T>
 typename boost::enable_if<is_multi_array<T>, void>::type
 read_dataset(dataset & data_set, T & array, dataspace const& memspace, dataspace const& filespace)
@@ -228,7 +252,7 @@ read_dataset(dataset & data_set, T & array, dataspace const& memspace, dataspace
 //    }
 
     if (static_cast<hsize_t>(filespace.get_select_npoints()) > array.num_elements())
-        H5XX_THROW("target array does not provide enough space to store slice");
+        H5XX_THROW("target array does not provide enough space to store selected dataspace elements");
 
     hid_t mem_space_id = memspace.hid(); //H5S_ALL;
     hid_t file_space_id = filespace.hid();

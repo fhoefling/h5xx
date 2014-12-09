@@ -151,7 +151,7 @@ public:
     /**
      * slice/hyperslab selection interface
      */
-    void select(slice const& selection, int mode = SET);
+    void select(slice const& _slice, int mode = SET);
 
     /**
      * return the number of elements currently selected from the dataspace
@@ -294,10 +294,16 @@ void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count
         throw error("selecting hyperslab");
 }
 
-void dataspace::select(slice const& selection, int mode)
+void dataspace::select(slice const& _slice, int mode)
 {
     if (!valid())
         throw error("invalid dataspace");
+    // --- to interpret the slicing string inside "slice" we need the dataspace's extents
+    //     and, unfortunately, a non-const local copy
+    slice selection = _slice;
+    if (selection.has_string()) {
+        selection.parse_string( extents() );
+    }
     if (selection.rank() != rank())
         throw error("dataspace and slice have mismatching rank");
     if (H5Sselect_hyperslab(    hid_

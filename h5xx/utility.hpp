@@ -52,9 +52,7 @@
         std::string message; \
         message.append(__FILE__); \
         message.append(":"); \
-        std::ostringstream oss; \
-        oss << __LINE__; \
-        message.append(oss.str()); \
+        message.append(num2str(__LINE__)); \
         message.append(":"); \
         message.append(__FUNCTION__); \
         message.append("(): "); \
@@ -434,6 +432,56 @@ T move(T& right)
     return left;
 }
 
+
+/**
+ * Convert an object, typically a number, to a std::string.
+ */
+template <typename T>
+inline std::string num2str(T const& num)
+{
+    std::ostringstream oss;
+    oss << num;
+    return oss.str();
+}
+
+/**
+ * Convert a string to another object, typically to a number.
+ */
+template <typename T>
+inline T str2num(std::string const& str)
+{
+    std::istringstream iss(str);
+    T num;
+    iss >> num;
+    return num;
+}
+
+/**
+ * Separate a string by a separator and return a vector of substrings.
+ */
+std::vector<std::string> chop(std::string const& str, std::string const& sep)
+{
+    std::vector<std::string> items;
+    std::string::size_type begIdx, endIdx;
+    begIdx = str.find_first_not_of(sep);
+    while (begIdx != std::string::npos) {
+        endIdx = str.find_first_of(sep, begIdx);
+        if (endIdx == std::string::npos) {
+            endIdx = str.length();
+        }
+        std::string buf; buf.clear();
+        for (std::string::size_type i = begIdx; i<endIdx; ++i) {
+            buf.push_back(str[i]);
+        }
+        items.push_back(buf);
+        begIdx = str.find_first_not_of (sep, endIdx);
+    }
+    return items;
+}
+
 } // namespace h5xx
+
+
+
 
 #endif /* ! H5XX_UTILITY_HPP */

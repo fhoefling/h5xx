@@ -19,7 +19,9 @@
  */
 
 #include <h5xx/h5xx.hpp>
+#include <boost/multi_array.hpp>
 #include <iostream>
+#include <vector>
 #include <cstdio>
 
 typedef boost::multi_array<int, 2> array_2d_t;

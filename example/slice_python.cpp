@@ -19,12 +19,29 @@
  */
 
 #include <h5xx/h5xx.hpp>
+#include <boost/array.hpp>
+#include <boost/multi_array.hpp>
 #include <iostream>
+#include <vector>
 #include <cstdio>
 
 const int NI=10;
+const int NJ=NI;
 
 typedef boost::array<int, NI> array_t;
+typedef boost::multi_array<int, 2> array_2d_t;
+
+void print_array(array_2d_t const& array)
+{
+    for (unsigned int j = 0; j < array.shape()[1]; j++)
+    {
+        for (unsigned int i = 0; i < array.shape()[0]; i++)
+        {
+            printf("%2d ", array[j][i]);
+        }
+        printf("\n");
+    }
+}
 
 template <typename ArrayT>
 void print_array(ArrayT const& array)
@@ -36,10 +53,11 @@ void print_array(ArrayT const& array)
     printf("\n");
 }
 
+
 // --- run some tests of the string slicing notation
 void write_int_data(std::string const& filename, array_t const& array)
 {
-    h5xx::file file(filename, h5xx::file::trunc);
+    h5xx::file file(filename, h5xx::file::out);
     std::string name;
 
     {
@@ -60,6 +78,8 @@ void write_int_data(std::string const& filename, array_t const& array)
         h5xx::write_dataset(file, name, data, slice);
     }
 
+
+    // --- below, we test the Python/NumPy-like slicing notation ---
     {
         // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 2";
@@ -175,6 +195,120 @@ void write_int_data(std::string const& filename, array_t const& array)
 }
 
 
+
+void write_2D_int_data(std::string const& filename, array_2d_t const& array)
+{
+    h5xx::file file(filename, h5xx::file::out);
+    std::string name;
+
+    // --- write a 2x2 patch in the 2D dataset using a slice/hyperslab
+    {
+        // --- create dataset and fill it with the default array data (positive values)
+        name = "2D integer array";
+        h5xx::create_dataset(file, name, array);
+        h5xx::write_dataset(file, name, array);
+
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
+//        std::vector<int> offset; int offset_raw[2] = {4,4}; offset.assign(offset_raw, offset_raw + 2);
+//        std::vector<int> count;  int count_raw[2] = {2,2}; count.assign(count_raw, count_raw + 2);
+//        h5xx::slice slice(offset, count);
+        h5xx::slice slice("4:6,4:6");
+
+        // --- data to be written to the slice (negative values)
+        boost::array<int,4> data = {{-1,-2,-3,-4}};
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
+    }
+
+    // --- overwrite part of the third row of the 2D dataset using a slice/hyperslab
+    {
+        // --- create dataset and fill it with the default array data (positive values)
+        name = "2D integer array 1";
+        h5xx::create_dataset(file, name, array);
+        h5xx::write_dataset(file, name, array);
+
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
+        h5xx::slice slice("2,4:8");
+
+        // --- data to be written to the slice (negative values)
+        boost::array<int,4> data = {{-1,-2,-3,-4}};
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
+    }
+
+    // --- overwrite part of the third column of the 2D dataset using a slice/hyperslab
+    {
+        // --- create dataset and fill it with the default array data (positive values)
+        name = "2D integer array 2";
+        h5xx::create_dataset(file, name, array);
+        h5xx::write_dataset(file, name, array);
+
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
+        h5xx::slice slice("4:8,2");
+
+        // --- data to be written to the slice (negative values)
+        boost::array<int,4> data = {{-1,-2,-3,-4}};
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
+    }
+
+    // --- overwrite the fifth row of the 2D dataset using a slice/hyperslab
+    {
+        // --- create dataset and fill it with the default array data (positive values)
+        name = "2D integer array 3";
+        h5xx::create_dataset(file, name, array);
+        h5xx::write_dataset(file, name, array);
+
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
+        h5xx::slice slice("4,:");
+
+        // --- data to be written to the slice
+        boost::array<int,10> data = {{-1,-2,-3,-4,-5,-6,-7,-8,-9,0}};
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
+    }
+
+    // --- overwrite the fifth column of the 2D dataset using a slice/hyperslab
+    {
+        // --- create dataset and fill it with the default array data (positive values)
+        name = "2D integer array 4";
+        h5xx::create_dataset(file, name, array);
+        h5xx::write_dataset(file, name, array);
+
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
+        h5xx::slice slice(":,4");
+
+        // --- data to be written to the slice
+        boost::array<int,10> data = {{-1,-2,-3,-4,-5,-6,-7,-8,-9,0}};
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
+    }
+
+    // --- overwrite a strided pattern of the 2D dataset using a slice/hyperslab
+    {
+        // --- create dataset and fill it with the default array data (positive values)
+        name = "2D integer array 5";
+        h5xx::create_dataset(file, name, array);
+        h5xx::write_dataset(file, name, array);
+
+        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
+        h5xx::slice slice("4:6,2:7:2");
+
+        // --- data to be written to the slice
+        boost::array<int,6> data = {{-1,-2,-3,-4,-5,-6}};
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
+    }
+}
+
+
+
 void read_int_data(std::string const& filename)
 {
     h5xx::file file(filename, h5xx::file::in);
@@ -195,9 +329,10 @@ void read_int_data(std::string const& filename)
         boost::array<int,6> data;
 
         // --- create a slice object (aka hyperslab) to specify the patch to be read from the dataset
-        boost::array<int,1> offset; offset[0] = 2;
-        boost::array<int,1> count; count[0] = 6;
-        h5xx::slice slice(offset, count);
+//        boost::array<int,1> offset; offset[0] = 2;
+//        boost::array<int,1> count; count[0] = 6;
+//        h5xx::slice slice(offset, count);
+        h5xx::slice slice("2:8");
 
         h5xx::read_dataset(file, name, data, slice);
 
@@ -213,7 +348,11 @@ int main(int argc, char** argv)
     std::string filename = argv[0];
     filename.append(".h5");
 
-//    // --- do a few demos/tests using integers
+    {
+        h5xx::file file(filename, h5xx::file::trunc);
+    }
+
+    // --- do a few 1D tests using integers
     {
         array_t array;
         for (int i = 0; i < NI; i++)
@@ -224,26 +363,18 @@ int main(int argc, char** argv)
         read_int_data(filename);
     }
 
+    // --- 2D tests
     {
-//        {
-//            std::vector<hsize_t> extents; extents.push_back(4);
-//            h5xx::slice mySlice("1:3");
-//            mySlice.parse_string(extents);
-//        }
-//        {
-//            std::vector<hsize_t> extents; extents.push_back(4);
-//            h5xx::slice mySlice(":2");
-//            mySlice.parse_string(extents);
-//        }
-//        {
-//            std::vector<hsize_t> extents; extents.push_back(4);
-//            h5xx::slice mySlice("::3");
-//            mySlice.parse_string(extents);
-//        }
-//        {
-//            h5xx::slice mySlice("1,2,4");
-//            mySlice.parse_string();
-//        }
+        array_2d_t array(boost::extents[NJ][NI]);
+        {
+            const int nelem = NI*NJ;
+            int data[nelem];
+            for (int i = 0; i < nelem; i++)
+                data[i] = i;
+            array.assign(data, data + nelem);
+        }
+
+        write_2D_int_data(filename, array);
     }
 
     return 0;

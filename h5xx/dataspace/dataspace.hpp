@@ -22,6 +22,8 @@
 #ifndef H5XX_DATASPACE_DATASPACE_HPP
 #define H5XX_DATASPACE_DATASPACE_HPP
 
+#include <vector>
+
 #include <boost/array.hpp>
 #include <boost/multi_array.hpp>
 #include <boost/type_traits.hpp>
@@ -127,13 +129,13 @@ public:
     /** returns true if dataspace is of simple type */
     bool is_simple() const;
 
-    /**
-     * TODO : obsolete, use the method "select" in combination with slices
-     * simple hyperslab selection, offsets and counts are given as some array
-     * type (e.g., boost::array or std::vector)
-     */
-    template <typename ArrayType>
-    void select_hyperslab(ArrayType const& offset, ArrayType const& count);
+//    /**
+//     * TODO : obsolete, use the method "select" in combination with slices
+//     * simple hyperslab selection, offsets and counts are given as some array
+//     * type (e.g., boost::array or std::vector)
+//     */
+//    template <typename ArrayType>
+//    void select_hyperslab(ArrayType const& offset, ArrayType const& count);
 
     /**
      * flags for slice (hyperslab) selection
@@ -282,17 +284,17 @@ bool dataspace::is_simple() const
     return H5Sget_simple_extent_type(hid_) == H5S_SIMPLE;
 }
 
-// --- routine is obsolete
-template <typename ArrayType>
-void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count)
-{
-    if (!valid())
-        throw error("invalid dataspace");
-    if (offset.size() != count.size() || offset.size() != rank())
-        throw error("hyperslab specification has mismatching size");
-    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0)
-        throw error("selecting hyperslab");
-}
+//// --- routine is obsolete
+//template <typename ArrayType>
+//void dataspace::select_hyperslab(ArrayType const& offset, ArrayType const& count)
+//{
+//    if (!valid())
+//        throw error("invalid dataspace");
+//    if (offset.size() != count.size() || offset.size() != rank())
+//        throw error("hyperslab specification has mismatching size");
+//    if (H5Sselect_hyperslab(hid_, H5S_SELECT_SET, &offset[0], NULL, &count[0], NULL) < 0)
+//        throw error("selecting hyperslab");
+//}
 
 void dataspace::select(slice const& _slice, int mode)
 {

@@ -19,7 +19,9 @@
  */
 
 #include <h5xx/h5xx.hpp>
+#include <boost/multi_array.hpp>
 #include <iostream>
+#include <vector>
 #include <cstdio>
 
 typedef boost::multi_array<int, 2> array_2d_t;
@@ -102,7 +104,7 @@ void read_int_data(std::string const& filename)
         std::vector<int> count;  int count_raw[2] = {4,4}; count.assign(count_raw, count_raw + 2);
         h5xx::slice slice(offset, count);
 
-        // --- allocate memory for the slice (user's responsibility, this is not done internally)
+        // --- allocate memory for the slice (user's responsibility, is not done internally)
         array.resize(count);
 
         h5xx::read_dataset(file, name, array, slice);
@@ -115,7 +117,6 @@ void read_int_data(std::string const& filename)
     // read a 2D subset of the dataset into a 1D array
     {
         array_1d_t array;
-//        std::cout << array.num_elements() << std::endl; // 0
 
         // --- create a slice object (aka hyperslab) to specify the patch to be read from the dataset
         std::vector<int> offset; int offset_raw[2] = {3,3}; offset.assign(offset_raw, offset_raw + 2);
@@ -126,7 +127,6 @@ void read_int_data(std::string const& filename)
         std::vector<int> total_count;
         total_count.push_back(count[0]*count[1]);
         array.resize(total_count);
-//        std::cout << array.num_elements() << std::endl; // 16
 
         h5xx::read_dataset(file, name, array, slice);
 

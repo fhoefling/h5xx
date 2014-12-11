@@ -35,6 +35,8 @@
 #include <h5xx/policy/string.hpp>
 #include <h5xx/utility.hpp>
 
+#include <vector>
+
 namespace h5xx {
 
 /**

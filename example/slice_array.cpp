@@ -19,7 +19,9 @@
  */
 
 #include <h5xx/h5xx.hpp>
+#include <boost/array.hpp>
 #include <iostream>
+#include <vector>
 #include <cstdio>
 
 const int NI=10;

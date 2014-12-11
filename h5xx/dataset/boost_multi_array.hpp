@@ -35,6 +35,7 @@
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/and.hpp>
 #include <boost/multi_array.hpp>
+#include <boost/array.hpp>
 #include <boost/type_traits.hpp>
 #include <boost/utility/enable_if.hpp>
 

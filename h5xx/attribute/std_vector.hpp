@@ -31,7 +31,6 @@
 #include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
 
-
 #include <boost/array.hpp>
 #include <boost/lexical_cast.hpp>
 #include <boost/mpl/and.hpp>

@@ -17,6 +17,10 @@
  * along with this program.  If not, see <http://www.gnu.org/licenses/>.
  */
 
+
+// NOTE : Obsolete, use dataset with policy classes!
+
+
 #ifndef H5XX_CHUNKED_DATASET_HPP
 #define H5XX_CHUNKED_DATASET_HPP
 

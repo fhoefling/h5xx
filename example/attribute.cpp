@@ -34,8 +34,6 @@ void write_attribute(std::string const& filename, array_t const& array)
 
     // attach array data as attribute to group
     h5xx::write_attribute(group, "integer array", array);
-
-    // file and group are closed when 'f' and 'g' go out of scope
 }
 
 void read_attribute(std::string const& filename)

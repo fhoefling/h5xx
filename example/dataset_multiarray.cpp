@@ -83,34 +83,34 @@ void write_int_data(std::string const& filename, array_2d_t const& array)
         h5xx::write_dataset(file, name, array);
     }
 
-    // (3) overwrite part of dataset (1) using a hyperslab
-    //     UPDATE : obsolete, see slice.cpp
-    {
-        name = "integer array";
-
-        h5xx::dataset dataset(file, name);
-        h5xx::dataspace filespace(dataset);
-//        std::cout << "points contained in dataspace \"filespace\" before hyperslab selection : "
-//                << filespace.get_select_npoints() << std::endl;
-
-        boost::array<hsize_t,2> offset = {{4,4}};
-        boost::array<hsize_t,2> count = {{2,2}};
-        filespace.select_hyperslab(offset, count);
-//        std::cout << "points contained in dataspace \"filespace\" after hyperslab selection : "
-//                        << filespace.get_select_npoints() << std::endl;
-
-        // construct a 2x2 array and fill it with negative numbers
-        boost::array<size_t, 2> hyperslab_extents = {{2,2}};
-        array_2d_t hyperslab_data(hyperslab_extents);
-        const int nelem = 4;
-        int data[nelem];
-        for (int i = 0; i < nelem; i++)
-            data[i] = -1*(i+1);
-        hyperslab_data.assign(data, data + nelem);
-        h5xx::dataspace memspace = h5xx::create_dataspace(hyperslab_data);
-
-        h5xx::write_dataset(dataset, hyperslab_data, memspace, filespace);
-    }
+//    // (3) overwrite part of dataset (1) using a hyperslab
+//    //     UPDATE : obsolete, see slice_*.cpp
+//    {
+//        name = "integer array";
+//
+//        h5xx::dataset dataset(file, name);
+//        h5xx::dataspace filespace(dataset);
+////        std::cout << "points contained in dataspace \"filespace\" before hyperslab selection : "
+////                << filespace.get_select_npoints() << std::endl;
+//
+//        boost::array<hsize_t,2> offset = {{4,4}};
+//        boost::array<hsize_t,2> count = {{2,2}};
+//        filespace.select_hyperslab(offset, count);
+////        std::cout << "points contained in dataspace \"filespace\" after hyperslab selection : "
+////                        << filespace.get_select_npoints() << std::endl;
+//
+//        // construct a 2x2 array and fill it with negative numbers
+//        boost::array<size_t, 2> hyperslab_extents = {{2,2}};
+//        array_2d_t hyperslab_data(hyperslab_extents);
+//        const int nelem = 4;
+//        int data[nelem];
+//        for (int i = 0; i < nelem; i++)
+//            data[i] = -1*(i+1);
+//        hyperslab_data.assign(data, data + nelem);
+//        h5xx::dataspace memspace = h5xx::create_dataspace(hyperslab_data);
+//
+//        h5xx::write_dataset(dataset, hyperslab_data, memspace, filespace);
+//    }
 }
 
 // --- try various storage layouts and filters, integer
@@ -218,52 +218,50 @@ void read_int_data(std::string const& filename)
     {
         array_2d_t array;
         h5xx::read_dataset(file, name, array);
-        printf("original integer array as read from file, negative number patch was written using a hyperslab\n");
-        print_array(array);
-        printf("\n");
-    }
-
-    // (2) select a 2D hyperslab and read it into a 2x2 array
-    //     UPDATE : obsolete, see slice.cpp
-    boost::array<hsize_t,2> offset = {{1,1}};
-    boost::array<hsize_t,2> count = {{2,2}};
-    {
-        h5xx::dataset dataset(file, name);
-        // create file dataspace from dataset and select hyperslab from the dataset
-        h5xx::dataspace filespace(dataset);
-        filespace.select_hyperslab(offset, count);
-
-        // create memory dataspace
-        boost::array<hsize_t, 2> extents = {{2,2}};
-        h5xx::dataspace memspace(extents);
-
-        // allocate memory for the data
-        array_2d_t array;
-        array.resize(extents);
-
-        h5xx::read_dataset(dataset, array, memspace, filespace);
-        printf("hyperslab of the integer array, copied to an array w/ reduced extents\n");
-        print_array(array);
-        printf("\n");
-    }
-
-    // (3) select a 2D hyperslab and read it into a 1D array
-    //     UPDATE : obsolete, see slice.cpp
-    {
-        h5xx::dataset dataset(file, name);
-        h5xx::dataspace filespace(dataset);
-        filespace.select_hyperslab(offset, count);
-
-        boost::array<hsize_t, 1> extents_1D = {{4}};
-        h5xx::dataspace memspace_1D(extents_1D);
-
-        array_1d_t array;
-        array.resize(extents_1D);
-
-        h5xx::read_dataset(dataset, array, memspace_1D, filespace);
-        printf("the same 2D hyperslab of the integer array, copied to a 1D array\n");
         print_array(array);
     }
+
+//    // (2) select a 2D hyperslab and read it into a 2x2 array
+//    //     UPDATE : obsolete, see slice_*.cpp
+//    boost::array<hsize_t,2> offset = {{1,1}};
+//    boost::array<hsize_t,2> count = {{2,2}};
+//    {
+//        h5xx::dataset dataset(file, name);
+//        // create file dataspace from dataset and select hyperslab from the dataset
+//        h5xx::dataspace filespace(dataset);
+//        filespace.select_hyperslab(offset, count);
+//
+//        // create memory dataspace
+//        boost::array<hsize_t, 2> extents = {{2,2}};
+//        h5xx::dataspace memspace(extents);
+//
+//        // allocate memory for the data
+//        array_2d_t array;
+//        array.resize(extents);
+//
+//        h5xx::read_dataset(dataset, array, memspace, filespace);
+//        printf("hyperslab of the integer array, copied to an array w/ reduced extents\n");
+//        print_array(array);
+//        printf("\n");
+//    }
+//
+//    // (3) select a 2D hyperslab and read it into a 1D array
+//    //     UPDATE : obsolete
+//    {
+//        h5xx::dataset dataset(file, name);
+//        h5xx::dataspace filespace(dataset);
+//        filespace.select_hyperslab(offset, count);
+//
+//        boost::array<hsize_t, 1> extents_1D = {{4}};
+//        h5xx::dataspace memspace_1D(extents_1D);
+//
+//        array_1d_t array;
+//        array.resize(extents_1D);
+//
+//        h5xx::read_dataset(dataset, array, memspace_1D, filespace);
+//        printf("the same 2D hyperslab of the integer array, copied to a 1D array\n");
+//        print_array(array);
+//    }
 }
 
 // --- try various storage layouts and filters, double precision

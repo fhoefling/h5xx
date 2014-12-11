@@ -38,12 +38,8 @@ namespace h5xx {
 
 class slice {
 public:
-//    slice();
-
-//    ~slice();
-
     /**
-     * Slice constructor which accepts a string with a numpy-like slicing notation.
+     * Slice constructor accepting a string with a numpy-like slicing notation.
      */
     slice(const std::string & slice_str);
 
@@ -74,7 +70,7 @@ public:
 
     /**
      * Fill offset_, count_, stride_, block_ arrays based on the slice string.
-     * When ranges ":" are used, the extents of the dataset must be passed.
+     * When ranges ":" are used, the extents of the dataset must be given.
      */
     void parse_string(const std::vector<hsize_t> & extents = std::vector<hsize_t>());
 
@@ -102,10 +98,6 @@ slice::slice(const std::string & slice_str)
 {
     slice_str_ = slice_str;
 }
-
-//slice::~slice()
-//{
-//}
 
 
 //template <class ArrayType>
@@ -306,7 +298,7 @@ void slice::parse_string(const std::vector<hsize_t> & extents)
 
 
 /**
- * compile regular expression handle w/ error checking
+ * compile regular expression handle. with error checking
  */
 void slice::prepare_rex(regex_t & rex, std::string const& str)
 {

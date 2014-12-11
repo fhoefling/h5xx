@@ -222,9 +222,9 @@ template <typename T>
 inline typename boost::enable_if< boost::mpl::and_< is_array<T>, boost::is_fundamental<typename T::value_type> >, void>::type
 read_dataset(dataset & data_set, T & value, dataspace const& memspace, dataspace const& filespace)
 {
-    // Assure that the vector has at least the capacity of the dataspace selection.
+    // Assure that the array has at least the capacity of the dataspace selection.
     if (static_cast<hsize_t>(filespace.get_select_npoints()) > value.size())
-        H5XX_THROW("target vector does not provide enough space to store slice");
+        H5XX_THROW("target array does not provide enough space to store slice");
 
     typedef typename T::value_type value_type;
     hid_t type_id = ctype<value_type>::hid();

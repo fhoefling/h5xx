@@ -66,9 +66,9 @@ void write_int_data(std::string const& filename, array_t const& array)
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
-        boost::array<int,1> offset; offset[0] = 4;
-        boost::array<int,1> count; count[0] = 2;
+        // --- create a slice object (aka hyperslab) in the conventional way
+        boost::array<int,1> offset = {{4}};
+        boost::array<int,1> count = {{2}};
         h5xx::slice slice(offset, count);
 
         // --- data to be written to the slice (negative values)
@@ -79,119 +79,90 @@ void write_int_data(std::string const& filename, array_t const& array)
     }
 
 
-    // --- below, we test the Python/NumPy-like slicing notation ---
+    // --- in the code blocks below, we test the Python/NumPy-like slicing notation ---
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 2";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("4:5");
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,1> data = {{-1}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 3";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("2:6:2");
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,2> data = {{-1,-2}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 4";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice(":");
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,NI> data = {{-1,-2,-3,-4,-5,-6,-7,-8,-9,0}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 5";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice(":5"); // select all elements up to index 5, ie 0,1,2,3,4
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,5> data = {{-1,-2,-3,-4,-5}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 6";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("5:"); // select all elements starting from index 5, ie 5,6,7,8,9
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,5> data = {{-1,-2,-3,-4,-5}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 7";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("::2"); // select every second element, ie 0,2,4,6,8
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,5> data = {{-1,-2,-3,-4,-5}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "integer array 8";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("::3"); // select every second element, ie 0,3,6,9
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,4> data = {{-1,-2,-3,-4}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
-
 }
 
 
@@ -203,106 +174,82 @@ void write_2D_int_data(std::string const& filename, array_2d_t const& array)
 
     // --- write a 2x2 patch in the 2D dataset using a slice/hyperslab
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "2D integer array";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
 //        std::vector<int> offset; int offset_raw[2] = {4,4}; offset.assign(offset_raw, offset_raw + 2);
 //        std::vector<int> count;  int count_raw[2] = {2,2}; count.assign(count_raw, count_raw + 2);
 //        h5xx::slice slice(offset, count);
         h5xx::slice slice("4:6,4:6");
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,4> data = {{-1,-2,-3,-4}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     // --- overwrite part of the third row of the 2D dataset using a slice/hyperslab
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "2D integer array 1";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("2,4:8");
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,4> data = {{-1,-2,-3,-4}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     // --- overwrite part of the third column of the 2D dataset using a slice/hyperslab
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "2D integer array 2";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("4:8,2");
 
-        // --- data to be written to the slice (negative values)
         boost::array<int,4> data = {{-1,-2,-3,-4}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     // --- overwrite the fifth row of the 2D dataset using a slice/hyperslab
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "2D integer array 3";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("4,:");
 
-        // --- data to be written to the slice
         boost::array<int,10> data = {{-1,-2,-3,-4,-5,-6,-7,-8,-9,0}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     // --- overwrite the fifth column of the 2D dataset using a slice/hyperslab
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "2D integer array 4";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice(":,4");
 
-        // --- data to be written to the slice
         boost::array<int,10> data = {{-1,-2,-3,-4,-5,-6,-7,-8,-9,0}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 
     // --- overwrite a strided pattern of the 2D dataset using a slice/hyperslab
     {
-        // --- create dataset and fill it with the default array data (positive values)
         name = "2D integer array 5";
         h5xx::create_dataset(file, name, array);
         h5xx::write_dataset(file, name, array);
 
-        // --- create a slice object (aka hyperslab) to specify the location in the dataset to be overwritten
         h5xx::slice slice("4:6,2:7:2");
 
-        // --- data to be written to the slice
         boost::array<int,6> data = {{-1,-2,-3,-4,-5,-6}};
 
-        // --- overwrite part of the dataset as specified by slice
         h5xx::write_dataset(file, name, data, slice);
     }
 }

@@ -24,27 +24,27 @@
 
 namespace h5xx {
 
-template <typename Exception>
-class no_autoprint : public H5::Exception
-{
-public:
-    no_autoprint()
-    {
-        H5::Exception::getAutoPrint(func, &client_data);
-        H5::Exception::dontPrint();
-    }
-/*
-    ~no_autoprint()
-    {
-        H5::Exception::setAutoPrint(func, client_data);
-    }
-*/
-private:
-    H5E_auto_t func;
-    void* client_data;
-};
-
-#define H5XX_NO_AUTO_PRINT(exception) h5xx::no_autoprint<exception> __no_autoprint;
+//template <typename Exception>
+//class no_autoprint : public H5::Exception
+//{
+//public:
+//    no_autoprint()
+//    {
+//        H5::Exception::getAutoPrint(func, &client_data);
+//        H5::Exception::dontPrint();
+//    }
+///*
+//    ~no_autoprint()
+//    {
+//        H5::Exception::setAutoPrint(func, client_data);
+//    }
+//*/
+//private:
+//    H5E_auto_t func;
+//    void* client_data;
+//};
+//
+//#define H5XX_NO_AUTO_PRINT(exception) h5xx::no_autoprint<exception> __no_autoprint;
 
 } // namespace h5xx
 

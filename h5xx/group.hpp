@@ -169,40 +169,40 @@ inline bool exists_group(group const& grp, std::string const& name)
     return (hid > 0);
 }
 
-inline bool exists_group(H5::CommonFG const& fg, std::string const& name)
-{
-    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
-    hid_t hid;
-    H5E_BEGIN_TRY {
-        hid = H5Gopen(loc.getId(), name.c_str(), H5P_DEFAULT);
-        if (hid > 0) {
-            H5Gclose(hid);
-        }
-    } H5E_END_TRY
-    return (hid > 0);
-}
+//inline bool exists_group(H5::CommonFG const& fg, std::string const& name)
+//{
+//    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
+//    hid_t hid;
+//    H5E_BEGIN_TRY {
+//        hid = H5Gopen(loc.getId(), name.c_str(), H5P_DEFAULT);
+//        if (hid > 0) {
+//            H5Gclose(hid);
+//        }
+//    } H5E_END_TRY
+//    return (hid > 0);
+//}
 
 /**
  * open or create HDF5 group
  *
  * This function creates missing intermediate groups.
  */
-inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path)
-{
-    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
-    hid_t group_id;
-    H5E_BEGIN_TRY {
-        group_id = H5Gopen(loc.getId(), path.c_str(), H5P_DEFAULT);
-    } H5E_END_TRY
-    if (group_id < 0) {
-        H5::PropList pl = create_intermediate_group_property();
-        group_id = H5Gcreate(loc.getId(), path.c_str(), pl.getId(), H5P_DEFAULT, H5P_DEFAULT);
-    }
-    if (group_id < 0) {
-        throw error("failed to create group \"" + path + "\"");
-    }
-    return H5::Group(group_id);
-}
+//inline H5::Group open_group(H5::CommonFG const& fg, std::string const& path)
+//{
+//    H5::IdComponent const& loc(dynamic_cast<H5::IdComponent const&>(fg));
+//    hid_t group_id;
+//    H5E_BEGIN_TRY {
+//        group_id = H5Gopen(loc.getId(), path.c_str(), H5P_DEFAULT);
+//    } H5E_END_TRY
+//    if (group_id < 0) {
+//        H5::PropList pl = create_intermediate_group_property();
+//        group_id = H5Gcreate(loc.getId(), path.c_str(), pl.getId(), H5P_DEFAULT, H5P_DEFAULT);
+//    }
+//    if (group_id < 0) {
+//        throw error("failed to create group \"" + path + "\"");
+//    }
+//    return H5::Group(group_id);
+//}
 
 inline hid_t open_group(hid_t loc_id, std::string const& path)
 {

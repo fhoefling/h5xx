@@ -141,15 +141,15 @@ inline std::string get_name(h5xxObject const& obj)
     return get_name(obj.hid());
 }
 
-/**
- * hard link HDF5 object into the given group with given name
- */
-inline void link(H5::H5Object const& object, H5::Group const& group, std::string const& name)
-{
-    if (0 > H5Lcreate_hard(object.getId(), ".", group.getId(), name.c_str(), H5P_DEFAULT, H5P_DEFAULT)) {
-        throw error("failed to link object");
-    }
-}
+///**
+// * hard link HDF5 object into the given group with given name
+// */
+//inline void link(H5::H5Object const& object, H5::Group const& group, std::string const& name)
+//{
+//    if (0 > H5Lcreate_hard(object.getId(), ".", group.getId(), name.c_str(), H5P_DEFAULT, H5P_DEFAULT)) {
+//        throw error("failed to link object");
+//    }
+//}
 
 /**
  * Data type is a fixed-size RandomAccessCollection
@@ -238,177 +238,177 @@ has_type(hid_t const& hid)
     return has_type<typename T::element>(hid);
 }
 
-/**
- * check data type of abstract dataset (dataset or attribute)
- */
+///**
+// * check data type of abstract dataset (dataset or attribute)
+// */
+//
+//template <typename T>
+//inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
+//has_type(H5::AbstractDs const& ds)
+//{
+//    return ds.getDataType() == ctype<T>::hid();
+//}
+//
+//template <typename T>
+//inline typename boost::enable_if<boost::is_same<T, std::string>, bool>::type
+//has_type(H5::AbstractDs const& ds)
+//{
+//    return ds.getTypeClass() == H5T_STRING;
+//}
+//
+//template <typename T>
+//inline typename boost::enable_if<boost::is_same<T, char const*>, bool>::type
+//has_type(H5::AbstractDs const& ds)
+//{
+//    return has_type<std::string>(ds);
+//}
+//
+//template <typename T>
+//inline typename boost::enable_if<is_vector<T>, bool>::type
+//has_type(H5::AbstractDs const& ds)
+//{
+//    return has_type<typename T::value_type>(ds);
+//}
+//
+//template <typename T>
+//inline typename boost::enable_if<is_array<T>, bool>::type
+//has_type(H5::AbstractDs const& ds)
+//{
+//    return has_type<typename T::value_type>(ds);
+//}
+//
+//template <typename T>
+//inline typename boost::enable_if<is_multi_array<T>, bool>::type
+//has_type(H5::AbstractDs const& ds)
+//{
+//    return has_type<typename T::element>(ds);
+//}
 
-template <typename T>
-inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
-has_type(H5::AbstractDs const& ds)
-{
-    return ds.getDataType() == ctype<T>::hid();
-}
-
-template <typename T>
-inline typename boost::enable_if<boost::is_same<T, std::string>, bool>::type
-has_type(H5::AbstractDs const& ds)
-{
-    return ds.getTypeClass() == H5T_STRING;
-}
-
-template <typename T>
-inline typename boost::enable_if<boost::is_same<T, char const*>, bool>::type
-has_type(H5::AbstractDs const& ds)
-{
-    return has_type<std::string>(ds);
-}
-
-template <typename T>
-inline typename boost::enable_if<is_vector<T>, bool>::type
-has_type(H5::AbstractDs const& ds)
-{
-    return has_type<typename T::value_type>(ds);
-}
-
-template <typename T>
-inline typename boost::enable_if<is_array<T>, bool>::type
-has_type(H5::AbstractDs const& ds)
-{
-    return has_type<typename T::value_type>(ds);
-}
-
-template <typename T>
-inline typename boost::enable_if<is_multi_array<T>, bool>::type
-has_type(H5::AbstractDs const& ds)
-{
-    return has_type<typename T::element>(ds);
-}
-
-/**
- * check if data space is scalar
- */
-inline bool is_scalar(H5::DataSpace const& dataspace)
-{
-    return dataspace.getSimpleExtentType() == H5S_SCALAR;
-}
-
-/**
- * check data space of abstract dataset (dataset or attribute)
- */
-inline bool has_scalar_space(H5::AbstractDs const& ds)
-{
-    return is_scalar(ds.getSpace());
-}
-
-/**
- * check rank of data space
- */
-template <hsize_t rank>
-inline bool has_rank(H5::DataSpace const& ds)
-{
-    return ds.isSimple() && ds.getSimpleExtentNdims() == rank;
-}
-
-/**
- * check data space rank of abstract dataset (dataset or attribute)
- */
-template <hsize_t rank>
-inline bool has_rank(H5::AbstractDs const& ds)
-{
-    return has_rank<rank>(ds.getSpace());
-}
-
-/**
- * check data space extent
- *
- * The parameter extra_rank specifies how many dimensions
- * are skipped. It should be 1 for multi-valued datasets
- * and 2 multi-valued datasets of std::vector.
- */
-template <typename T, hsize_t extra_rank>
-inline typename boost::enable_if<is_array<T>, bool>::type
-has_extent(H5::DataSpace const& dataspace)
-{
-    // check extent of last dimension
-    if (has_rank<1 + extra_rank>(dataspace)) {
-        hsize_t dim[1 + extra_rank];
-        dataspace.getSimpleExtentDims(dim);
-        return dim[extra_rank] == T::static_size;
-    }
-    else
-        return false;
-}
-
-template <typename T, hsize_t extra_rank>
-inline typename boost::enable_if<is_multi_array<T>, bool>::type
-has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape)
-{
-    enum { rank = T::dimensionality };
-    if (has_rank<rank + extra_rank>(dataspace)) {
-        boost::array<hsize_t, rank + extra_rank> dim;
-        dataspace.getSimpleExtentDims(dim.data());
-        return std::equal(dim.begin() + extra_rank, dim.end(), shape);
-    }
-    else
-        return false;
-}
-
-template <typename T>
-inline typename boost::enable_if<is_array<T>, bool>::type
-has_extent(H5::DataSpace const& dataspace)
-{
-    return has_extent<T, 0>(dataspace);
-}
-
-template <typename T>
-inline typename boost::enable_if<is_multi_array<T>, bool>::type
-has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape)
-{
-    return has_extent<T, 0>(dataspace);
-}
-
-/**
- * check data space extent of an H5::DataSet or H5::Attribute
- */
-template <typename T, hsize_t extra_rank>
-inline bool has_extent(H5::AbstractDs const& ds)
-{
-    return has_extent<T, extra_rank>(ds.getSpace());
-}
-
-template <typename T, hsize_t extra_rank>
-inline bool has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape)
-{
-    return has_extent<T, extra_rank>(ds.getSpace(), shape);
-}
-
-template <typename T>
-inline bool has_extent(H5::AbstractDs const& ds)
-{
-    return has_extent<T, 0>(ds.getSpace());
-}
-
-template <typename T>
-inline bool has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape)
-{
-    return has_extent<T, 0>(ds.getSpace(), shape);
-}
-
-/**
- * return total number of elements of a dataspace
- */
-inline hsize_t elements(H5::DataSpace const& dataspace)
-{
-    return dataspace.getSimpleExtentNpoints();
-}
-
-/**
- * return total number of data elements in a dataset or attribute
- */
-inline hsize_t elements(H5::AbstractDs const& ds)
-{
-    return elements(ds.getSpace());
-}
+///**
+// * check if data space is scalar
+// */
+//inline bool is_scalar(H5::DataSpace const& dataspace)
+//{
+//    return dataspace.getSimpleExtentType() == H5S_SCALAR;
+//}
+//
+///**
+// * check data space of abstract dataset (dataset or attribute)
+// */
+//inline bool has_scalar_space(H5::AbstractDs const& ds)
+//{
+//    return is_scalar(ds.getSpace());
+//}
+//
+///**
+// * check rank of data space
+// */
+//template <hsize_t rank>
+//inline bool has_rank(H5::DataSpace const& ds)
+//{
+//    return ds.isSimple() && ds.getSimpleExtentNdims() == rank;
+//}
+//
+///**
+// * check data space rank of abstract dataset (dataset or attribute)
+// */
+//template <hsize_t rank>
+//inline bool has_rank(H5::AbstractDs const& ds)
+//{
+//    return has_rank<rank>(ds.getSpace());
+//}
+//
+///**
+// * check data space extent
+// *
+// * The parameter extra_rank specifies how many dimensions
+// * are skipped. It should be 1 for multi-valued datasets
+// * and 2 multi-valued datasets of std::vector.
+// */
+//template <typename T, hsize_t extra_rank>
+//inline typename boost::enable_if<is_array<T>, bool>::type
+//has_extent(H5::DataSpace const& dataspace)
+//{
+//    // check extent of last dimension
+//    if (has_rank<1 + extra_rank>(dataspace)) {
+//        hsize_t dim[1 + extra_rank];
+//        dataspace.getSimpleExtentDims(dim);
+//        return dim[extra_rank] == T::static_size;
+//    }
+//    else
+//        return false;
+//}
+//
+//template <typename T, hsize_t extra_rank>
+//inline typename boost::enable_if<is_multi_array<T>, bool>::type
+//has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape)
+//{
+//    enum { rank = T::dimensionality };
+//    if (has_rank<rank + extra_rank>(dataspace)) {
+//        boost::array<hsize_t, rank + extra_rank> dim;
+//        dataspace.getSimpleExtentDims(dim.data());
+//        return std::equal(dim.begin() + extra_rank, dim.end(), shape);
+//    }
+//    else
+//        return false;
+//}
+//
+//template <typename T>
+//inline typename boost::enable_if<is_array<T>, bool>::type
+//has_extent(H5::DataSpace const& dataspace)
+//{
+//    return has_extent<T, 0>(dataspace);
+//}
+//
+//template <typename T>
+//inline typename boost::enable_if<is_multi_array<T>, bool>::type
+//has_extent(H5::DataSpace const& dataspace, typename T::size_type const* shape)
+//{
+//    return has_extent<T, 0>(dataspace);
+//}
+//
+///**
+// * check data space extent of an H5::DataSet or H5::Attribute
+// */
+//template <typename T, hsize_t extra_rank>
+//inline bool has_extent(H5::AbstractDs const& ds)
+//{
+//    return has_extent<T, extra_rank>(ds.getSpace());
+//}
+//
+//template <typename T, hsize_t extra_rank>
+//inline bool has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape)
+//{
+//    return has_extent<T, extra_rank>(ds.getSpace(), shape);
+//}
+//
+//template <typename T>
+//inline bool has_extent(H5::AbstractDs const& ds)
+//{
+//    return has_extent<T, 0>(ds.getSpace());
+//}
+//
+//template <typename T>
+//inline bool has_extent(H5::AbstractDs const& ds, typename T::size_type const* shape)
+//{
+//    return has_extent<T, 0>(ds.getSpace(), shape);
+//}
+//
+///**
+// * return total number of elements of a dataspace
+// */
+//inline hsize_t elements(H5::DataSpace const& dataspace)
+//{
+//    return dataspace.getSimpleExtentNpoints();
+//}
+//
+///**
+// * return total number of data elements in a dataset or attribute
+// */
+//inline hsize_t elements(H5::AbstractDs const& ds)
+//{
+//    return elements(ds.getSpace());
+//}
 
 /** swaps two h5xx objects */
 template <typename h5xxObject>

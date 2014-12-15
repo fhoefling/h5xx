@@ -1,0 +1,149 @@
+/**
+ * Copyright © 2013-2014 Felix Höfling
+ * Copyright © 2014      Klaus Reuter
+ *
+ * This file is part of h5xx.
+ *
+ * h5xx is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <http://www.gnu.org/licenses/>.
+ */
+
+#include <h5xx/h5xx.hpp>
+#include <boost/array.hpp>
+#include <boost/multi_array.hpp>
+#include <iostream>
+#include <vector>
+#include <cstdio>
+
+#include <mpi.h>
+
+const int NI=10;
+const int NJ=NI;
+
+// --- global MPI variables, for simple use in read,write functions
+int mpi_size, mpi_rank;
+MPI_Comm comm;
+MPI_Info info;
+// ---
+
+typedef boost::array<int, NI> array_t;
+typedef boost::multi_array<int, 2> array_2d_t;
+
+void print_array(array_2d_t const& array)
+{
+    for (unsigned int j = 0; j < array.shape()[1]; j++)
+    {
+        for (unsigned int i = 0; i < array.shape()[0]; i++)
+        {
+            printf("%2d ", array[j][i]);
+        }
+        printf("\n");
+    }
+}
+
+template <typename ArrayT>
+void print_array(ArrayT const& array)
+{
+    for (unsigned int i = 0; i < array.size(); i++)
+    {
+        printf("%2d ", array[i]);
+    }
+    printf("\n");
+}
+
+
+// --- run some tests of the string slicing notation
+void write_int_data(std::string const& filename, array_t const& array)
+{
+    h5xx::file file(filename, comm, info, h5xx::file::out);
+    std::string name;
+
+    {
+        // --- create dataset and fill it with the default array data (positive values)
+        name = "integer array";
+        hsize_t chunk_dims[] = {2};
+        h5xx::create_dataset(file, name, array, h5xx::policy::storage::chunked(1, chunk_dims));
+        h5xx::write_dataset(file, name, array);
+
+        // --- create a slice object (aka hyperslab) in the conventional way
+        boost::array<int,1> offset;
+        offset[0] = mpi_rank;
+        boost::array<int,1> count = {{1}};
+        h5xx::slice slice(offset, count);
+
+        // --- data to be written to the slice (negative values)
+        boost::array<int,1> data;
+        data[0] = mpi_rank;
+
+        // --- overwrite part of the dataset as specified by slice
+        h5xx::write_dataset(file, name, data, slice);
+    }
+
+}
+
+
+
+
+void read_int_data(std::string const& filename)
+{
+    h5xx::file file(filename, h5xx::file::in);
+    std::string name = "integer array";
+
+    // read and print the full dataset
+    {
+        array_t data;
+        // --- read the complete dataset into data
+        h5xx::read_dataset(file, name, data);
+        printf("integer array read from file, numbers <10 were written by separate MPI ranks\n");
+        print_array(data);
+        printf("\n");
+    }
+}
+
+
+int main(int argc, char** argv)
+{
+    std::string filename = argv[0];
+    filename.append(".h5");
+
+    MPI_Init(&argc, &argv);
+    // --- fill global MPI variables (ugly)
+    comm = MPI_COMM_WORLD;
+    info = MPI_INFO_NULL;
+    MPI_Comm_size(comm, &mpi_size);
+    MPI_Comm_rank(comm, &mpi_rank);
+
+    if (mpi_size > 10)
+    {
+        MPI_Finalize();
+        return 1;
+    }
+
+    {
+        h5xx::file file(filename, comm, info, h5xx::file::trunc);
+    }
+
+    {
+        array_t array;
+        for (int i = 0; i < NI; i++)
+            array[i] = 10+i;
+
+        write_int_data(filename, array);
+
+        if (mpi_rank == 0)
+            read_int_data(filename);
+    }
+
+    MPI_Finalize();
+    return 0;
+}

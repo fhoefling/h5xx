@@ -135,13 +135,14 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     );
 }
 
+// test default creation of a dataset (no storage policy provided)
 BOOST_AUTO_TEST_CASE( boost_multi_array_simple )
 {
     typedef boost::multi_array<int, 3> multi_array3;
     int data3[] = {99,98,97,96,95,94,93,92,91,90,89,88,87,86,85,84,83,82,81,80,79,78,77,76};
     multi_array3 multi_array_value(boost::extents[2][3][4]);
     multi_array_value.assign(data3, data3 + 2 * 3 * 4);
-    multi_array3 read(boost::extents[2][3][4]);
+    multi_array3 arrayRead(boost::extents[2][3][4]);
     const std::string name = "boost multi array, int";
     BOOST_CHECK_NO_THROW(
             create_dataset(file, name, multi_array_value)
@@ -150,49 +151,163 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_simple )
             write_dataset(file, name, multi_array_value)
     );
     BOOST_CHECK_NO_THROW(
-            read_dataset(file, name, read)
+            read_dataset(file, name, arrayRead)
     );
     BOOST_CHECK(
-            read == multi_array_value
+            arrayRead == multi_array_value
     );
 }
 
-BOOST_AUTO_TEST_CASE( boost_multi_array_hyperslab_simple )
+// test chunked dataset and the filters (compression, etc) it can use
+BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
 {
     typedef boost::multi_array<int, 2> array_2d_t;
-    typedef boost::multi_array<int, 1> array_1d_t;
     const int NI=10;
     const int NJ=NI;
-    array_2d_t array(boost::extents[NJ][NI]);
+    boost::array<hsize_t, 2> chunkDims = {{2,2}};
+    std::string name;
+    array_2d_t arrayRead(boost::extents[NJ][NI]);
+    array_2d_t arrayWrite(boost::extents[NJ][NI]);
     {
         const int nelem = NI*NJ;
         int data[nelem];
-        for (int i = 0; i < nelem; i++)
-            data[i] = i;
-        array.assign(data, data + nelem);
+        for (int i = 0; i < nelem; i++) data[i] = i;
+        arrayWrite.assign(data, data + nelem);
     }
-    const std::string name = "boost multi array, hyperslabbed, int";
-    array_2d_t read(boost::extents[NJ][NI]);
 
-    // make the dataset chunked and compressed
-    boost::array<hsize_t, 2> chunk_dims = {{2, 2}};
-    h5xx::policy::storage::chunked storage_policy(chunk_dims);
-    storage_policy.add(h5xx::policy::filter::deflate());
+    {
+        name = "boost multi array, int, chunked";
+        h5xx::policy::storage::chunked storagePolicy(chunkDims);
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
 
-    BOOST_CHECK_NO_THROW(
-            create_dataset(file, name, array, storage_policy)
-    );
-    BOOST_CHECK_NO_THROW(
-            write_dataset(file, name, array)
-    );
-    BOOST_CHECK_NO_THROW(
-//            read = read_dataset<array_2d_t>(file, name)
-//            read_dataset<array_2d_t>(file, name, read)
-            read_dataset(file, name, read)
-    );
-    BOOST_CHECK(
-            read == array
-    );
+    {
+        name = "boost multi array, int, chunked, deflate";
+        h5xx::policy::storage::chunked storagePolicy(chunkDims);
+        storagePolicy.add(h5xx::policy::filter::deflate());
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+    {
+        name = "boost multi array, int, chunked, szip";
+        h5xx::policy::storage::chunked storagePolicy(chunkDims);
+        //storagePolicy.add(h5xx::policy::filter::szip());
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+    {
+        name = "boost multi array, int, chunked, shuffle";
+        h5xx::policy::storage::chunked storagePolicy(chunkDims);
+        storagePolicy.add(h5xx::policy::filter::shuffle());
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+    {
+        name = "boost multi array, int, chunked, fletcher32";
+        h5xx::policy::storage::chunked storagePolicy(chunkDims);
+        storagePolicy.add(h5xx::policy::filter::fletcher32());
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+    {
+        name = "boost multi array, int, chunked, scaleoffset";
+        h5xx::policy::storage::chunked storagePolicy(chunkDims);
+        storagePolicy.add(h5xx::policy::filter::scaleoffset<int>(0));
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+    {
+        name = "boost multi array, int, chunked, nbit";
+        h5xx::policy::storage::chunked storagePolicy(chunkDims);
+        storagePolicy.add(h5xx::policy::filter::nbit());
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+
 
 
 // --- TODO rewrite using slice objects

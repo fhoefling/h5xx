@@ -24,6 +24,7 @@
 
 #include <h5xx/file.hpp>
 
+//#define NDEBUG
 #undef NDEBUG
 
 /**

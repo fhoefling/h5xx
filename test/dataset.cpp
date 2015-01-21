@@ -143,7 +143,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_simple )
     multi_array3 multi_array_value(boost::extents[2][3][4]);
     multi_array_value.assign(data3, data3 + 2 * 3 * 4);
     multi_array3 arrayRead(boost::extents[2][3][4]);
-    const std::string name = "boost multi array, int";
+    const std::string name = "boost multi array, int, default";
     BOOST_CHECK_NO_THROW(
             create_dataset(file, name, multi_array_value)
     );
@@ -306,8 +306,85 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         );
         for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
     }
+}
 
 
+// test contiguous dataset and some of the features it can use
+BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
+{
+    typedef boost::multi_array<int, 2> array_2d_t;
+    const int NI=10;
+    const int NJ=NI;
+    std::string name;
+    array_2d_t arrayRead(boost::extents[NJ][NI]);
+    array_2d_t arrayWrite(boost::extents[NJ][NI]);
+    {
+        const int nelem = NI*NJ;
+        int data[nelem];
+        for (int i = 0; i < nelem; i++) data[i] = i;
+        arrayWrite.assign(data, data + nelem);
+    }
+
+    {
+        name = "boost multi array, int, contiguous";
+        h5xx::policy::storage::contiguous storagePolicy;
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+    {
+        name = "boost multi array, int, contiguous, fill_value";
+        const int fillValue = 4711;
+        h5xx::policy::storage::contiguous storagePolicy;
+        storagePolicy.set(h5xx::policy::storage::fill_value(fillValue));
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+//        BOOST_CHECK_NO_THROW(
+//                write_dataset(file, name, arrayWrite)
+//        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        array_2d_t array4711(boost::extents[NJ][NI]);
+        for (unsigned int i = 0; i < array4711.num_elements(); i++) array4711.data()[i] = fillValue;
+        BOOST_CHECK(
+                arrayRead == array4711
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+    {
+        name = "boost multi array, int, contiguous, track_times";
+        h5xx::policy::storage::contiguous storagePolicy;
+        storagePolicy.set(h5xx::policy::storage::track_times());
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+    }
+
+}
 
 
 // --- TODO rewrite using slice objects
@@ -387,7 +464,11 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
 //                read == check
 //        );
 //    }
-}
+//}
+
+
+
+
 
 
 

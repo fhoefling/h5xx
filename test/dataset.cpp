@@ -47,6 +47,7 @@ void zero_multi_array(T &array) {
 char filename[] = "test_h5xx_dataset.h5";
 typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
+typedef boost::multi_array<int, 1> array_1d_t;
 typedef boost::multi_array<int, 2> array_2d_t;
 
 BOOST_AUTO_TEST_CASE( construction )
@@ -469,8 +470,62 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
 
 
 
-//BOOST_AUTO_TEST_CASE( h5xx_dataset_hyperslab )
-//{
+BOOST_AUTO_TEST_CASE( h5xx_dataset_hyperslab )
+{
+    const int NI=10;
+    const int NJ=NI;
+    std::string name;
+    array_2d_t arrayRead(boost::extents[NJ][NI]);
+    array_2d_t arrayWrite(boost::extents[NJ][NI]);
+    {
+        const int nelem = NI*NJ;
+        int data[nelem];
+        for (int i = 0; i < nelem; i++) data[i] = i;
+        arrayWrite.assign(data, data + nelem);
+    }
+
+    name = "integer array";
+    h5xx::create_dataset(file, name, arrayWrite);
+    h5xx::write_dataset(file, name, arrayWrite);
+
+    std::vector<int> offset; { int offset_raw[2] = {4,4}; offset.assign(offset_raw, offset_raw + 2); }
+    std::vector<int> count;  { int count_raw[2] = {2,2};  count.assign(count_raw, count_raw + 2); }
+    h5xx::slice slice(offset, count);
+
+    array_1d_t slice_data(boost::extents[4]);
+    {
+        int data_raw[4] = {-1,-2,-3,-4};
+        slice_data.assign(data_raw, data_raw+4);
+    }
+
+    BOOST_CHECK_NO_THROW(
+        h5xx::write_dataset(file, name, slice_data, slice)
+    );
+
+    BOOST_CHECK_NO_THROW(
+        h5xx::read_dataset(file, name, arrayRead);
+    );
+
+    BOOST_CHECK(
+        arrayRead != arrayWrite
+    );
+
+    // manipulate arrayWrite such that it should be equal to arrayRead at this point
+    {
+        int neg = -1;
+        for (int j = 0; j < count[0]; j++) {
+            for (int i = 0; i < count[1]; i++) {
+                arrayWrite[ j+offset[0] ][ i+offset[1] ] = neg;
+                neg--;
+            }
+        }
+    }
+
+    BOOST_CHECK(
+        arrayRead == arrayWrite
+    );
+}
+
 //    // overwrite part of the dataset, read it back in and check the result
 //    {
 //        // select a 2x2 patch in the center of the array

@@ -31,15 +31,23 @@
 #include <cmath>
 #include <string>
 
+using namespace h5xx;
+
 BOOST_GLOBAL_FIXTURE( ctest_full_output )
 
+
 namespace fixture { // preferred over BOOST_FIXTURE_TEST_SUITE
+
+template <typename T>
+void zero_multi_array(T &array) {
+    for (unsigned int i = 0; i < array.num_elements(); i++)
+        array.data()[i] = 0;
+}
 
 char filename[] = "test_h5xx_dataset.h5";
 typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
-using namespace h5xx;
-
+typedef boost::multi_array<int, 2> array_2d_t;
 
 BOOST_AUTO_TEST_CASE( construction )
 {
@@ -161,7 +169,6 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_simple )
 // test chunked dataset and the filters (compression, etc) it can use
 BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
 {
-    typedef boost::multi_array<int, 2> array_2d_t;
     const int NI=10;
     const int NJ=NI;
     boost::array<hsize_t, 2> chunkDims = {{2,2}};
@@ -190,7 +197,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -209,7 +216,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -228,7 +235,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -247,7 +254,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -266,7 +273,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -285,7 +292,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -304,15 +311,14 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 }
 
 
-// test contiguous dataset and some of the features it can use
+// test contiguous dataset and some storage policies it can use
 BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
 {
-    typedef boost::multi_array<int, 2> array_2d_t;
     const int NI=10;
     const int NJ=NI;
     std::string name;
@@ -340,7 +346,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -362,7 +368,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
         BOOST_CHECK(
                 arrayRead == array4711
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
 
     {
@@ -381,13 +387,90 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
         BOOST_CHECK(
                 arrayRead == arrayWrite
         );
-        for (unsigned int i = 0; i < arrayRead.num_elements(); i++) arrayRead.data()[i] = 0;
+        zero_multi_array(arrayRead);
     }
-
 }
 
 
-// --- TODO rewrite using slice objects
+// test compact dataset and some storage policies it can use
+BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
+{
+    const int NI=10;
+    const int NJ=NI;
+    std::string name;
+    array_2d_t arrayRead(boost::extents[NJ][NI]);
+    array_2d_t arrayWrite(boost::extents[NJ][NI]);
+    {
+        const int nelem = NI*NJ;
+        int data[nelem];
+        for (int i = 0; i < nelem; i++) data[i] = i;
+        arrayWrite.assign(data, data + nelem);
+    }
+
+    {
+        name = "boost multi array, int, compact";
+        h5xx::policy::storage::compact storagePolicy;
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        zero_multi_array(arrayRead);
+    }
+
+    {
+        name = "boost multi array, int, compact, fill_value";
+        const int fillValue = 4711;
+        h5xx::policy::storage::compact storagePolicy;
+        storagePolicy.set(h5xx::policy::storage::fill_value(fillValue));
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+//        BOOST_CHECK_NO_THROW(
+//                write_dataset(file, name, arrayWrite)
+//        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        array_2d_t array4711(boost::extents[NJ][NI]);
+        for (unsigned int i = 0; i < array4711.num_elements(); i++) array4711.data()[i] = fillValue;
+        BOOST_CHECK(
+                arrayRead == array4711
+        );
+        zero_multi_array(arrayRead);
+    }
+
+    {
+        name = "boost multi array, int, compact, track_times";
+        h5xx::policy::storage::compact storagePolicy;
+        storagePolicy.set(h5xx::policy::storage::track_times());
+        BOOST_CHECK_NO_THROW(
+                create_dataset(file, name, arrayWrite, storagePolicy)
+        );
+        BOOST_CHECK_NO_THROW(
+                write_dataset(file, name, arrayWrite)
+        );
+        BOOST_CHECK_NO_THROW(
+                read_dataset(file, name, arrayRead)
+        );
+        BOOST_CHECK(
+                arrayRead == arrayWrite
+        );
+        zero_multi_array(arrayRead);
+    }
+}
+
+
+
+//BOOST_AUTO_TEST_CASE( h5xx_dataset_hyperslab )
+//{
 //    // overwrite part of the dataset, read it back in and check the result
 //    {
 //        // select a 2x2 patch in the center of the array
@@ -421,10 +504,8 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
 //        // manipulate array such that it is equal to the original array with the hyperslab applied
 //        {
 //            int neg = -1;
-//            for (int j = 0; j < count[0]; j++)
-//            {
-//                for (int i = 0; i < count[1]; i++)
-//                {
+//            for (int j = 0; j < count[0]; j++) {
+//                for (int i = 0; i < count[1]; i++) {
 //                    array[ j+offset[0] ][ i+offset[1] ] = neg;
 //                    neg--;
 //                }
@@ -435,6 +516,9 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
 //                read == array
 //        );
 //    }
+//
+//}
+
 
 // --- TODO rewrite using slice objects
 //    // read part of the array
@@ -637,5 +721,6 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset )
 #endif
 }
 --- end old unit tests --- */
+
 
 } //namespace fixture

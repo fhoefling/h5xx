@@ -312,6 +312,19 @@ inline hsize_t elements(H5::AbstractDs const& ds)
     return elements(ds.getSpace());
 }
 
+/**
+ * return if a handle id is valid or not
+ */
+inline bool is_valid(hid_t hid)
+{
+#if H5_VERSION_LE(1,8,13)
+    return hid > 0;  // the C++ API of HDF5 ≤ 1.8.13 may return 0 for invalid hids
+#else
+    return hid >= 0; // the above has been fixed in HDF5 1.8.14
+#endif /* H5_VERSION_LE(1,8,13) */
+}
+
+
 } // namespace h5xx
 
 #endif /* ! H5XX_UTILITY_HPP */

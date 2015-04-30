@@ -8,8 +8,8 @@ find_package(Boost 1.40.0 QUIET REQUIRED)
 find_package(HDF5 QUIET REQUIRED)
 find_package(H5XX QUIET REQUIRED)
 
-include_directories("${Boost_INCLUDE_DIR}")
-include_directories("${HDF5_INCLUDE_DIR}")
+include_directories(SYSTEM "${Boost_INCLUDE_DIR}")
+include_directories(SYSTEM "${HDF5_INCLUDE_DIR}")
 include_directories("${H5XX_INCLUDE_DIR}")
 
 set(CMAKE_BUILD_TYPE "Release")

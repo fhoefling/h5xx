@@ -1,6 +1,9 @@
 /* HDF5 C++ extensions
  *
- * Copyright © 2008-2010  Peter Colberg and Felix Höfling
+ * Copyright © 2008-2015 Felix Höfling
+ * Copyright © 2014-2015 Klaus Reuter
+ * Copyright © 2014      Manuel Dibak
+ * Copyright © 2008-2010 Peter Colberg
  *
  * This file is part of h5xx.
  *

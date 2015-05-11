@@ -1,6 +1,7 @@
 /*
- * Copyright © 2013      Manuel Dibak
+ * Copyright © 2014-2015 Klaus Reuter
  * Copyright © 2013-2014 Felix Höfling
+ * Copyright © 2013      Manuel Dibak
  *
  * This file is part of h5xx.
  *

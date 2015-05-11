@@ -1,5 +1,6 @@
 /*
  * Copyright © 2008-2013 Felix Höfling
+ * Copyright © 2014-2015 Klaus Reuter
  * Copyright © 2013      Manuael Dibak
  * Copyright © 2008-2010 Peter Colberg
  *

@@ -1,6 +1,6 @@
 /*
- * Copyright © 2008-2011  Peter Colberg and Felix Höfling
- * Copyright © 2014       Klaus Reuter
+ * Copyright © 2008-2011 Peter Colberg and Felix Höfling
+ * Copyright © 2014-2015 Klaus Reuter
  *
  * This file is part of h5xx.
  *

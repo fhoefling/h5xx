@@ -23,6 +23,7 @@ endif(suffix STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 foreach(module
   attribute
   dataset
+  dataspace
   file
   group
   )

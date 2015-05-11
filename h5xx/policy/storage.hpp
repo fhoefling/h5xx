@@ -28,7 +28,6 @@
 #include <cstring>
 
 // --- we need a smart pointer to use std::vector as container for the filter pipelines and modifier sets
-//#include <memory>
 #include <boost/shared_ptr.hpp>
 #include <boost/make_shared.hpp>
 

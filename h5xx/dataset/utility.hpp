@@ -21,10 +21,6 @@
 #ifndef H5XX_DATASET_UTILITY_HPP
 #define H5XX_DATASET_UTILITY_HPP
 
-//#include <h5xx/dataset.hpp>
-//#include <h5xx/dataset/dataset.hpp>
-//#include <h5xx/dataspace.hpp>
-//#include <h5xx/datatype.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/utility.hpp>
 

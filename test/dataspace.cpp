@@ -79,7 +79,27 @@ BOOST_AUTO_TEST_CASE( construction )
             xts.size(), size_t(1)
         );
         BOOST_CHECK_EQUAL(
-            xts[0], hsize_t(4)
+            xts[0], vec.size()
+        );
+    }
+
+    // --- creation of dataspace from a boost::array
+    {
+        boost::array<int, 4> vec = {{2,4,6,8}};
+        dataspace ds;
+        BOOST_CHECK_NO_THROW(
+            ds = create_dataspace(vec);
+        );
+        //boost::array<hsize_t,size_t(1)> xts;
+        std::vector<hsize_t> xts;
+        BOOST_CHECK_NO_THROW(
+            xts = ds.extents();
+        );
+        BOOST_CHECK_EQUAL(
+            xts.size(), size_t(1)
+        );
+        BOOST_CHECK_EQUAL(
+            xts[0], vec.size()
         );
     }
 

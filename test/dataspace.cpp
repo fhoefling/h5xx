@@ -60,6 +60,13 @@ BOOST_AUTO_TEST_CASE( construction )
         dataspace();
     );
 
+    {
+        dataspace ds;
+        BOOST_CHECK(
+            ds.valid() == false
+        );
+    }
+
     // --- creation of dataspace from a std::vector
     {
         std::vector<int> vec;
@@ -70,6 +77,9 @@ BOOST_AUTO_TEST_CASE( construction )
         dataspace ds;
         BOOST_CHECK_NO_THROW(
             ds = create_dataspace(vec);
+        );
+        BOOST_CHECK(
+            ds.valid() == true
         );
         std::vector<hsize_t> xts;
         BOOST_CHECK_NO_THROW(
@@ -90,7 +100,9 @@ BOOST_AUTO_TEST_CASE( construction )
         BOOST_CHECK_NO_THROW(
             ds = create_dataspace(vec);
         );
-        //boost::array<hsize_t,size_t(1)> xts;
+        BOOST_CHECK(
+            ds.valid() == true
+        );
         std::vector<hsize_t> xts;
         BOOST_CHECK_NO_THROW(
             xts = ds.extents();
@@ -103,37 +115,109 @@ BOOST_AUTO_TEST_CASE( construction )
         );
     }
 
-//    --- dataset test code ---
-//    BOOST_CHECK_NO_THROW(
-//        dataset();                                      // default constructor
-//    );
-//
-//    BOOST_CHECK_NO_THROW(
-//            create_dataset<int>(file, "foo");
-//    );
-//    BOOST_CHECK_NO_THROW(
-//            write_dataset(file, "foo", 1);              // create dataset in a file's root group
-//    );
-//    BOOST_CHECK_NO_THROW(
-//            dataset(file, "foo");                       // open existing attribute on-the-fly
-//    );
-//
-//    dataset foo(file, "foo");
-//    BOOST_CHECK_EQUAL(get_name(foo), "/foo");          // full path of the dataset
-//    BOOST_CHECK(foo.valid());
-//
-//    // TODO recheck, taken from the attribute unit test program
-//    hid_t hid = foo.hid();
-//    dataset bar;
-//    BOOST_CHECK_THROW(bar = foo, h5xx::error);         // assignment is not allowed (it makes a copy)
-//    BOOST_CHECK_NO_THROW(bar = move(foo));             // move assignment
-//    BOOST_CHECK_EQUAL(bar.hid(), hid);
-//    BOOST_CHECK(!foo.valid());
-//
-//    // TODO recheck, taken from the attribute unit test program
-//    BOOST_CHECK_THROW(dataset g(bar), h5xx::error);  // copying is not allowed
-//    BOOST_CHECK_NO_THROW(dataset g(move(bar)));      // copying from temporary is allowed (with move semantics)
-//    BOOST_CHECK(!bar.valid());
+
+    // --- creation of dataspace from a boost::multiarray
+    {
+        const int NI=10;
+        const int NJ=NI;
+        array_2d_t arr(boost::extents[NJ][NI]);
+        {
+            const int nelem = NI*NJ;
+            int data[nelem];
+            for (int i = 0; i < nelem; i++) data[i] = i;
+            arr.assign(data, data + nelem);
+        }
+        dataspace ds;
+        BOOST_CHECK_NO_THROW(
+            ds = create_dataspace(arr);
+        );
+        BOOST_CHECK(
+            ds.valid() == true
+        );
+        std::vector<hsize_t> xts;
+        BOOST_CHECK_NO_THROW(
+            xts = ds.extents();
+        );
+        BOOST_CHECK_EQUAL(
+            xts.size(), size_t(2)
+        );
+        BOOST_CHECK_EQUAL(
+            xts[0], hsize_t(NI)
+        );
+        BOOST_CHECK_EQUAL(
+            xts[1], hsize_t(NJ)
+        );
+    }
+
+
+    {
+        std::vector<int> vec;
+        vec.push_back(2);
+        vec.push_back(4);
+        vec.push_back(6);
+        dataspace ds;
+        BOOST_CHECK_NO_THROW(
+            ds = create_dataspace(vec);
+        );
+        BOOST_CHECK(
+            ds.valid() == true
+        );
+        BOOST_CHECK_EQUAL(
+            ds.rank(), 1
+        );
+        BOOST_CHECK(
+            ds.is_scalar() == false
+        );
+        BOOST_CHECK(
+            ds.is_simple() == true
+        );
+    }
+
+
+    // --- test basic select facilities
+    {
+        const int NI=10;
+        const int NJ=NI;
+        array_2d_t arr(boost::extents[NJ][NI]);
+        {
+            const int nelem = NI*NJ;
+            int data[nelem];
+            for (int i = 0; i < nelem; i++) data[i] = i;
+            arr.assign(data, data + nelem);
+        }
+        dataspace ds;
+        BOOST_CHECK_NO_THROW(
+            ds = create_dataspace(arr);
+        );
+        BOOST_CHECK(
+            ds.valid() == true
+        );
+        // --- everything is selected by default
+        BOOST_CHECK(
+            ds.get_select_npoints() == NI*NJ
+        );
+        // --- define a range by using a numpy-arange-like specification
+        {
+            slice slc("1:3,3:5");
+            BOOST_CHECK_NO_THROW(
+                ds.select(slc);
+            );
+        }
+        BOOST_CHECK(
+            ds.get_select_npoints() == 2*2
+        );
+        {
+            slice slc("7,7");
+            BOOST_CHECK_NO_THROW(
+                ds.select(slc, dataspace::AND);
+            );
+        }
+        std::cout << ds.get_select_npoints() << std::endl;
+        BOOST_CHECK(
+            ds.get_select_npoints() == 2*2 + 1
+        );
+    }
+
 }
 
 

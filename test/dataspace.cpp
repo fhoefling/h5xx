@@ -196,9 +196,9 @@ BOOST_AUTO_TEST_CASE( construction )
         BOOST_CHECK(
             ds.get_select_npoints() == NI*NJ
         );
-        // --- define a range by using a numpy-arange-like specification
+        // --- define a range by using the numpy-arange-like specification
         {
-            slice slc("1:3,3:5");
+            slice slc("1:3,3:5");  // 2x2 patch
             BOOST_CHECK_NO_THROW(
                 ds.select(slc);
             );
@@ -207,14 +207,24 @@ BOOST_AUTO_TEST_CASE( construction )
             ds.get_select_npoints() == 2*2
         );
         {
-            slice slc("7,7");
+            slice slc("7,7");  // separate single item
             BOOST_CHECK_NO_THROW(
-                ds.select(slc, dataspace::AND);
+                ds.select(slc, dataspace::OR);  // add slice to selection, "OR" works like a binary OR
             );
         }
-        std::cout << ds.get_select_npoints() << std::endl;
+        //std::cout << ds.get_select_npoints() << std::endl;
         BOOST_CHECK(
             ds.get_select_npoints() == 2*2 + 1
+        );
+        {
+            slice slc("2:4,4:6");
+            BOOST_CHECK_NO_THROW(
+                ds.select(slc, dataspace::AND);  // add slice to selection, "AND" works like a binary AND
+            );
+        }
+        // std::cout << ds.get_select_npoints() << std::endl;
+        BOOST_CHECK(
+            ds.get_select_npoints() == 1
         );
     }
 

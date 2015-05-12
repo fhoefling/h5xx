@@ -90,7 +90,6 @@ BOOST_AUTO_TEST_CASE( construction )
         BOOST_CHECK_NO_THROW(
             ds = create_dataspace(vec);
         );
-        //boost::array<hsize_t,size_t(1)> xts;
         std::vector<hsize_t> xts;
         BOOST_CHECK_NO_THROW(
             xts = ds.extents();
@@ -102,6 +101,38 @@ BOOST_AUTO_TEST_CASE( construction )
             xts[0], vec.size()
         );
     }
+
+
+    // --- creation of dataspace from a boost::multiarray
+    {
+        const int NI=10;
+        const int NJ=NI;
+        array_2d_t arr(boost::extents[NJ][NI]);
+        {
+            const int nelem = NI*NJ;
+            int data[nelem];
+            for (int i = 0; i < nelem; i++) data[i] = i;
+            arr.assign(data, data + nelem);
+        }
+        dataspace ds;
+        BOOST_CHECK_NO_THROW(
+            ds = create_dataspace(arr);
+        );
+        std::vector<hsize_t> xts;
+        BOOST_CHECK_NO_THROW(
+            xts = ds.extents();
+        );
+        BOOST_CHECK_EQUAL(
+            xts.size(), size_t(2)
+        );
+        BOOST_CHECK_EQUAL(
+            xts[0], hsize_t(NI)
+        );
+        BOOST_CHECK_EQUAL(
+            xts[1], hsize_t(NJ)
+        );
+    }
+
 
 //    --- dataset test code ---
 //    BOOST_CHECK_NO_THROW(

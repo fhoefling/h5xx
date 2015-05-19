@@ -21,6 +21,7 @@
 #define H5XX_UTILITY_HPP
 
 #include <h5xx/ctype.hpp>
+#include <h5xx/error.hpp>
 
 #include <boost/algorithm/string.hpp>
 #include <boost/array.hpp>

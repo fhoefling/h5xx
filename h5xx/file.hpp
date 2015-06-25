@@ -31,7 +31,7 @@
 #include <string>
 #include <vector>
 
-#ifdef USE_MPI
+#ifdef H5XX_USE_MPI
 #include <mpi.h>
 #endif
 
@@ -77,7 +77,7 @@ public:
     /** open file upon construction */
     explicit file(std::string const& filename, unsigned mode = in | out);
 
-#ifdef USE_MPI
+#ifdef H5XX_USE_MPI
     // --- default arguments require mode to be the last argument
     explicit file(std::string const& filename, MPI_Comm comm, MPI_Info info, unsigned mode = in | out);
 #endif
@@ -147,7 +147,7 @@ file::file(std::string const& filename, unsigned mode)
     open(filename, mode);
 }
 
-#ifdef USE_MPI
+#ifdef H5XX_USE_MPI
 file::file(std::string const& filename, MPI_Comm comm, MPI_Info info, unsigned mode)
   : hid_(-1),plid_(H5P_DEFAULT)
 {

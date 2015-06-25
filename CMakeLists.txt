@@ -30,7 +30,7 @@ endif()
 if (MPI_FOUND)
    include_directories(${MPI_INCLUDE_PATH})
    link_libraries(${MPI_LIBRARIES})
-   add_definitions(-DUSE_MPI)
+   add_definitions(-DH5XX_USE_MPI)
 endif()
 
 include_directories(${HDF5_INCLUDE_DIR})

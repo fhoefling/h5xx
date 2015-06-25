@@ -83,20 +83,23 @@ BOOST_AUTO_TEST_CASE( open )
 // test copying and moving
 BOOST_AUTO_TEST_CASE( copy_move )
 {
-//## TODO : lines commented out ("##") currently cause tests to fail
     file foo(name);
 
-    BOOST_CHECK_THROW(file f(foo), h5xx::error);   // copying is not allowed
-//##    BOOST_CHECK_NO_THROW(file f(move(foo)));       // copying from temporary is allowed (with move semantics)
-//## ---   BOOST_CHECK(!foo.valid());
+    BOOST_CHECK(foo.valid());
 
-//##    foo.open(name);
+    BOOST_CHECK_THROW(file f(foo), h5xx::error);   // copying is not allowed
+    BOOST_CHECK(foo.valid());
+
+    BOOST_CHECK_NO_THROW(file f(move(foo)));       // copying from temporary is allowed (with move semantics)
+    BOOST_CHECK(!foo.valid());
+
+    foo.open(name);
     hid_t hid = foo.hid();
     file bar;
     BOOST_CHECK_THROW(bar = foo, h5xx::error);     // assignment is not allowed (it makes a copy)
-//##    BOOST_CHECK_NO_THROW(bar = move(foo));         // move assignment
-//##    BOOST_CHECK_EQUAL(bar.hid(), hid);
-//##    BOOST_CHECK(!foo.valid());
+    BOOST_CHECK_NO_THROW(bar = move(foo));         // move assignment
+    BOOST_CHECK_EQUAL(bar.hid(), hid);
+    BOOST_CHECK(!foo.valid());
 
     bar.close();
     unlink(name);
@@ -111,4 +114,3 @@ BOOST_AUTO_TEST_CASE( hdf5_id )
     BOOST_CHECK(is_hdf5_file(name) > 0);
     unlink(name);
 }
-

@@ -72,12 +72,13 @@ public:
     };
 
     /** default constructor */
-    file() : hid_(-1), plid_(-1) {}
+    file() : hid_(-1), plid_(H5P_DEFAULT) {}
 
     /** open file upon construction */
     explicit file(std::string const& filename, unsigned mode = in | out);
 
 #ifdef USE_MPI
+    // --- default arguments require mode to be the last argument
     explicit file(std::string const& filename, MPI_Comm comm, MPI_Info info, unsigned mode = in | out);
 #endif
 
@@ -114,7 +115,7 @@ public:
     }
 
     /** open HDF5 file in specified mode */
-    void open(std::string const& filename, unsigned mode = in | out, hid_t plid =  H5P_DEFAULT);
+    void open(std::string const& filename, unsigned mode = in | out);
 
     /** close HDF5 file
      *
@@ -133,7 +134,7 @@ private:
     /** HDF5 object ID */
     hid_t hid_;
 
-    /** file access property list ID */
+    /** file access property list ID, required for MPI parallel functionality */
     hid_t plid_;
 
     template <typename h5xxObject>
@@ -141,30 +142,27 @@ private:
 };
 
 file::file(std::string const& filename, unsigned mode)
-  : hid_(-1),plid_(-1)
+  : hid_(-1),plid_(H5P_DEFAULT)
 {
     open(filename, mode);
 }
 
 #ifdef USE_MPI
 file::file(std::string const& filename, MPI_Comm comm, MPI_Info info, unsigned mode)
-  : hid_(-1),plid_(-1)
+  : hid_(-1),plid_(H5P_DEFAULT)
 {
-    hid_t plid = H5Pcreate(H5P_FILE_ACCESS);
-    H5Pset_fapl_mpio(plid, comm, info);
-    open(filename, mode, plid);
-    // plid is copied inside open() and must be closed here
-    H5Pclose(plid);
+    plid_ = H5Pcreate(H5P_FILE_ACCESS);
+    H5Pset_fapl_mpio(plid_, comm, info);
+    open(filename, mode);
 }
 #endif
-
 
 file::file(file const& other)
 {
     // copying would be safe if the exception were disabled.
     throw error("h5xx::file can not be copied. Copying must be elided by return value optimisation.");
     hid_ = H5Freopen(other.hid_);
-    plid_ = H5Fget_access_plist(hid_);  // not quite sure what to do here
+    plid_ = H5Fget_access_plist(hid_);
 }
 
 file const& file::operator=(file other)
@@ -178,7 +176,7 @@ file::~file()
     close();
 }
 
-void file::open(std::string const& filename, unsigned mode, hid_t plid)
+void file::open(std::string const& filename, unsigned mode)
 {
     // check that object is not yet in use
     if (hid_ >= 0) {
@@ -200,7 +198,6 @@ void file::open(std::string const& filename, unsigned mode, hid_t plid)
             if (is_hdf5 == 0) {
                 throw error("not a valid HDF5 file: " + filename);
             }
-            plid_ = H5Pcopy(plid);
             // use that "in" and "out" are equal to H5F_ACC_RDONLY and H5F_ACC_RDWR, resp.
             hid_ = H5Fopen(filename.c_str(), mode & (in | out), plid_);
         }
@@ -211,7 +208,6 @@ void file::open(std::string const& filename, unsigned mode, hid_t plid)
             throw error("read-only access to non-existing HDF5 file: " + filename);
         }
         // create new file
-        plid_ = H5Pcopy(plid);
         hid_ = H5Fcreate(filename.c_str(), H5F_ACC_TRUNC, H5P_DEFAULT, plid_);
     }
     if (hid_ < 0) {
@@ -240,8 +236,10 @@ void file::close(bool strict)
             throw error("closing HDF5 file would leave " + boost::lexical_cast<std::string>(count) + " open objects behind");
         }
     }
-
-    if ((H5Pclose(plid_) < 0) || (H5Fclose(hid_) < 0)) {
+    if (plid_ >= 0) {
+        H5Pclose(plid_);
+    }
+    if (H5Fclose(hid_) < 0) {
         throw error("closing HDF5 file: " + name() +
                     ", file ID: " + boost::lexical_cast<std::string>(hid_));
     }

@@ -30,7 +30,6 @@
 #include <h5xx/policy/storage.hpp>
 #include <h5xx/utility.hpp>
 #include <h5xx/error.hpp>
-#include <h5xx/exception.hpp>
 
 #include <boost/array.hpp>
 #include <boost/lexical_cast.hpp>

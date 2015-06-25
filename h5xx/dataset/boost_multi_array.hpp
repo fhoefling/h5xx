@@ -28,7 +28,6 @@
 #include <h5xx/dataset/dataset.hpp>
 #include <h5xx/dataspace.hpp>
 #include <h5xx/error.hpp>
-#include <h5xx/exception.hpp>
 #include <h5xx/policy/storage.hpp>
 #include <h5xx/utility.hpp>
 

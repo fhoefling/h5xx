@@ -25,7 +25,6 @@
 #include <h5xx/ctype.hpp>
 #include <h5xx/dataspace.hpp>
 #include <h5xx/error.hpp>
-#include <h5xx/exception.hpp>
 #include <h5xx/utility.hpp>
 #include <h5xx/attribute/utility.hpp>
 #include <h5xx/policy/string.hpp>

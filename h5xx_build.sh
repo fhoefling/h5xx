@@ -1,6 +1,6 @@
 #!/bin/bash
 
-# --- h5xx configure/build script example ---
+# --- h5xx configure/build script example (Linux) ---
 
 # Uncomment the following line when you edit
 # this script and adapt it to your local environment.
@@ -12,7 +12,10 @@ TEST="yes"
 #DOXYGEN="yes"
 
 # --- configuration
-MPI="yes"
+export CXX="g++"
+# export CXX="clang"
+# export CXX="icpc"
+# MPI="yes"
 # --- build directory
 H5XX_BUILD_PREFIX=$HOME/h5xx
 # --- source code location
@@ -23,6 +26,7 @@ export BOOST_ROOT=/opt/apps/boost/1.58
 export HDF5_ROOT=/opt/apps/hdf5/1.8.14
 if [ x"$MPI" == x"yes" ]
 then
+  export CXX=mpicxx
   export HDF5_ROOT=${HDF5_ROOT}-mpi
 fi
 

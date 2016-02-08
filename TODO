@@ -2,7 +2,7 @@
 
   As a difference, multiple writes to different hyperslabs of the same dataset
   can occur (incremental write). Hence, creation and writing have to be
-  separate functions. 
+  separate functions.
 
   Suggestion: creation occurs in the constructor (or in a free function?),
   writing is separate free function and will eventually support
@@ -59,4 +59,3 @@
 
     - in C++98 we can't avoid TR1 things such as enable_if, array, etc.
     - the "complex" types are found only in certain headers, which may be included or not
-

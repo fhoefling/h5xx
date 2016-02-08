@@ -14,6 +14,8 @@ if(DEFINED CMAKE_CXX_COMPILER_ID)
     set(CMAKE_CXX_FLAGS_INIT "-fPIC -Wall")
 
   else()
-    message(WARNING "Unsupported CXX compiler: ${CMAKE_CXX_COMPILER_ID}")
+
+    message(WARNING "Unsupported C++ compiler: ${CMAKE_CXX_COMPILER_ID}")
+
   endif()
 endif()

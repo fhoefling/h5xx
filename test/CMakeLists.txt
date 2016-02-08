@@ -5,9 +5,11 @@
 #
 # http://www.boost.org/doc/libs/release/libs/test/doc/html/utf/user-guide/usage-variants.html
 #
+
 get_filename_component(
   suffix "${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}" EXT
 )
+
 if(suffix STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
   get_directory_property(
     flags COMPILE_DEFINITIONS

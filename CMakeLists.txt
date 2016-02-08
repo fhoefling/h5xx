@@ -20,12 +20,12 @@ find_package(Boost 1.40.0 QUIET REQUIRED COMPONENTS unit_test_framework)
 find_package(HDF5 QUIET REQUIRED)
 
 #
-# use 
+# use
 # $ cmake -DMPI=ON ...
 # to configure with MPI support
 #
 if (MPI)
-  find_package(MPI QUIET)
+   find_package(MPI QUIET)
 endif()
 if (MPI_FOUND)
    include_directories(${MPI_INCLUDE_PATH})

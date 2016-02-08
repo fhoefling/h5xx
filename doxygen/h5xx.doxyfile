@@ -1,5 +1,12 @@
 # Doxyfile 1.8.7
 
+#
+# --- h5xx doxygen configuration file ---
+# Warning:  This file assumes the environment variables
+# H5XX_ROOT and H5XX_DOC_PREFIX to be set.
+# Use the script h5xx_build.sh to generate documentation.
+#
+
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
 #
@@ -58,7 +65,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = ./doc/
+OUTPUT_DIRECTORY       = $(H5XX_DOC_PREFIX)
 
 # If the CREATE_SUBDIRS tag is set to YES, then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -152,7 +159,7 @@ FULL_PATH_NAMES        = YES
 # will be relative from the directory where doxygen is started.
 # This tag requires that the tag FULL_PATH_NAMES is set to YES.
 
-STRIP_FROM_PATH        =
+STRIP_FROM_PATH        = $(H5XX_ROOT)
 
 # The STRIP_FROM_INC_PATH tag can be used to strip a user-defined part of the
 # path mentioned in the documentation of a class, which tells the reader which
@@ -754,7 +761,7 @@ WARN_LOGFILE           =
 # spaces.
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = h5xx
+INPUT                  = $(H5XX_ROOT)/h5xx
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses

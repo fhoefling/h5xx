@@ -99,7 +99,7 @@ int main(int argc, char** argv)
     filename.append(".h5");
 
     MPI_Init(&argc, &argv);
-    // --- initialize global MPI variables, for convenience
+    // --- initialize MPI variables (global variables, for convenience)
     comm = MPI_COMM_WORLD;
     info = MPI_INFO_NULL;
     MPI_Comm_size(comm, &mpi_size);
@@ -109,23 +109,21 @@ int main(int argc, char** argv)
     {
         MPI_Finalize();
         return 1;
+    } else {
+        {
+            h5xx::file file(filename, comm, info, h5xx::file::trunc);
+        }
+        {
+            array_t array;
+            for (int i = 0; i < NI; i++)
+                array[i] = 10+i;
+
+            write_int_data(filename, array);
+
+            if (mpi_rank == 0)
+                read_int_data(filename);
+        }
+        MPI_Finalize();
+        return 0;
     }
-
-    {
-        h5xx::file file(filename, comm, info, h5xx::file::trunc);
-    }
-
-    {
-        array_t array;
-        for (int i = 0; i < NI; i++)
-            array[i] = 10+i;
-
-        write_int_data(filename, array);
-
-        if (mpi_rank == 0)
-            read_int_data(filename);
-    }
-
-    MPI_Finalize();
-    return 0;
 }

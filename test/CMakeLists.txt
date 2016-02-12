@@ -25,6 +25,7 @@ endif(suffix STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 foreach(module
   attribute
   dataset
+  dataset_big
   dataspace
   file
   group

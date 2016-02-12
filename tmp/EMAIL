@@ -1,0 +1,86 @@
+
+Hallo Klaus,
+
+ich bin nun im September nach Berlin umgezogen und gerade dabei, hier meine
+Gruppe aufzubauen. Leider war in den letzten Monaten gar keine Luft, um mich um
+Software zu kümmern. Und da ist auch h5xx etwas unter die Räder gekommen.
+
+Wir können den redesign-Branch gern so auf GitHub schieben, da gibt es
+eigentlich keinen Grund, das zu verzögern. Am einfachsten würde ich Dir
+Schreibrechte auf meinem GitHub-Projekt geben. Verschiedene Forks sind zwar im
+Spirit von GitHub, führen aber immer wieder zu Verwirrung, was die "offizielle",
+stabile Version angeht. (Ich habe da so meine  Erfahrungen mit luabind gemacht.)
+
+Nur mit einem "Release" wäre ich noch etwas zurückhaltend, da die API dann
+wirklich stabil sein sollte. Wahrscheinlich ist es aber sowiewso am besten, die
+vorläufige Version in Real-World-Anwendungen auszuprobieren und dann zu
+überarbeiten. Wenn Ihr eine Anwendung für h5xx habt, freut mich das sehr. Ab
+Januar habe ich endlich auch einen Hiwi, der mich bei der Softwarepflege
+unterstützt. Seine erste Aufgabe wird sein, das neue h5xx in HALMD einzubauen.
+Und im Sommersemester plane ich ein Projekt mit Studenten, bei dem auf Basis von
+h5xx Plugins für LAMMPS und VMD entwickelt werden sollen, die unser neues Format
+H5MD verarbeiten können.
+
+Jetzt habe ich gerade einmal wieder in den Code geschaut. Da wird auch klar,
+warum ich das noch nicht auf Github geschoben hatte: ich finde im Repository
+einiges Branches "redesign", die sich nicht ohne Konflikt miteinander
+verschmelzen lassen. Konkret ist auf repo.is.mpg.de folgendes zu finden:
+  remotes/origin/redesign
+  remotes/origin/redesign.khr
+  remotes/origin/sandbox/felix.hoefling/policies
+  remotes/origin/sandbox/felix.hoefling/redesign
+  remotes/origin/sandbox/klaus.reuter/redesign.khr
+
+Mir ist es noch nicht gelungen, das alles aufzulösen. Sicherlich bist Du näher an dem Code dran, um das zu entwirren:
+
+- origin/redesign ist die gemeinsame Grundlage für alle anderen Branches, soweit habe ich GitHub gerade aktualisiert
+
+- Ich denke, daß redesign.khr zugunsten von sandbox/klaus.reuter/redesign.khr gelöscht werden kann. Beim Durchschauen des Diffs sieht es alles nach Verbesserungen aus:
+git diff remotes/origin/redesign.khr remotes/origin/sandbox/klaus.reuter/redesign.khr
+(Was ist mit dem auskommentierten Code in h5xx/utility.hpp, kann der gelöscht werden?)
+
+- In sandbox/felix.hoefling/policies gibt es nur einen einzigen Commit. Inwieweit ist das in Deinem Branch enthalten? Falls nicht, kann die Idee des Commits aber auch später nachgeholt werden.
+
+- origin/sandbox/felix.hoefling/redesign enthält noch zwei Commits, die sich nicht ohne weiteres übertragen lassen. Allerdings sieht ein Rebase auf origin/sandbox/klaus.reuter/redesign.khr machbar aus (Konflikte müssen manuell gelöst werden).
+
+Unter'm Strich könnte wohl origin/redesign bis auf origin/sandbox/klaus.reuter/redesign.khr vorgespult werden, die paar Commits aus meiner Sandbox muß ich dann später einmal manuell nachholen.
+
+Wenn Du Kapazitäten dafür hast, könntest Du das bitte einmal nachvollziehen? Wenn Du mir sagst, welcher Branch auf Github landen soll, kann ich das gern schnell machen. Das mit den Schreibrechten können wir genauso gleich einrichten.
+
+Viele Grüße
+
+Felix
+
+
+Am 12.11.2015, 12:46 Uhr, schrieb Klaus Reuter <khr@mpcdf.mpg.de>:
+
+> Hallo Felix,
+>
+>
+> wie geht's?  Ich wollte kurz zurückkommen auf unser h5xx-Projekt.
+>
+> Zunächst wollte ich fragen, ob es nach meinen Arbeiten in 2014/Anfang 2015 noch Neuerungen gab.  Die Version auf GitHub scheint derzeit noch die alte zu sein.
+>
+> Der Anlass für diese Mail ist, dass wir am Rechenzentrum für einen Code aus der MPG Unterstützung für HDF5 und parallele IO leisten sollen.  Da der betreffende Code in C++ geschrieben ist, bietet es sich natürlich an, h5xx einzusetzen.  Möglicherweise übernehme ich die Implementierung oder begleite diese, so dass dies eine tolle Gelegenheit wäre, h5xx in einem echten Code einzusetzen und Bugfixes und Korrekturen an h5xx vorzunehmen.
+>
+> Vorher sollte h5xx aber in der Redesign-Version öffentlich sein.  Wärst Du möglicherweise mit einem Fork auf GitHub einverstanden, falls Du nicht die Zeit haben solltest, Dein Repository auf GitHub (kontinuierlich) zu aktualisieren?
+>
+>
+> Beste Gruesse,
+>
+> Klaus
+>
+>
+
+
+--
+Prof. Dr. Felix Höfling
+Computational Statistical & Biological Physics
+
+Freie Universität Berlin
+Fachbereich Mathematik und Informatik
+
+Phone:    +49 30 838 50545
+Fax:    +49 30 838 450545
+Mail:    Arnimallee 6, 14195 Berlin, Germany
+Web:    http://www.is.mpg.de/dietrich/hoefling

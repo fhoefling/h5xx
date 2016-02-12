@@ -7,9 +7,9 @@
 #echo "h5xx build example.  Please adapt this script first.  Exiting." && exit 1
 
 # --- actions
-CLEAN="no"
+CLEAN="yes"
 BUILD="yes"
-TEST="yes"
+TEST="no"
 #DOXYGEN="yes"
 
 # --- select compiler

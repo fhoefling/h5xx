@@ -1,6 +1,6 @@
 /*
  * Copyright © 2010-2014 Felix Höfling
- * Copyright © 2014-2015 Klaus Reuter
+ * Copyright © 2014-2016 Klaus Reuter
  *
  * This file is part of h5xx.
  *
@@ -56,15 +56,11 @@ typedef boost::multi_array<int, 2> array_2d_t;
 
 BOOST_AUTO_TEST_CASE( construction )
 {
-    BOOST_CHECK_NO_THROW(
-        dataspace();
-    );
+    BOOST_CHECK_NO_THROW(dataspace());
 
     {
         dataspace ds;
-        BOOST_CHECK(
-            ds.valid() == false
-        );
+        BOOST_CHECK(ds.valid() == false);
     }
 
     // --- creation of dataspace from a std::vector
@@ -75,44 +71,24 @@ BOOST_AUTO_TEST_CASE( construction )
         vec.push_back(6);
         vec.push_back(8);
         dataspace ds;
-        BOOST_CHECK_NO_THROW(
-            ds = create_dataspace(vec);
-        );
-        BOOST_CHECK(
-            ds.valid() == true
-        );
+        BOOST_CHECK_NO_THROW(ds = create_dataspace(vec));
+        BOOST_CHECK(ds.valid() == true);
         std::vector<hsize_t> xts;
-        BOOST_CHECK_NO_THROW(
-            xts = ds.extents();
-        );
-        BOOST_CHECK_EQUAL(
-            xts.size(), size_t(1)
-        );
-        BOOST_CHECK_EQUAL(
-            xts[0], vec.size()
-        );
+        BOOST_CHECK_NO_THROW(xts = ds.extents());
+        BOOST_CHECK_EQUAL(xts.size(), size_t(1));
+        BOOST_CHECK_EQUAL(xts[0], vec.size());
     }
 
     // --- creation of dataspace from a boost::array
     {
         boost::array<int, 4> vec = {{2,4,6,8}};
         dataspace ds;
-        BOOST_CHECK_NO_THROW(
-            ds = create_dataspace(vec);
-        );
-        BOOST_CHECK(
-            ds.valid() == true
-        );
+        BOOST_CHECK_NO_THROW(ds = create_dataspace(vec));
+        BOOST_CHECK(ds.valid() == true);
         std::vector<hsize_t> xts;
-        BOOST_CHECK_NO_THROW(
-            xts = ds.extents();
-        );
-        BOOST_CHECK_EQUAL(
-            xts.size(), size_t(1)
-        );
-        BOOST_CHECK_EQUAL(
-            xts[0], vec.size()
-        );
+        BOOST_CHECK_NO_THROW(xts = ds.extents());
+        BOOST_CHECK_EQUAL(xts.size(), size_t(1));
+        BOOST_CHECK_EQUAL(xts[0], vec.size());
     }
 
 
@@ -128,25 +104,13 @@ BOOST_AUTO_TEST_CASE( construction )
             arr.assign(data, data + nelem);
         }
         dataspace ds;
-        BOOST_CHECK_NO_THROW(
-            ds = create_dataspace(arr);
-        );
-        BOOST_CHECK(
-            ds.valid() == true
-        );
+        BOOST_CHECK_NO_THROW(ds = create_dataspace(arr));
+        BOOST_CHECK(ds.valid() == true);
         std::vector<hsize_t> xts;
-        BOOST_CHECK_NO_THROW(
-            xts = ds.extents();
-        );
-        BOOST_CHECK_EQUAL(
-            xts.size(), size_t(2)
-        );
-        BOOST_CHECK_EQUAL(
-            xts[0], hsize_t(NI)
-        );
-        BOOST_CHECK_EQUAL(
-            xts[1], hsize_t(NJ)
-        );
+        BOOST_CHECK_NO_THROW(xts = ds.extents());
+        BOOST_CHECK_EQUAL(xts.size(), size_t(2));
+        BOOST_CHECK_EQUAL(xts[0], hsize_t(NI));
+        BOOST_CHECK_EQUAL(xts[1], hsize_t(NJ));
     }
 
 
@@ -156,21 +120,11 @@ BOOST_AUTO_TEST_CASE( construction )
         vec.push_back(4);
         vec.push_back(6);
         dataspace ds;
-        BOOST_CHECK_NO_THROW(
-            ds = create_dataspace(vec);
-        );
-        BOOST_CHECK(
-            ds.valid() == true
-        );
-        BOOST_CHECK_EQUAL(
-            ds.rank(), 1
-        );
-        BOOST_CHECK(
-            ds.is_scalar() == false
-        );
-        BOOST_CHECK(
-            ds.is_simple() == true
-        );
+        BOOST_CHECK_NO_THROW(ds = create_dataspace(vec));
+        BOOST_CHECK(ds.valid() == true);
+        BOOST_CHECK_EQUAL(ds.rank(), 1);
+        BOOST_CHECK(ds.is_scalar() == false);
+        BOOST_CHECK(ds.is_simple() == true);
     }
 
 
@@ -186,46 +140,28 @@ BOOST_AUTO_TEST_CASE( construction )
             arr.assign(data, data + nelem);
         }
         dataspace ds;
-        BOOST_CHECK_NO_THROW(
-            ds = create_dataspace(arr);
-        );
-        BOOST_CHECK(
-            ds.valid() == true
-        );
+        BOOST_CHECK_NO_THROW(ds = create_dataspace(arr));
+        BOOST_CHECK(ds.valid() == true);
         // --- everything is selected by default
-        BOOST_CHECK(
-            ds.get_select_npoints() == NI*NJ
-        );
+        BOOST_CHECK(ds.get_select_npoints() == NI*NJ);
         // --- define a range by using the numpy-arange-like specification
         {
             slice slc("1:3,3:5");  // 2x2 patch
-            BOOST_CHECK_NO_THROW(
-                ds.select(slc);
-            );
+            BOOST_CHECK_NO_THROW(ds.select(slc));
         }
-        BOOST_CHECK(
-            ds.get_select_npoints() == 2*2
-        );
+        BOOST_CHECK(ds.get_select_npoints() == 2*2);
         {
             slice slc("7,7");  // separate single item
-            BOOST_CHECK_NO_THROW(
-                ds.select(slc, dataspace::OR);  // add slice to selection, "OR" works like a binary OR
-            );
+            BOOST_CHECK_NO_THROW(ds.select(slc, dataspace::OR));  // add slice to selection, "OR" works like a binary OR
         }
         //std::cout << ds.get_select_npoints() << std::endl;
-        BOOST_CHECK(
-            ds.get_select_npoints() == 2*2 + 1
-        );
+        BOOST_CHECK(ds.get_select_npoints() == 2*2 + 1);
         {
             slice slc("2:4,4:6");
-            BOOST_CHECK_NO_THROW(
-                ds.select(slc, dataspace::AND);  // add slice to selection, "AND" works like a binary AND
-            );
+            BOOST_CHECK_NO_THROW(ds.select(slc, dataspace::AND));  // add slice to selection, "AND" works like a binary AND
         }
         // std::cout << ds.get_select_npoints() << std::endl;
-        BOOST_CHECK(
-            ds.get_select_npoints() == 1
-        );
+        BOOST_CHECK(ds.get_select_npoints() == 1);
     }
 
 }

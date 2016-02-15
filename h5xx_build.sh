@@ -19,7 +19,7 @@ export CXX="g++"
 # --- parallel build
 # NPROC=`nproc`
 # --- MPI support, requires an MPI-HDF5 build
-MPI="yes"
+MPI="no"
 # --- build directory
 H5XX_BUILD_PREFIX=${HOME}/h5xx
 # --- source code location

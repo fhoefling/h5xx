@@ -28,6 +28,7 @@
 #include <test/fixture.hpp>
 
 #include <unistd.h>
+#include <cstdio>
 #include <cmath>
 #include <string>
 

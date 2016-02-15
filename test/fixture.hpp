@@ -43,7 +43,7 @@ struct h5file
     {
         file.close(true);
 #ifdef NDEBUG
-        unlink(filename);
+        remove(filename);
         BOOST_TEST_MESSAGE("HDF5 file removed: " << filename);
 #endif
     }

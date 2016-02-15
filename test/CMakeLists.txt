@@ -25,7 +25,6 @@ endif(suffix STREQUAL "${CMAKE_SHARED_LIBRARY_SUFFIX}")
 foreach(module
   attribute
   dataset
-  dataset_big
   dataspace
   file
   group
@@ -44,3 +43,37 @@ foreach(module
     test_h5xx_${module} --log_level=test_suite
   )
 endforeach()
+
+# do not add the _big and _big_mpi tests to the default test set -- start them manually
+foreach(module
+  dataset_big
+  )
+  add_executable(test_h5xx_${module}
+    ${module}.cpp
+  )
+  target_link_libraries(test_h5xx_${module}
+    ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+    ${HDF5_LIBRARY}
+    pthread
+    dl
+    z
+  )
+endforeach()
+
+
+if (MPI_FOUND)
+    foreach(module
+      dataset_big_mpi
+      )
+      add_executable(test_h5xx_${module}
+        ${module}.cpp
+      )
+      target_link_libraries(test_h5xx_${module}
+        #${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
+        ${HDF5_LIBRARY}
+        pthread
+        dl
+        z
+      )
+    endforeach()
+endif()

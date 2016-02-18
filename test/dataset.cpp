@@ -125,7 +125,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
 {
     const int NI=10;
     const int NJ=NI;
-    boost::array<hsize_t, 2> chunkDims = {{2,2}};
+    boost::array<size_t, 2> chunkDims = {{2,2}};
     std::string name;
     array_2d_t arrayRead(boost::extents[NJ][NI]);
     array_2d_t arrayWrite(boost::extents[NJ][NI]);

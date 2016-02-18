@@ -39,10 +39,12 @@ int main(int argc, char ** argv) {
     const std::string filename = "test_h5xx_dataset_big_mpi.h5";
     const std::string matrix_name = "distributed integer matrix";
 
-    // size of the local matrix
-    const int NI = 100;  // local matrix blocks are stacked along this dimension globally
-    const int NJ = 1000;
-    const int NE = NI * NJ;
+    // WARNING -- size of the process-local matrix is set to 1 GB -- WARNING
+    const size_t NI = 256;  // local matrix blocks are stacked along this dimension globally
+    const size_t NJ = 1048576;
+
+    const size_t NE = NI * NJ;
+    const float gigabytes_per_process = float(sizeof(int)*NI*NJ)/float(1073741824);
 
     int rank;
     int size;
@@ -52,10 +54,12 @@ int main(int argc, char ** argv) {
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
-    if (rank == 0)
+    if (rank == 0) {
         std::cout << "Running 1 test case..." << std::endl;
+        std::cout << "Running " << size << " MPI processes, writing " << gigabytes_per_process << " GB per process ..." << std::endl;
+    }
 
-    // write distributed matrix to a HDF5 file
+    // write distributed matrix to HDF5 file
     {
         // allocate and initialize local array block
         array_2d_t matrix(boost::extents[NI][NJ]);
@@ -66,14 +70,14 @@ int main(int argc, char ** argv) {
 
         h5xx::datatype matrix_datatype(matrix);
 
-        std::vector<hsize_t> matrix_global_dim;
+        std::vector<size_t> matrix_global_dim;
         matrix_global_dim.push_back(NI * size);
         matrix_global_dim.push_back(NJ);
         h5xx::dataspace matrix_dataspace(matrix_global_dim);
 
-        std::vector<hsize_t> chunk_dims;
-        chunk_dims.push_back(10);
-        chunk_dims.push_back(10);
+        std::vector<size_t> chunk_dims;
+        chunk_dims.push_back(256);
+        chunk_dims.push_back(256);
 
         h5xx::create_dataset(hdf5_file,
                              matrix_name,
@@ -82,10 +86,10 @@ int main(int argc, char ** argv) {
                              h5xx::policy::storage::chunked(chunk_dims));
 
 
-        std::vector<int> slice_offset;
+        std::vector<size_t> slice_offset;
         slice_offset.push_back(NI * rank);  // stack matrix blocks
         slice_offset.push_back(0);
-        std::vector<int> slice_count;
+        std::vector<size_t> slice_count;
         slice_count.push_back(NI);
         slice_count.push_back(NJ);
         h5xx::slice matrix_slice(slice_offset, slice_count);
@@ -99,6 +103,7 @@ int main(int argc, char ** argv) {
 
     // read complete matrix back from the file and check its entries
     if (rank == 0) {
+        std::cout << "Reading and checking " << float(size)*gigabytes_per_process << " GB on MPI rank 0 ..." << std::endl;
         try {
             array_2d_t matrix;
             h5xx::file hdf5_file(filename);
@@ -106,9 +111,9 @@ int main(int argc, char ** argv) {
                                matrix_name,
                                matrix);
             // test block by block if the matrix element is equal to the generating processors rank
-            for (int j=0; j<size; ++j) {
-                int idx = j * NE;
-                for (int i=0; i<NE; ++i) {
+            for (size_t j=0; j<size; ++j) {
+                size_t idx = j * NE;
+                for (size_t i=0; i<NE; ++i) {
                     if (matrix.data()[idx] != j)
                         throw std::string("matrix element is wrong");
                     ++idx;
@@ -121,7 +126,7 @@ int main(int argc, char ** argv) {
         } catch (...) {
             std::cout << "*** Error in matrix read-back from HDF5 file." << std::endl;
         }
-        remove(filename.c_str());  // comment to inspect HDF5 file
+        //remove(filename.c_str());  // comment to inspect HDF5 file
     }
 
     MPI_Barrier(comm);

@@ -1,7 +1,7 @@
 /*
- * Copyright © 2014-2015 Klaus Reuter
  * Copyright © 2014      Felix Höfling
  * Copyright © 2014      Manuel Dibak
+ * Copyright © 2014-2016 Klaus Reuter
  *
  * This file is part of h5xx.
  *
@@ -56,16 +56,22 @@ public:
 
     /** construct simple dataspace of given extents, boost::array version */
     template <std::size_t N>
+    dataspace(boost::array<std::size_t, N> const& dims);
+    template <std::size_t N>
     dataspace(boost::array<hsize_t, N> const& dims);
 
     /** construct simple dataspace of given extents, std::vector version */
+    dataspace(std::vector<std::size_t> const& dims);
     dataspace(std::vector<hsize_t> const& dims);
 
     /** construct simple dataspace of given extents and maximal extents, boost::array version */
     template <std::size_t N>
+    dataspace(boost::array<size_t, N> const& dims, boost::array<size_t, N> const& max_dims);
+    template <std::size_t N>
     dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t, N> const& max_dims);
 
     /** construct simple dataspace of given extents and maximal extents, std::vector version */
+    dataspace(std::vector<size_t> const& dims, std::vector<size_t> const& max_dims);
     dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims);
 
 // --- generic array versions, cannot be resolved by the compiler currently ---
@@ -112,15 +118,18 @@ public:
     /** returns rank/dimensionality of simple dataspace */
     int rank() const;
 
-    /** returns extents/dimensions of simple dataspace, optionally the maximal
+    /** returns extents/dimensions of simple dataspace, optionally the maximum
     *   dimensions are returned in maxdims
     */
+//    template <std::size_t N>
+//    boost::array<std::size_t, N> extents(hsize_t *maxdims = NULL) const;
     template <std::size_t N>
     boost::array<hsize_t, N> extents(hsize_t *maxdims = NULL) const;
 
-    /** returns extents/dimensions of simple dataspace, optionally the maximal
+    /** returns extents/dimensions of simple dataspace, optionally the maximum
     *   dimensions are returned in maxdims
     */
+//    std::vector<std::size_t> extents(hsize_t *maxdims = NULL) const;
     std::vector<hsize_t> extents(hsize_t *maxdims = NULL) const;
 
     /** returns true if dataspace is of scalar type */
@@ -128,14 +137,6 @@ public:
 
     /** returns true if dataspace is of simple type */
     bool is_simple() const;
-
-//    /**
-//     * TODO : obsolete, use the method "select" in combination with slices
-//     * simple hyperslab selection, offsets and counts are given as some array
-//     * type (e.g., boost::array or std::vector)
-//     */
-//    template <typename ArrayType>
-//    void select_hyperslab(ArrayType const& offset, ArrayType const& count);
 
     /**
      * flags for slice (hyperslab) selection
@@ -187,48 +188,72 @@ dataspace const& dataspace::operator=(dataspace other)
 
 dataspace::dataspace(H5S_class_t type)
 {
-    if((hid_ = H5Screate(type)) < 0){
+    if((hid_ = H5Screate(type)) < 0)
         throw error("creating dataspace");
-    }
 }
 
+
+dataspace::dataspace(std::vector<std::size_t> const& dims)
+{
+    std::vector<hsize_t> h_dims = to_hsize_t(dims);
+    if ((hid_ = H5Screate_simple(h_dims.size(), &*h_dims.begin(), NULL)) < 0)
+        throw error("creating simple dataspace");
+}
+dataspace::dataspace(std::vector<hsize_t> const& dims)
+{
+    if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), NULL)) < 0)
+        throw error("creating simple dataspace");
+}
+
+template <std::size_t N>
+dataspace::dataspace(boost::array<std::size_t, N> const& dims)
+{
+    std::vector<hsize_t> h_dims = to_hsize_t(dims);
+    if ((hid_ = H5Screate_simple(N, &*h_dims.begin(), NULL)) < 0)
+        throw error("creating simple dataspace");
+}
 template <std::size_t N>
 dataspace::dataspace(boost::array<hsize_t, N> const& dims)
 {
-    if ((hid_ = H5Screate_simple(N, &*dims.begin(), NULL)) < 0) {
+    if ((hid_ = H5Screate_simple(N, &*dims.begin(), NULL)) < 0)
         throw error("creating simple dataspace");
-    }
+}
+
+
+dataspace::dataspace(std::vector<size_t> const& dims, std::vector<size_t> const& max_dims)
+{
+    std::vector<hsize_t> h_dims = to_hsize_t(dims);
+    std::vector<hsize_t> h_max_dims = to_hsize_t(max_dims);
+    if ((hid_ = H5Screate_simple(h_dims.size(), &*h_dims.begin(), &*h_max_dims.begin())) < 0)
+        throw error("creating simple dataspace");
+}
+dataspace::dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims)
+{
+    if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), &*max_dims.begin())) < 0)
+        throw error("creating simple dataspace");
 }
 
 template <std::size_t N>
+dataspace::dataspace(boost::array<size_t, N> const& dims, boost::array<size_t, N> const& max_dims)
+{
+    std::vector<hsize_t> h_dims = to_hsize_t(dims);
+    std::vector<hsize_t> h_max_dims = to_hsize_t(max_dims);
+    if ((hid_ = H5Screate_simple(N, &*h_dims.begin(), &*h_max_dims.begin())) < 0)
+        throw error("creating simple dataspace");
+}
+template <std::size_t N>
 dataspace::dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t, N> const& max_dims)
 {
-    if ((hid_ = H5Screate_simple(N, &*dims.begin(), &*max_dims.begin())) < 0) {
+    if ((hid_ = H5Screate_simple(N, &*dims.begin(), &*max_dims.begin())) < 0)
         throw error("creating simple dataspace");
-    }
-}
-
-dataspace::dataspace(std::vector<hsize_t> const& dims)
-{
-    if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), NULL)) < 0) {
-        throw error("creating simple dataspace");
-    }
-}
-
-dataspace::dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims)
-{
-    if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), &*max_dims.begin())) < 0) {
-        throw error("creating simple dataspace");
-    }
 }
 
 
 dataspace::~dataspace()
 {
     if (hid_ >= 0) {
-        if(H5Sclose(hid_) < 0){
+        if(H5Sclose(hid_) < 0)
             throw error("closing h5xx::dataspace with ID " + boost::lexical_cast<std::string>(hid_));
-        }
         hid_ = -1;
     }
 }
@@ -239,48 +264,59 @@ int dataspace::rank() const
         throw error("invalid dataspace");
     }
     int rank = H5Sget_simple_extent_ndims(hid_);
-    if (rank < 0) {
+    if (rank < 0)
         throw error("dataspace has invalid rank");
-    }
     return rank;
 }
+
 
 template <std::size_t N>
 boost::array<hsize_t, N> dataspace::extents(hsize_t *maxdims) const
 {
-    boost::array<hsize_t, N> dims;
-    if (rank() != N) {
+    boost::array<hsize_t, N> h_dims;
+    if (rank() != N)
         throw error("mismatching dataspace rank");
-    }
-    if (H5Sget_simple_extent_dims(hid_, &*dims.begin(), maxdims) < 0) {
+    if (H5Sget_simple_extent_dims(hid_, &*h_dims.begin(), maxdims) < 0)
         throw error("determining extents");
-    }
-    return dims;
+    return h_dims;
 }
+//template <std::size_t N>
+//boost::array<size_t, N> dataspace::extents(hsize_t *maxdims) const
+//{
+//    boost::array<hsize_t, N> h_dims;
+//    h_dims = dataspace::extents(maxdims);
+//    boost::array<size_t, N> dims = to_size_t(h_dims);
+//    return dims;
+//}
+
 
 std::vector<hsize_t> dataspace::extents(hsize_t *maxdims) const
 {
-    std::vector<hsize_t> dims( rank() );
-    if (H5Sget_simple_extent_dims(hid_, &*dims.begin(), maxdims) < 0) {
+    std::vector<hsize_t> h_dims(rank());
+    if (H5Sget_simple_extent_dims(hid_, &*h_dims.begin(), maxdims) < 0)
         throw error("determining extents");
-    }
-    return dims;
+    return h_dims;
 }
+//std::vector<size_t> dataspace::extents(hsize_t *maxdims) const
+//{
+//    std::vector<hsize_t> h_dims(rank());
+//    h_dims = dataspace::extents(maxdims);
+//    std::vector<size_t> dims = to_size_t(h_dims);
+//    return dims;
+//}
 
 
 bool dataspace::is_scalar() const
 {
-    if (!valid()) {
+    if (!valid())
         return false;
-    }
     return H5Sget_simple_extent_type(hid_) == H5S_SCALAR;
 }
 
 bool dataspace::is_simple() const
 {
-    if (!valid()) {
+    if (!valid())
         return false;
-    }
     return H5Sget_simple_extent_type(hid_) == H5S_SIMPLE;
 }
 
@@ -303,9 +339,8 @@ void dataspace::select(slice const& _slice, int mode)
     // --- to interpret the slicing string inside "slice" we need the dataspace's extents
     //     and, unfortunately, a non-const local copy
     slice selection = _slice;
-    if (selection.has_string()) {
+    if (selection.has_string())
         selection.parse_string( extents() );
-    }
     if (selection.rank() != rank())
         throw error("dataspace and slice have mismatching rank");
     if (H5Sselect_hyperslab(    hid_

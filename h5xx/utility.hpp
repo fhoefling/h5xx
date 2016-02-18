@@ -309,9 +309,51 @@ std::vector<std::string> chop(std::string const& str, std::string const& sep)
     return items;
 }
 
+/**
+ * Conversion: std::vector<std::size_t> --> std::vector<hsize_t>
+ */
+std::vector<hsize_t> to_hsize_t(std::vector<std::size_t> const& vec_size_t) {
+    std::vector<hsize_t> vec_hsize_t;
+    for (std::vector<size_t>::const_iterator it=vec_size_t.begin(); it!=vec_size_t.end(); ++it)
+        vec_hsize_t.push_back( (hsize_t) *it );
+    return vec_hsize_t;
+}
+
+/**
+ * Conversion: boost::array<std::size_t, N> --> std::vector<hsize_t>
+ */
+template <std::size_t N>
+std::vector<hsize_t> to_hsize_t(boost::array<std::size_t, N> const& arr_size_t) {
+    typedef typename boost::array<std::size_t, N>::iterator it_t;
+    std::vector<hsize_t> vec_hsize_t;
+    for (it_t it=arr_size_t.begin(); it!=arr_size_t.end(); ++it)
+        vec_hsize_t.push_back( (hsize_t) *it );
+    return vec_hsize_t;
+}
+
+/**
+ * Conversion: std::vector<hsize_t> --> std::vector<std::size_t>
+ */
+std::vector<std::size_t> to_size_t(std::vector<hsize_t> const& vec_hsize_t) {
+    std::vector<std::size_t> vec_size_t;
+    for (std::vector<hsize_t>::const_iterator it=vec_hsize_t.begin(); it!=vec_hsize_t.end(); ++it)
+        vec_size_t.push_back( (std::size_t) *it );
+    return vec_size_t;
+}
+
+/**
+ * Conversion: boost::array<hsize_t, N> --> std::vector<size_t>
+ */
+template <std::size_t N>
+std::vector<size_t> to_size_t(boost::array<hsize_t, N> const& arr_hsize_t) {
+    typedef typename boost::array<hsize_t, N>::iterator it_t;
+    std::vector<std::size_t> vec_size_t;
+    for (it_t it=arr_hsize_t.begin(); it!=arr_hsize_t.end(); ++it)
+        vec_size_t.push_back( (std::size_t) *it );
+    return vec_size_t;
+}
+
 } // namespace h5xx
-
-
 
 
 #endif /* ! H5XX_UTILITY_HPP */

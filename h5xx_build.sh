@@ -1,38 +1,67 @@
 #!/bin/bash
 
-# --- h5xx configure/build script example (Linux) ---
+# --- h5xx example script for building the example and test executables (Linux) ---
+#
+# The environment variables BOOST_ROOT and HDF5_ROOT can be used to point to
+# the installation locations of these libraries.
+#
 
-# Uncomment the following line when you edit
-# this script and adapt it to your local environment.
-#echo "h5xx build example.  Please adapt this script first.  Exiting." && exit 1
 
 # --- actions
-CLEAN="yes"
+CLEAN="no"
 BUILD="yes"
 TEST="no"
 #DOXYGEN="yes"
 
 # --- select compiler
 export CXX="g++"
-# export CXX="clang"
-# export CXX="icpc"
+#export CXX="icpc"
+# export CXX="clang"  # not tested
+
 # --- parallel build
-# NPROC=`nproc`
+#NPROC=`nproc`
+
 # --- MPI support, requires an MPI-HDF5 build
-MPI="no"
+MPI="yes"
+
 # --- build directory
 H5XX_BUILD_PREFIX=${HOME}/h5xx
+
 # --- source code location
 export H5XX_ROOT=`pwd`
-# --- Boost library installation directory
-export BOOST_ROOT=/opt/apps/boost/1.60
-# --- HDF5 library installation directory
-export HDF5_ROOT=/opt/apps/hdf5/1.8.16
-if [ x"$MPI" == x"yes" ]
-then
-  #export CXX=mpicxx
-  export HDF5_ROOT=${HDF5_ROOT}-mpi
+
+
+
+# --- end of configuration section ---
+
+
+
+# --- configure Boost library installation directory ---
+# check if library installation locations are provided by *_HOME environment
+# variables (such as at the MPCDF where environment modules are used)
+if [ x"${BOOST_HOME}" != x"" ]; then
+  export BOOST_ROOT=$BOOST_HOME
 fi
+if [ x"${BOOST_ROOT}" == x"" ]; then
+  export BOOST_ROOT=/opt/apps/boost/1.60
+fi
+
+# --- configure HDF5 library installation directory ---
+# check if library installation locations are provided by *_HOME environment
+# variables (such as at the MPCDF where environment modules are used)
+if [ x"${HDF5_HOME}" != x"" ]; then
+  export HDF5_ROOT=$HDF5_HOME
+fi
+if [ x"${HDF5_ROOT}" == x"" ]; then
+  export HDF5_ROOT=/opt/apps/hdf5/1.8.16
+  if [ x"$MPI" == x"yes" ]
+  then
+    #export CXX=mpicxx
+    export HDF5_ROOT=${HDF5_ROOT}-mpi
+  fi
+fi
+
+
 # --- generate colored GCC error output (only supported by recent GCC versions)
 export GCC_COLORS='error=01;31:warning=01;35:note=01;36:caret=01;32:locus=01:quote=01'
 

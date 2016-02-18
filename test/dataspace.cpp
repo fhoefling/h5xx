@@ -73,9 +73,9 @@ BOOST_AUTO_TEST_CASE( construction )
         dataspace ds;
         BOOST_CHECK_NO_THROW(ds = create_dataspace(vec));
         BOOST_CHECK(ds.valid() == true);
-        std::vector<hsize_t> xts;
-        BOOST_CHECK_NO_THROW(xts = ds.extents());
-        BOOST_CHECK_EQUAL(xts.size(), size_t(1));
+        std::vector<std::size_t> xts;
+        BOOST_CHECK_NO_THROW(xts = to_size_t(ds.extents()));
+        BOOST_CHECK_EQUAL(xts.size(), std::size_t(1));
         BOOST_CHECK_EQUAL(xts[0], vec.size());
     }
 
@@ -85,9 +85,9 @@ BOOST_AUTO_TEST_CASE( construction )
         dataspace ds;
         BOOST_CHECK_NO_THROW(ds = create_dataspace(vec));
         BOOST_CHECK(ds.valid() == true);
-        std::vector<hsize_t> xts;
-        BOOST_CHECK_NO_THROW(xts = ds.extents());
-        BOOST_CHECK_EQUAL(xts.size(), size_t(1));
+        std::vector<std::size_t> xts;
+        BOOST_CHECK_NO_THROW(xts = to_size_t(ds.extents()));
+        BOOST_CHECK_EQUAL(xts.size(), std::size_t(1));
         BOOST_CHECK_EQUAL(xts[0], vec.size());
     }
 
@@ -106,11 +106,11 @@ BOOST_AUTO_TEST_CASE( construction )
         dataspace ds;
         BOOST_CHECK_NO_THROW(ds = create_dataspace(arr));
         BOOST_CHECK(ds.valid() == true);
-        std::vector<hsize_t> xts;
-        BOOST_CHECK_NO_THROW(xts = ds.extents());
-        BOOST_CHECK_EQUAL(xts.size(), size_t(2));
-        BOOST_CHECK_EQUAL(xts[0], hsize_t(NI));
-        BOOST_CHECK_EQUAL(xts[1], hsize_t(NJ));
+        std::vector<std::size_t> xts;
+        BOOST_CHECK_NO_THROW(xts = to_size_t(ds.extents()));
+        BOOST_CHECK_EQUAL(xts.size(), std::size_t(2));
+        BOOST_CHECK_EQUAL(xts[0], NI);
+        BOOST_CHECK_EQUAL(xts[1], NJ);
     }
 
 

@@ -62,10 +62,10 @@ void write_int_data(std::string const& filename, array_2d_t const& array)
     // (1) create and write chunked and compressed dataset
     {
         name = "integer array";
-        hsize_t chunk_dims[] = {2, 2};
+        std::vector<size_t> chunk_dims(2,2);
         // derive dataspace and datatype from the array internally
         h5xx::create_dataset(file, name, array
-          , h5xx::policy::storage::chunked(2, chunk_dims)  /* optional argument */
+          , h5xx::policy::storage::chunked(chunk_dims)  /* optional argument */
                 .add(h5xx::policy::filter::deflate())
         );
         h5xx::write_dataset(file, name, array);
@@ -130,7 +130,7 @@ void write_int_data_2(std::string const& filename, array_2d_t const& array)
 
     {
         name = "E -- integer array, chunked, fill_value, deflate";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .set(h5xx::policy::storage::fill_value(42))
@@ -141,7 +141,7 @@ void write_int_data_2(std::string const& filename, array_2d_t const& array)
 
     {
         name = "F -- integer array, chunked, shuffle";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::shuffle())
@@ -151,7 +151,7 @@ void write_int_data_2(std::string const& filename, array_2d_t const& array)
 
     {
         name = "G -- integer array, chunked, fletcher32";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::fletcher32())
@@ -161,7 +161,7 @@ void write_int_data_2(std::string const& filename, array_2d_t const& array)
 
     {
         name = "H -- integer array, chunked, scaleoffset";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::scaleoffset<int>())
@@ -171,7 +171,7 @@ void write_int_data_2(std::string const& filename, array_2d_t const& array)
 
     {
         name = "I -- integer array, chunked, nbit";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::nbit())
@@ -240,7 +240,7 @@ void write_dbl_data(std::string const& filename, array_2d_dbl_t const& array)
 
     {
         name = "E -- double array, chunked, fill_value, deflate";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .set(h5xx::policy::storage::fill_value(42.667))
@@ -251,7 +251,7 @@ void write_dbl_data(std::string const& filename, array_2d_dbl_t const& array)
 
     {
         name = "F -- double array, chunked, shuffle";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::shuffle())
@@ -261,7 +261,7 @@ void write_dbl_data(std::string const& filename, array_2d_dbl_t const& array)
 
     {
         name = "G -- double array, chunked, fletcher32";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::fletcher32())
@@ -271,7 +271,7 @@ void write_dbl_data(std::string const& filename, array_2d_dbl_t const& array)
 
     {
         name = "H -- double array, chunked, scaleoffset";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::scaleoffset<double>(1))
@@ -281,7 +281,7 @@ void write_dbl_data(std::string const& filename, array_2d_dbl_t const& array)
 
     {
         name = "I -- double array, chunked, nbit";
-        std::vector<hsize_t> chunk_dims(2,2);
+        std::vector<size_t> chunk_dims(2,2);
         h5xx::create_dataset(file, name, array
           , h5xx::policy::storage::chunked(chunk_dims)
                 .add(h5xx::policy::filter::nbit())

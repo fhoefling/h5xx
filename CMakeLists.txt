@@ -25,12 +25,13 @@ find_package(HDF5 QUIET REQUIRED)
 # to configure with MPI support
 #
 if (MPI)
-   find_package(MPI QUIET)
+   #find_package(MPI QUIET)
+   find_package(MPI)
 endif()
 if (MPI_FOUND)
    include_directories(${MPI_INCLUDE_PATH})
    link_libraries(${MPI_LIBRARIES})
-   add_definitions(-DH5XX_USE_MPI)
+   add_definitions(-DH5XX_USE_MPI -DMPICH_IGNORE_CXX_SEEK)
 endif()
 
 include_directories(${HDF5_INCLUDE_DIR})

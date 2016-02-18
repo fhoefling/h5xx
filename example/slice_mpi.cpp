@@ -58,16 +58,16 @@ void write_int_data(std::string const& filename, array_t const& array)
 
     {
         name = "integer array";
-        hsize_t chunk_dims[] = {2};
-        h5xx::create_dataset(file, name, array, h5xx::policy::storage::chunked(1, chunk_dims));
+        boost::array<size_t, 1> chunk_dims = {{2}};
+        h5xx::create_dataset(file, name, array, h5xx::policy::storage::chunked(chunk_dims));
         h5xx::write_dataset(file, name, array);
 
-        boost::array<int,1> offset;
+        boost::array<size_t,1> offset;
         offset[0] = mpi_rank;
-        boost::array<int,1> count = {{1}};
+        boost::array<size_t,1> count = {{1}};
         h5xx::slice slice(offset, count);
 
-        boost::array<int,1> data;
+        boost::array<size_t,1> data;
         data[0] = mpi_rank;
 
         h5xx::write_dataset(file, name, data, slice);

@@ -44,7 +44,7 @@ int main(int argc, char ** argv) {
     const size_t NJ = 1048576;
 
     const size_t NE = NI * NJ;
-    const float gigabytes_per_process = float(sizeof(int)*NI*NJ)/float(1073741824);
+    const double gigabytes_per_process = double(sizeof(int)*NI*NJ)/double(1073741824);
 
     int rank;
     int size;
@@ -54,9 +54,11 @@ int main(int argc, char ** argv) {
     MPI_Comm_rank(comm, &rank);
     MPI_Comm_size(comm, &size);
 
+    const double gigabytes_total = double(size) * gigabytes_per_process;
+
     if (rank == 0) {
         std::cout << "Running 1 test case..." << std::endl;
-        std::cout << "Running " << size << " MPI processes, writing " << gigabytes_per_process << " GB per process ..." << std::endl;
+        std::cout << "write-out: " << size << " MPI processes, " << gigabytes_per_process << " GB per process" << std::endl;
     }
 
     // write distributed matrix to HDF5 file
@@ -66,44 +68,52 @@ int main(int argc, char ** argv) {
         for (size_t i=0; i<NE; ++i)
             matrix.data()[i] = rank;
 
-        h5xx::file hdf5_file(filename, comm, info, h5xx::file::trunc);
+        // --- time the write operation
+        double t0 = MPI_Wtime();
+        {
+            h5xx::file hdf5_file(filename, comm, info, h5xx::file::trunc);
 
-        h5xx::datatype matrix_datatype(matrix);
+            // --- create dataset
+            h5xx::datatype matrix_datatype(matrix);
+            //
+            std::vector<size_t> matrix_global_dim;
+            matrix_global_dim.push_back(NI * size);
+            matrix_global_dim.push_back(NJ);
+            h5xx::dataspace matrix_dataspace(matrix_global_dim);
+            //
+            std::vector<size_t> chunk_dims;
+            chunk_dims.push_back(256);
+            chunk_dims.push_back(256);
+            //
+            h5xx::create_dataset(hdf5_file,
+                                 matrix_name,
+                                 matrix_datatype,
+                                 matrix_dataspace,
+                                 h5xx::policy::storage::chunked(chunk_dims));
 
-        std::vector<size_t> matrix_global_dim;
-        matrix_global_dim.push_back(NI * size);
-        matrix_global_dim.push_back(NJ);
-        h5xx::dataspace matrix_dataspace(matrix_global_dim);
-
-        std::vector<size_t> chunk_dims;
-        chunk_dims.push_back(256);
-        chunk_dims.push_back(256);
-
-        h5xx::create_dataset(hdf5_file,
-                             matrix_name,
-                             matrix_datatype,
-                             matrix_dataspace,
-                             h5xx::policy::storage::chunked(chunk_dims));
-
-
-        std::vector<size_t> slice_offset;
-        slice_offset.push_back(NI * rank);  // stack matrix blocks
-        slice_offset.push_back(0);
-        std::vector<size_t> slice_count;
-        slice_count.push_back(NI);
-        slice_count.push_back(NJ);
-        h5xx::slice matrix_slice(slice_offset, slice_count);
-
-        h5xx::write_dataset(hdf5_file,
-                            matrix_name,
-                            matrix,
-                            matrix_slice);
-    } // file is closed at the end of its scope
+            // --- define slice and write dataset
+            std::vector<size_t> slice_offset;
+            slice_offset.push_back(NI * rank);  // stack matrix blocks
+            slice_offset.push_back(0);
+            std::vector<size_t> slice_count;
+            slice_count.push_back(NI);
+            slice_count.push_back(NJ);
+            h5xx::slice matrix_slice(slice_offset, slice_count);
+            //
+            h5xx::write_dataset(hdf5_file,
+                                matrix_name,
+                                matrix,
+                                matrix_slice);
+        } // file is closed at the end of its scope
+        double t1 = MPI_Wtime();
+        if (rank == 0)
+            std::cout << "write-out: total data rate = " << gigabytes_total/(t1 - t0) << " GB/s" << std::endl;
+    }
 
 
     // read complete matrix back from the file and check its entries
     if (rank == 0) {
-        std::cout << "Reading and checking " << float(size)*gigabytes_per_process << " GB on MPI rank 0 ..." << std::endl;
+        std::cout << "Reading and checking " << gigabytes_total << " GB on MPI rank 0 ..." << std::endl;
         try {
             array_2d_t matrix;
             h5xx::file hdf5_file(filename);

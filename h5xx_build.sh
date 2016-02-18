@@ -8,7 +8,7 @@
 
 
 # --- actions
-CLEAN="no"
+CLEAN="yes"
 BUILD="yes"
 TEST="no"
 #DOXYGEN="yes"

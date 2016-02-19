@@ -5,6 +5,9 @@
  * The local matrices are filled with the local processes' rank.
  * The read-back and check is performed by rank 0 only.
  *
+ * The program may be used to do performance experiments on
+ * parallel file systems, varying array sizes and HDF5 chunk sizes.
+ *
  * Copyright © 2016 Klaus Reuter
  *
  * This file is part of h5xx.
@@ -35,16 +38,31 @@
 
 typedef boost::multi_array<int, 2> array_2d_t;
 
+
 int main(int argc, char ** argv) {
     const std::string filename = "test_h5xx_dataset_big_mpi.h5";
     const std::string matrix_name = "distributed integer matrix";
 
-    // WARNING -- size of the process-local matrix is set to 1 GB -- WARNING
-    const size_t NI = 256;  // local matrix blocks are stacked along this dimension globally
-    const size_t NJ = 1048576;
+    size_t NI, NJ, CHUNK_I, CHUNK_J;
+    if (argc != 5) {
+        // local matrix blocks are stacked along the first dimension
+        NI = 128;
+        NJ = 262144;
+        // HDF5 chunk size.  May severely affect performance,
+        // especially on GPFS file systems.
+        CHUNK_I = 128;
+        CHUNK_J = 32768;
+    } else {
+        NI = atoi(argv[1]);
+        NJ = atoi(argv[2]);
+        CHUNK_I = atoi(argv[3]);
+        CHUNK_J = atoi(argv[4]);
+    }
+
+    const double kilobytes_per_chunk = double(sizeof(int)*CHUNK_I*CHUNK_J)/double(1<<10);
 
     const size_t NE = NI * NJ;
-    const double gigabytes_per_process = double(sizeof(int)*NI*NJ)/double(1073741824);
+    const double gigabytes_per_process = double(sizeof(int)*NI*NJ)/double(1<<30);
 
     int rank;
     int size;
@@ -58,7 +76,10 @@ int main(int argc, char ** argv) {
 
     if (rank == 0) {
         std::cout << "Running 1 test case..." << std::endl;
-        std::cout << "write-out: " << size << " MPI processes, " << gigabytes_per_process << " GB per process" << std::endl;
+        std::cout << "write-out: " << size << " processes, "
+                  << gigabytes_per_process << " GB per process, "
+                  << kilobytes_per_chunk << " kb per HDF5 chunk, "
+                  << std::endl;
     }
 
     // write distributed matrix to HDF5 file
@@ -82,8 +103,8 @@ int main(int argc, char ** argv) {
             h5xx::dataspace matrix_dataspace(matrix_global_dim);
             //
             std::vector<size_t> chunk_dims;
-            chunk_dims.push_back(256);
-            chunk_dims.push_back(256);
+            chunk_dims.push_back(CHUNK_I);
+            chunk_dims.push_back(CHUNK_J);
             //
             h5xx::create_dataset(hdf5_file,
                                  matrix_name,
@@ -107,11 +128,13 @@ int main(int argc, char ** argv) {
         } // file is closed at the end of its scope
         double t1 = MPI_Wtime();
         if (rank == 0)
-            std::cout << "write-out: total data rate = " << gigabytes_total/(t1 - t0) << " GB/s" << std::endl;
+            std::cout << "write-out: total data rate = " << gigabytes_total/(t1 - t0) << " GB/s, "
+                      << NI << " " << NJ << " " << CHUNK_I << " " << CHUNK_J << " array / chunk dims"
+                      << std::endl;
     }
 
 
-    // read complete matrix back from the file and check its entries
+    // --- read complete matrix back from the file and check its entries (timing is pointless)
     if (rank == 0) {
         std::cout << "Reading and checking " << gigabytes_total << " GB on MPI rank 0 ..." << std::endl;
         try {

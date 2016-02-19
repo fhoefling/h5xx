@@ -6,43 +6,43 @@
 h5xx is a template based C++ wrapper for the HDF5 library.  The goal of h5xx is
 to provide an easy-to-use yet flexible and powerful interface to HDF5 for C++
 codes.  In some sense, h5xx aims at providing similar functionality to C++ as
-h5py does for Python.  In particular, a NumPy-like slicing notation for HDF5
+h5py does to Python.  For example, a NumPy-like slicing notation for HDF5
 hyperslabs is implemented.  Currently, h5xx supports std::vector, boost::array,
 and boost::multi_array containers.
 
-Using h5xx, e.g. a hello world example to write a 2D Boost multi_array would
-look as follows:
+Using h5xx, a hello world example to write a 32x32 Boost multi_array to HDF5
+would look as follows:
 ```
-boost_array_2d_t array(boost::extents[NJ][NI]);
+boost_array_2d_t array(boost::extents[32][32]);
 // fill array with data
-h5xx::file file(filename, h5xx::file::out);
-h5xx::create_dataset(file, name, array);
-h5xx::write_dataset(file, name, array);
+h5xx::file file("data.h5", h5xx::file::out);
+h5xx::create_dataset(file, "my_array", array);
+h5xx::write_dataset(file, "my_array", array);
 ```
 
-The unit test and example codes provide more information and guidance to h5xx'
-capabilities.
+The unit tests and example codes provide further information and guidance to the
+usage and the capabilities of h5xx.
 
 
 ## Requirements
 
 * A compiler that supports at least C++98 is required.  h5xx was developed
 and tested using g++ on x86_64 Linux.  h5xx was tested in addition with icpc.
-* CMAKE: The cmake build system is required to compile the examples and unit
-tests that are packaged with h5xx.
 * HDF5: h5xx requires an installation of the HDF5 library.  HDF5 may be built
 with MPI to support parallel IO.  The deprecated HDF5 C++ bindings are not required.
 * Boost: h5xx requires an installation of the Boost C++ library.
 h5xx supports the Boost array and the Boost multidimensional array datatype.
 Moreover, h5xx uses the Boost `enable_if` set of templates to control the creation
 of SFINAE (substitution-failure-is-not-an-error) conditions.
+* CMAKE: The cmake build system is required to compile the examples and unit
+tests that are packaged with h5xx.
 
 See the file INSTALL.md for some hints on installing and using h5xx.
 
 
-## Code status
+## Supported platforms
 
-As of 2016/02, h5xx was successfully built and tested using the following
+In 2016/02 h5xx was successfully built and tested on the following
 configurations.
 
 * Ubuntu Linux 14.04 (x86_64)
@@ -57,4 +57,4 @@ configurations.
   * Boost: 1.57, 1.58
   * HDF5: 1.8.12, 1.8.16
 
-h5xx is under active development.
+h5xx is considered quite stable, and it is under active development.

@@ -309,6 +309,7 @@ std::vector<std::string> chop(std::string const& str, std::string const& sep)
     return items;
 }
 
+
 /**
  * Conversion: std::vector<std::size_t> --> std::vector<hsize_t>
  */
@@ -352,6 +353,20 @@ std::vector<size_t> to_size_t(boost::array<hsize_t, N> const& arr_hsize_t) {
         vec_size_t.push_back( (std::size_t) *it );
     return vec_size_t;
 }
+
+
+/**
+ * return if a handle id is valid or not
+ */
+inline bool is_valid(hid_t hid)
+{
+#if H5_VERSION_LE(1,8,13)
+    return hid > 0;  // the C++ API of HDF5 ≤ 1.8.13 may return 0 for invalid hids
+#else
+    return hid >= 0; // the above has been fixed in HDF5 1.8.14
+#endif /* H5_VERSION_LE(1,8,13) */
+}
+
 
 } // namespace h5xx
 

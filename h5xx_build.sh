@@ -43,7 +43,7 @@ if [ x"${BOOST_HOME}" != x"" ]; then
   export BOOST_ROOT=$BOOST_HOME
 fi
 if [ x"${BOOST_ROOT}" == x"" ]; then
-  export BOOST_ROOT=/opt/apps/boost/1.60
+  export BOOST_ROOT=/opt/apps/boost/1.58
 fi
 
 # --- configure HDF5 library installation directory ---

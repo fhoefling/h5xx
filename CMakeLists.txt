@@ -34,8 +34,8 @@ if (MPI_FOUND)
    add_definitions(-DH5XX_USE_MPI -DMPICH_IGNORE_CXX_SEEK)
 endif()
 
-include_directories(${HDF5_INCLUDE_DIR})
-include_directories(${Boost_INCLUDE_DIRS})
+include_directories(SYSTEM ${HDF5_INCLUDE_DIR})
+include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 
 enable_testing()

@@ -20,6 +20,20 @@
 #ifndef H5XX_COMPAT_HPP
 #define H5XX_COMPAT_HPP
 
+// HDF5 ≥ 1.8.15 does not compile properly with GCC ≥ 4.8 in C++11 mode due to
+// issues with SSE3 optimisation. For example, it emits:
+//
+//     /usr/lib64/gcc/x86_64-unknown-linux-gnu/4.8.2/include/mmintrin.h:61:54: error: can’t convert between vector values of different size
+//         return (__m64) __builtin_ia32_vec_init_v2si (__i, 0);
+//
+// A related issue is described in http://stackoverflow.com/questions/19043109
+//
+// The following include serves as a work around, it must precede any HDF5
+// headers. Thus, we can not even check for the HDF5 version used.
+#if __cplusplus >= 201103L
+#  include <random>
+#endif
+
 //
 // h5xx wrapper supports the following HDF5 library versions:
 //

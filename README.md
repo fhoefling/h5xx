@@ -1,9 +1,9 @@
-# h5xx -- a template based C++ wrapper for the HDF5 library
+# h5xx — a template-based C++ wrapper for the HDF5 library
 
 
 ## Introduction
 
-h5xx is a template based C++ wrapper for the HDF5 library.  The goal of h5xx is
+h5xx is a template-based C++ wrapper for the HDF5 library.  The goal of h5xx is
 to provide an easy-to-use yet flexible and powerful interface to HDF5 for C++
 codes.  In some sense, h5xx aims at providing similar functionality to C++ as
 h5py does to Python.  For example, a NumPy-like slicing notation wrapping HDF5
@@ -30,7 +30,7 @@ the usage and the capabilities of h5xx.
 and tested using g++ on x86_64 Linux.  h5xx was tested in addition with Intel
 icpc.
 * HDF5: h5xx requires an installation of the HDF5 library.  HDF5 may be built
-with MPI to support parallel IO.  The (deprecated) HDF5 C++ bindings are not required.
+with MPI to support parallel IO.  The (deprecated) HDF5 C++ bindings are *not* required.
 * Boost: h5xx requires an installation of the Boost C++ library.
 h5xx supports the Boost array and the Boost multidimensional array datatype.
 Moreover, h5xx uses the Boost `enable_if` set of templates to control the creation
@@ -43,7 +43,7 @@ See the file INSTALL.md for some hints on installing and using h5xx.
 
 ## Supported platforms
 
-In 2016/02 h5xx was successfully built and tested on the following
+In 2016/02, h5xx was successfully built and tested on the following
 configurations.
 
 * Ubuntu Linux 14.04 (x86_64)

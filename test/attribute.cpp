@@ -146,13 +146,12 @@ BOOST_AUTO_TEST_CASE( array_int )
 {
     typedef boost::array<int, 2> int_array_type;
     typedef boost::array<double, 2> double_array_type;
-    typedef boost::array<int, 3> int_3_type;
-    int_array_type wrong_array = {{1, 2}};
+    double_array_type wrong_array = {{1, 2}};
     int_array_type int_array = {{ 1233, 12344}};
-    BOOST_CHECK_NO_THROW(write_attribute(file, "array, int", wrong_array));           //write wronga array first
-    BOOST_CHECK_NO_THROW(write_attribute(file, "array, int", int_array));            //overwrite with correct array
+    BOOST_CHECK_NO_THROW(write_attribute(file, "array, int", wrong_array));          // write wrong array first
+    BOOST_CHECK_NO_THROW(write_attribute(file, "array, int", int_array));            // overwrite with correct array
     BOOST_CHECK(exists_attribute(file, "array, int"));
-    BOOST_CHECK(read_attribute<int_array_type>(file, "array, int") == int_array);    //check if overwriting was successful
+    BOOST_CHECK(read_attribute<int_array_type>(file, "array, int") == int_array);    // check if overwriting was successful
 }
 
 BOOST_AUTO_TEST_CASE( array_bool )

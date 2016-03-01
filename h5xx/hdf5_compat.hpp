@@ -66,9 +66,4 @@
 
 #include <hdf5.h>
 
-/**
- * HDF5 C++ API (to be deprecated in HALMD)
- */
-//#include <H5Cpp.h>
-
 #endif /* ! H5XX_COMPAT_HPP */

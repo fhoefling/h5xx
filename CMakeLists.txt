@@ -25,7 +25,6 @@ find_package(HDF5 QUIET REQUIRED)
 # to configure with MPI support
 #
 if (MPI)
-   #find_package(MPI QUIET)
    find_package(MPI)
 endif()
 if (MPI_FOUND)

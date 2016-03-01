@@ -189,7 +189,7 @@ void read_int_data(std::string const& filename)
     {
         array_2d_t array;
         h5xx::read_dataset(file, name, array);
-        // print_array(array);
+        print_array(array);
     }
 }
 

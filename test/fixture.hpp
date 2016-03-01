@@ -24,9 +24,6 @@
 
 #include <h5xx/file.hpp>
 
-//#define NDEBUG
-#undef NDEBUG
-
 /**
  * fixture that provides and cleans up an HDF5 file
  */

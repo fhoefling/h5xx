@@ -31,7 +31,7 @@ char const* name = "test_h5xx_file.h5";
 
 using namespace h5xx;
 
-BOOST_GLOBAL_FIXTURE( ctest_full_output );
+BOOST_GLOBAL_FIXTURE( ctest_full_output )
 
 // test standard use cases
 BOOST_AUTO_TEST_CASE( use_cases )

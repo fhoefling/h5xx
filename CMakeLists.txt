@@ -40,4 +40,6 @@ include_directories(${CMAKE_SOURCE_DIR})
 enable_testing()
 include(CTest)
 add_subdirectory(test)
+
+set(H5XX_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/h5xx")
 add_subdirectory(example)

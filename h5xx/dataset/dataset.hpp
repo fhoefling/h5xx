@@ -155,7 +155,7 @@ dataset::dataset(
     }
 }
 
-dataset::~dataset()
+inline dataset::~dataset()
 {
     if (hid_ >= 0) {
         if(H5Dclose(hid_) < 0){
@@ -165,7 +165,7 @@ dataset::~dataset()
     }
 }
 
-dataset::dataset(dataset const& other)
+inline dataset::dataset(dataset const& other)
   : hid_(other.hid_)
 {
     // copying would be safe if the exception were disabled.
@@ -173,13 +173,13 @@ dataset::dataset(dataset const& other)
     H5Iinc_ref(hid_);
 }
 
-dataset const& dataset::operator=(dataset other)
+inline dataset const& dataset::operator=(dataset other)
 {
     swap(*this, other);
     return *this;
 }
 
-dataset::operator dataspace() const
+inline dataset::operator dataspace() const
 {
     if (hid_ < 0) {
         throw error("retrieving dataspace from invalid dataset");
@@ -192,7 +192,7 @@ dataset::operator dataspace() const
     return dspace;
 }
 
-void dataset::write(hid_t type_id, void const* value, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)
+inline void dataset::write(hid_t type_id, void const* value, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)
 {
     if (H5Dwrite(hid_, type_id, mem_space_id, file_space_id, xfer_plist_id, value) < 0)
     {
@@ -200,7 +200,7 @@ void dataset::write(hid_t type_id, void const* value, hid_t mem_space_id, hid_t 
     }
 }
 
-void dataset::read(hid_t type_id, void * buffer, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)
+inline void dataset::read(hid_t type_id, void * buffer, hid_t mem_space_id, hid_t file_space_id, hid_t xfer_plist_id)
 {
     if (H5Dread(hid_, type_id, mem_space_id, file_space_id, xfer_plist_id, buffer) < 0)
     {
@@ -208,7 +208,7 @@ void dataset::read(hid_t type_id, void * buffer, hid_t mem_space_id, hid_t file_
     }
 }
 
-hid_t dataset::get_type()
+inline hid_t dataset::get_type()
 {
     hid_t type_id = H5Dget_type(hid_);
     if (type_id < 0)
@@ -218,12 +218,12 @@ hid_t dataset::get_type()
     return type_id;
 }
 
-hid_t dataset::hid() const
+inline hid_t dataset::hid() const
 {
     return hid_;
 }
 
-bool dataset::valid() const
+inline bool dataset::valid() const
 {
     return (hid_ >= 0);
 }

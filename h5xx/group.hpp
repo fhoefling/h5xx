@@ -94,13 +94,13 @@ private:
  */
 inline bool exists_group(group const& grp, std::string const& name);
 
-group::group(group const& other, std::string const& name)
+inline group::group(group const& other, std::string const& name)
   : hid_(-1)
 {
     open(other, name);
 }
 
-group::group(file const& f)
+inline group::group(file const& f)
 {
     hid_ = H5Gopen(f.hid(), "/", H5P_DEFAULT);
     if (hid_ < 0){
@@ -108,7 +108,7 @@ group::group(file const& f)
     }
 }
 
-group::group(group const& other)
+inline group::group(group const& other)
   : hid_(other.hid_)
 {
     // copying would be safe if the exception were disabled.
@@ -116,18 +116,18 @@ group::group(group const& other)
     H5Iinc_ref(hid_);
 }
 
-group const& group::operator=(group other)
+inline group const& group::operator=(group other)
 {
     swap(*this, other);
     return *this;
 }
 
-group::~group()
+inline group::~group()
 {
     close();
 }
 
-void group::open(group const& other, std::string const& name)
+inline void group::open(group const& other, std::string const& name)
 {
     if (hid_ >= 0) {
         throw error("h5xx::group object is already in use");
@@ -146,7 +146,7 @@ void group::open(group const& other, std::string const& name)
     }
 }
 
-void group::close() {
+inline void group::close() {
     if (hid_ >= 0) {
         if(H5Gclose(hid_) < 0){
             throw error("closing h5xx::group with ID " + boost::lexical_cast<std::string>(hid_));

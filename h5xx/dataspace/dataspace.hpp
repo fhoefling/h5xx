@@ -172,7 +172,7 @@ private:
     friend class h5xx::dataset;   // method "operator dataspace()"
 };
 
-dataspace::dataspace(dataspace const& other)
+inline dataspace::dataspace(dataspace const& other)
   : hid_(other.hid_)
 {
     // copying would be safe if the exception were disabled.
@@ -180,26 +180,26 @@ dataspace::dataspace(dataspace const& other)
     H5Iinc_ref(hid_);
 }
 
-dataspace const& dataspace::operator=(dataspace other)
+inline dataspace const& dataspace::operator=(dataspace other)
 {
     swap(*this, other);
     return *this;
 }
 
-dataspace::dataspace(H5S_class_t type)
+inline dataspace::dataspace(H5S_class_t type)
 {
     if((hid_ = H5Screate(type)) < 0)
         throw error("creating dataspace");
 }
 
-
-dataspace::dataspace(std::vector<std::size_t> const& dims)
+inline dataspace::dataspace(std::vector<std::size_t> const& dims)
 {
     std::vector<hsize_t> h_dims = to_hsize_t(dims);
     if ((hid_ = H5Screate_simple(h_dims.size(), &*h_dims.begin(), NULL)) < 0)
         throw error("creating simple dataspace");
 }
-dataspace::dataspace(std::vector<hsize_t> const& dims)
+
+inline dataspace::dataspace(std::vector<hsize_t> const& dims)
 {
     if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), NULL)) < 0)
         throw error("creating simple dataspace");
@@ -220,14 +220,15 @@ dataspace::dataspace(boost::array<hsize_t, N> const& dims)
 }
 
 
-dataspace::dataspace(std::vector<size_t> const& dims, std::vector<size_t> const& max_dims)
+inline dataspace::dataspace(std::vector<size_t> const& dims, std::vector<size_t> const& max_dims)
 {
     std::vector<hsize_t> h_dims = to_hsize_t(dims);
     std::vector<hsize_t> h_max_dims = to_hsize_t(max_dims);
     if ((hid_ = H5Screate_simple(h_dims.size(), &*h_dims.begin(), &*h_max_dims.begin())) < 0)
         throw error("creating simple dataspace");
 }
-dataspace::dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims)
+
+inline dataspace::dataspace(std::vector<hsize_t> const& dims, std::vector<hsize_t> const& max_dims)
 {
     if ((hid_ = H5Screate_simple(dims.size(), &*dims.begin(), &*max_dims.begin())) < 0)
         throw error("creating simple dataspace");
@@ -241,6 +242,7 @@ dataspace::dataspace(boost::array<size_t, N> const& dims, boost::array<size_t, N
     if ((hid_ = H5Screate_simple(N, &*h_dims.begin(), &*h_max_dims.begin())) < 0)
         throw error("creating simple dataspace");
 }
+
 template <std::size_t N>
 dataspace::dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t, N> const& max_dims)
 {
@@ -248,8 +250,7 @@ dataspace::dataspace(boost::array<hsize_t, N> const& dims, boost::array<hsize_t,
         throw error("creating simple dataspace");
 }
 
-
-dataspace::~dataspace()
+inline dataspace::~dataspace()
 {
     if (hid_ >= 0) {
         if(H5Sclose(hid_) < 0)
@@ -258,7 +259,7 @@ dataspace::~dataspace()
     }
 }
 
-int dataspace::rank() const
+inline int dataspace::rank() const
 {
     if (!valid()) {
         throw error("invalid dataspace");
@@ -268,7 +269,6 @@ int dataspace::rank() const
         throw error("dataspace has invalid rank");
     return rank;
 }
-
 
 template <std::size_t N>
 boost::array<hsize_t, N> dataspace::extents(hsize_t *maxdims) const
@@ -290,7 +290,7 @@ boost::array<hsize_t, N> dataspace::extents(hsize_t *maxdims) const
 //}
 
 
-std::vector<hsize_t> dataspace::extents(hsize_t *maxdims) const
+inline std::vector<hsize_t> dataspace::extents(hsize_t *maxdims) const
 {
     std::vector<hsize_t> h_dims(rank());
     if (H5Sget_simple_extent_dims(hid_, &*h_dims.begin(), maxdims) < 0)
@@ -306,14 +306,14 @@ std::vector<hsize_t> dataspace::extents(hsize_t *maxdims) const
 //}
 
 
-bool dataspace::is_scalar() const
+inline bool dataspace::is_scalar() const
 {
     if (!valid())
         return false;
     return H5Sget_simple_extent_type(hid_) == H5S_SCALAR;
 }
 
-bool dataspace::is_simple() const
+inline bool dataspace::is_simple() const
 {
     if (!valid())
         return false;
@@ -332,7 +332,7 @@ bool dataspace::is_simple() const
 //        throw error("selecting hyperslab");
 //}
 
-void dataspace::select(slice const& _slice, int mode)
+inline void dataspace::select(slice const& _slice, int mode)
 {
     if (!valid())
         throw error("invalid dataspace");
@@ -354,7 +354,7 @@ void dataspace::select(slice const& _slice, int mode)
     }
 }
 
-hssize_t dataspace::get_select_npoints() const
+inline hssize_t dataspace::get_select_npoints() const
 {
     if (!valid())
         throw error("invalid dataspace");

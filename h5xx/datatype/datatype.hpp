@@ -85,7 +85,7 @@ datatype::datatype(T vector, typename boost::enable_if< boost::mpl::and_< is_vec
     type_id_ = ctype<value_type>::hid();
 }
 
-hid_t datatype::get_type_id() const
+inline hid_t datatype::get_type_id() const
 {
     return type_id_;
 }

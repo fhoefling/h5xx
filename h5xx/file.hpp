@@ -39,7 +39,7 @@
 
 namespace h5xx {
 
-htri_t is_hdf5_file(std::string const& filename)
+inline htri_t is_hdf5_file(std::string const& filename)
 {
     H5E_BEGIN_TRY {
         return H5Fis_hdf5(filename.c_str());
@@ -141,14 +141,14 @@ private:
     friend void swap(h5xxObject& left, h5xxObject& right);
 };
 
-file::file(std::string const& filename, unsigned mode)
+inline file::file(std::string const& filename, unsigned mode)
   : hid_(-1),plid_(H5P_DEFAULT)
 {
     open(filename, mode);
 }
 
 #ifdef H5XX_USE_MPI
-file::file(std::string const& filename, MPI_Comm comm, MPI_Info info, unsigned mode)
+inline file::file(std::string const& filename, MPI_Comm comm, MPI_Info info, unsigned mode)
   : hid_(-1),plid_(H5P_DEFAULT)
 {
     plid_ = H5Pcreate(H5P_FILE_ACCESS);
@@ -157,7 +157,7 @@ file::file(std::string const& filename, MPI_Comm comm, MPI_Info info, unsigned m
 }
 #endif
 
-file::file(file const& other)
+inline file::file(file const& other)
 {
     // copying would be safe if the exception were disabled.
     throw error("h5xx::file can not be copied. Copying must be elided by return value optimisation.");
@@ -165,18 +165,18 @@ file::file(file const& other)
     plid_ = H5Fget_access_plist(hid_);
 }
 
-file const& file::operator=(file other)
+inline file const& file::operator=(file other)
 {
     swap(*this, other);
     return *this;
 }
 
-file::~file()
+inline file::~file()
 {
     close();
 }
 
-void file::open(std::string const& filename, unsigned mode)
+inline void file::open(std::string const& filename, unsigned mode)
 {
     // check that object is not yet in use
     if (hid_ >= 0) {
@@ -215,7 +215,7 @@ void file::open(std::string const& filename, unsigned mode)
     }
 }
 
-void file::flush() const
+inline void file::flush() const
 {
     if (hid_ < 0) {
         return;
@@ -225,7 +225,7 @@ void file::flush() const
     }
 }
 
-void file::close(bool strict)
+inline void file::close(bool strict)
 {
     if (hid_ < 0) {
         return;
@@ -247,7 +247,7 @@ void file::close(bool strict)
     hid_ = -1;
 }
 
-std::string file::name() const
+inline std::string file::name() const
 {
     if (hid_ < 0) {
         throw error("no HDF5 file associated to h5xx::file object");

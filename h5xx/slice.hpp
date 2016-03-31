@@ -94,7 +94,7 @@ private:
 };
 
 
-slice::slice(const std::string & slice_str)
+inline slice::slice(const std::string & slice_str)
 {
     slice_str_ = slice_str;
 }
@@ -150,39 +150,39 @@ slice::slice(ArrayType offset, ArrayType count, ArrayType stride, ArrayType bloc
 
 
 
-int slice::rank() const
+inline int slice::rank() const
 {
     return count_.size();
 }
 
-const std::vector<hsize_t> & slice::get_offset() const
+inline const std::vector<hsize_t> & slice::get_offset() const
 {
     return offset_;
 }
 
-const std::vector<hsize_t> & slice::get_count() const
+inline const std::vector<hsize_t> & slice::get_count() const
 {
     return count_;
 }
 
-const std::vector<hsize_t> & slice::get_stride() const
+inline const std::vector<hsize_t> & slice::get_stride() const
 {
     return stride_;
 }
 
-const std::vector<hsize_t> & slice::get_block() const
+inline const std::vector<hsize_t> & slice::get_block() const
 {
     return block_;
 }
 
 
 
-bool slice::has_string() const
+inline bool slice::has_string() const
 {
     return (slice_str_.length() > 0);
 }
 
-void slice::parse_string(const std::vector<hsize_t> & extents)
+inline void slice::parse_string(const std::vector<hsize_t> & extents)
 {
     if (!has_string()) {
         throw error( "missing array slice string" );
@@ -300,7 +300,7 @@ void slice::parse_string(const std::vector<hsize_t> & extents)
 /**
  * compile regular expression handle. with error checking
  */
-void slice::prepare_rex(regex_t & rex, std::string const& str)
+inline void slice::prepare_rex(regex_t & rex, std::string const& str)
 {
     int ret = regcomp(&rex, str.c_str(), REG_EXTENDED);
     if (ret != 0) {
@@ -314,7 +314,7 @@ void slice::prepare_rex(regex_t & rex, std::string const& str)
 /**
  * check if a string matches to a regular expression
  */
-bool slice::match_rex(regex_t const& rex, std::string const& str)
+inline bool slice::match_rex(regex_t const& rex, std::string const& str)
 {
     int ret = regexec(&rex, str.c_str(), 0, NULL, 0);
     return (ret == 0);

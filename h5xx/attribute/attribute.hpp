@@ -143,7 +143,7 @@ attribute::attribute(h5xxObject const& object, std::string const& name, hid_t aa
     }
 }
 
-attribute::attribute(attribute const& other)
+inline attribute::attribute(attribute const& other)
   : hid_(other.hid_)
 {
     // copying would be safe if the exception were disabled.
@@ -151,13 +151,13 @@ attribute::attribute(attribute const& other)
     H5Iinc_ref(hid_);
 }
 
-attribute const& attribute::operator=(attribute other)
+inline attribute const& attribute::operator=(attribute other)
 {
     swap(*this, other);
     return *this;
 }
 
-attribute::~attribute()
+inline attribute::~attribute()
 {
     if (hid_ >= 0) {
         if(H5Aclose(hid_) < 0){
@@ -167,7 +167,7 @@ attribute::~attribute()
     }
 }
 
-attribute::operator dataspace() const
+inline attribute::operator dataspace() const
 {
     if (hid_ < 0) {
         throw error("retrieving dataspace from invalid attribute");
@@ -180,7 +180,7 @@ attribute::operator dataspace() const
     return dspace;
 }
 
-void attribute::write(hid_t mem_type_id, void const* value)
+inline void attribute::write(hid_t mem_type_id, void const* value)
 {
     if (H5Awrite(hid_, mem_type_id, value) < 0)
     {
@@ -188,7 +188,7 @@ void attribute::write(hid_t mem_type_id, void const* value)
     }
 }
 
-void attribute::read(hid_t mem_type_id, void * buffer)
+inline void attribute::read(hid_t mem_type_id, void * buffer)
 {
     if (H5Aread(hid_, mem_type_id, buffer) < 0)
     {
@@ -196,7 +196,7 @@ void attribute::read(hid_t mem_type_id, void * buffer)
     }
 }
 
-hid_t attribute::get_type()
+inline hid_t attribute::get_type()
 {
     hid_t type_id = H5Aget_type(hid_);
     if (type_id < 0)
@@ -206,7 +206,7 @@ hid_t attribute::get_type()
     return type_id;
 }
 
-std::string attribute::name() const
+inline std::string attribute::name() const
 {
 // --- code returning attribute name without full path ---
 //    ssize_t size = H5Aget_name(hid_, 0, NULL);        // get size of string

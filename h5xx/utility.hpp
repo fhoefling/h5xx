@@ -289,7 +289,7 @@ inline T str2num(std::string const& str)
 /**
  * Separate a string by a separator and return a vector of substrings.
  */
-std::vector<std::string> chop(std::string const& str, std::string const& sep)
+inline std::vector<std::string> chop(std::string const& str, std::string const& sep)
 {
     std::vector<std::string> items;
     std::string::size_type begIdx, endIdx;
@@ -313,7 +313,7 @@ std::vector<std::string> chop(std::string const& str, std::string const& sep)
 /**
  * Conversion: std::vector<std::size_t> --> std::vector<hsize_t>
  */
-std::vector<hsize_t> to_hsize_t(std::vector<std::size_t> const& vec_size_t) {
+inline std::vector<hsize_t> to_hsize_t(std::vector<std::size_t> const& vec_size_t) {
     std::vector<hsize_t> vec_hsize_t;
     for (std::vector<size_t>::const_iterator it=vec_size_t.begin(); it!=vec_size_t.end(); ++it)
         vec_hsize_t.push_back( (hsize_t) *it );
@@ -335,7 +335,7 @@ std::vector<hsize_t> to_hsize_t(boost::array<std::size_t, N> const& arr_size_t) 
 /**
  * Conversion: std::vector<hsize_t> --> std::vector<std::size_t>
  */
-std::vector<std::size_t> to_size_t(std::vector<hsize_t> const& vec_hsize_t) {
+inline std::vector<std::size_t> to_size_t(std::vector<hsize_t> const& vec_hsize_t) {
     std::vector<std::size_t> vec_size_t;
     for (std::vector<hsize_t>::const_iterator it=vec_hsize_t.begin(); it!=vec_hsize_t.end(); ++it)
         vec_size_t.push_back( (std::size_t) *it );

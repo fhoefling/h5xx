@@ -27,7 +27,7 @@
 
 #include <test/ctest_full_output.hpp>
 
-BOOST_GLOBAL_FIXTURE( ctest_full_output )
+BOOST_GLOBAL_FIXTURE( ctest_full_output );
 
 BOOST_AUTO_TEST_CASE( h5xx_group )
 {

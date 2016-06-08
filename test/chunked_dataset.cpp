@@ -28,7 +28,7 @@
 
 #include <test/ctest_full_output.hpp>
 
-BOOST_GLOBAL_FIXTURE( ctest_full_output )
+BOOST_GLOBAL_FIXTURE( ctest_full_output );
 
 // BOOST_CHECK doesn't like more than one template parameter :-(
 // so we define these wrappers here

@@ -6,9 +6,10 @@
 h5xx is a template-based C++ wrapper for the HDF5 library.  The goal of h5xx is
 to provide an easy-to-use yet flexible and powerful interface to HDF5 for C++
 codes.  In some sense, h5xx aims at providing similar functionality to C++ as
-h5py does to Python.  For example, a NumPy-like slicing notation wrapping HDF5
-hyperslabs is implemented.  Currently, h5xx supports std::vector, boost::array,
-and boost::multi_array containers.
+[h5py](http://www.h5py.org/ "HDF5 for Python") does to Python.  For example, a
+NumPy-like slicing notation wrapping HDF5 hyperslabs is implemented.
+Currently, h5xx supports std::vector, boost::array, and boost::multi_array
+containers.
 
 Using h5xx, a hello world example to write a 32x32 Boost multi_array to a HDF5
 dataset labeled "my_array" would look as follows:
@@ -22,6 +23,9 @@ h5xx::write_dataset(file, "my_array", array);
 
 The unit tests and example codes provide further information on and guidance to
 the usage and the capabilities of h5xx.
+
+h5xx can be used, copied, modified, and distributed freely under the terms of
+the 3-clause BSD license.
 
 
 ## Requirements

@@ -15,9 +15,9 @@ if(NOT DEFINED Boost_USE_MULTITHREADED)
 endif(NOT DEFINED Boost_USE_MULTITHREADED)
 
 find_package(Boost 1.40.0 QUIET REQUIRED COMPONENTS unit_test_framework)
-find_package(HDF5 QUIET REQUIRED)
+find_package(HDF5 QUIET REQUIRED COMPONENTS C CXX)
 
-include_directories(SYSTEM "${HDF5_INCLUDE_DIR}")
+include_directories(SYSTEM "${HDF5_INCLUDE_DIRS}")
 include_directories("${CMAKE_SOURCE_DIR}")
 
 enable_testing()

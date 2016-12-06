@@ -76,7 +76,7 @@ public:
     void read(hid_t type_id, void* buffer, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
 
     /** return copy of dataset's type */
-    hid_t get_type();
+    hid_t get_type() const;
 
 private:
     /** HDF5 handle of the dataset */
@@ -199,7 +199,7 @@ inline void dataset::read(hid_t type_id, void * buffer, hid_t mem_space_id, hid_
     }
 }
 
-inline hid_t dataset::get_type()
+inline hid_t dataset::get_type() const
 {
     hid_t type_id = H5Dget_type(hid_);
     if (type_id < 0)

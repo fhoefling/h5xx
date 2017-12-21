@@ -49,7 +49,7 @@ public:
      * with "group h5xx::move(group&)", i.e., the group object on the right
      * hand side is empty after move assignment.
      */
-    group const& operator=(group other);
+    group & operator=(group other);
 
     /** default destructor */
     ~group();
@@ -107,7 +107,7 @@ inline group::group(group const& other)
     H5Iinc_ref(hid_);
 }
 
-inline group const& group::operator=(group other)
+inline group & group::operator=(group other)
 {
     swap(*this, other);
     return *this;

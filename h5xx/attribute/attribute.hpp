@@ -45,7 +45,7 @@ public:
      * with "attribute h5xx::move(attribute&)", i.e., the attribute object on the right
      * hand side is empty after move assignment.
      */
-    attribute const& operator=(attribute other);
+    attribute & operator=(attribute other);
 
     /** default destructor */
     ~attribute();
@@ -142,7 +142,7 @@ inline attribute::attribute(attribute const& other)
     H5Iinc_ref(hid_);
 }
 
-inline attribute const& attribute::operator=(attribute other)
+inline attribute & attribute::operator=(attribute other)
 {
     swap(*this, other);
     return *this;

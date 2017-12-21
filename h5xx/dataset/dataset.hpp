@@ -58,7 +58,7 @@ public:
      * with "dataset h5xx::move(dataset&)", i.e., the dataset object on the right
      * hand side is empty after move assignment.
      */
-    dataset const& operator=(dataset other);
+    dataset & operator=(dataset other);
 
     /** deduce dataspace from dataset */
     operator dataspace() const;
@@ -164,7 +164,7 @@ inline dataset::dataset(dataset const& other)
     H5Iinc_ref(hid_);
 }
 
-inline dataset const& dataset::operator=(dataset other)
+inline dataset & dataset::operator=(dataset other)
 {
     swap(*this, other);
     return *this;

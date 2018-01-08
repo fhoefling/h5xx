@@ -88,7 +88,7 @@ public:
      * with "file h5xx::move(file&)", i.e., the group object on the right
      * hand side is empty after move assignment.
      */
-    file const& operator=(file other);
+    file & operator=(file other);
 
     /** close file upon destruction */
     ~file();
@@ -156,7 +156,7 @@ inline file::file(file const& other)
     plid_ = H5Fget_access_plist(hid_);
 }
 
-inline file const& file::operator=(file other)
+inline file & file::operator=(file other)
 {
     swap(*this, other);
     return *this;

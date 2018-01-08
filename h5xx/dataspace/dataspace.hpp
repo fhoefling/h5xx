@@ -89,7 +89,7 @@ public:
      * with "dataspace h5xx::move(dataspace&)", i.e., the dataspace object on the right
      * hand side is empty after move assignment.
      */
-    dataspace const& operator=(dataspace other);
+    dataspace & operator=(dataspace other);
 
     /** default destructor */
     ~dataspace();
@@ -171,7 +171,7 @@ inline dataspace::dataspace(dataspace const& other)
     H5Iinc_ref(hid_);
 }
 
-inline dataspace const& dataspace::operator=(dataspace other)
+inline dataspace & dataspace::operator=(dataspace other)
 {
     swap(*this, other);
     return *this;

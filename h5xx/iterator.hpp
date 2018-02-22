@@ -64,6 +64,7 @@ class iterator
 
 }; // ! iterator
 
+// TODO: is there a better way?
 template <typename T>
 herr_t find_names_of_type(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data);
 

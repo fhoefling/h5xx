@@ -1,37 +1,35 @@
+// FIXME copyright header
+
 #ifndef H5XX_ITERATOR_HPP
 #define H5XX_ITERATOR_HPP
 
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
 
+// FIXME #include <hdf5.h>
+
 namespace h5xx
 {
 
+/**
+ *
+ *  FIXME description
+ *
+ *  what iterator concepts are implemented? (Forward, RandomAccess, ...)
+ */
+
 template <typename T>
 class iterator
+// FIXME inherit from std::iterator ???
 {
 
-    private:
+public:
 
-        /** reference to container group **/
-	group& container_group;
+    iterator(group&);
+    iterator(const iterator&);
+    ~iterator();
 
-        /** id of container group **/
-        hid_t container_group_id;
-
-        /** container of names of elements in group **/
-        std::vector<std::string> names_of_elements;
-
-        /** internal iterator over element names **/
-        std::vector<std::string>::iterator internal_iter;
-
-    public:
-
-        iterator(group&);
-        iterator(const iterator&);
-        ~iterator();
-
-	/** operators for iterator arithmetic **/
+	/** operators for iterator arithmetic **/ // FIXME needed?
 	int operator+(const iterator&);
 	int operator-(const iterator&);
 
@@ -50,32 +48,52 @@ class iterator
 
         /** returns h5xx-object **/
         T operator*();
+        const T operator*() const; // FIXME
 
         /** comparison operators **/
         /** determined on basis of hdf5 id **/
         bool operator==(const iterator&);
         bool operator!=(const iterator&);
 
-        /** begin() and end() methods **/
+        /** begin() and end() methods FIXME move to containers **/
         iterator begin();
+//        const_iterator begin() const;
+
         iterator end();
 
-        void print_names();
+        // TODO get current name
+//        std::string get_name() const;
 
+        void print_names(); // FIXME debugging
+
+private:
+    /** reference to container group **/
+	group& container_group; // TODO how is the collection to be iterated stored in other implementations (std::list)
+
+        /** id of container group **/
+        hid_t container_group_id;
+
+        /** container of names of elements in group **/
+        std::vector<std::string> names_of_elements;
+
+        /** internal iterator over element names **/
+        std::vector<std::string>::iterator internal_iter;
 }; // ! iterator
 
-// TODO: is there a better way using more h5xx than hdf5?
-template <typename T>
-herr_t find_names_of_type(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data);
-
+namespace detail {
+    // TODO: is there a better way using more h5xx than hdf5?
+    template <typename T>
+    herr_t find_names_of_type(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept;
+}
 
 template <typename T>
 inline iterator<T>::iterator(group& group) : container_group(group)
 {
     // assuming container_group is legit h5xx::group object and open
     container_group_id = container_group.hid();
-    hsize_t stop_idx = 0; // TODO: does this work in the general case ??
-    H5Literate(container_group_id, H5_INDEX_NAME, H5_ITER_NATIVE, &stop_idx, find_names_of_type<T>, &names_of_elements);
+    hsize_t stop_idx = 0; // TODO: does this work in the general case ?? FIXME why initialising to 0?
+    H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_NATIVE, &stop_idx, detail::find_names_of_type<T>, &names_of_elements);
+    // FIXME evaluate stop_idx??
     internal_iter = names_of_elements.begin(); //TODO: this is only a foreward iterator. should there be backward too??
 }
 
@@ -178,39 +196,6 @@ inline iterator<T>& iterator<T>::operator--(int)
     return(*this);
 }
 
-
-// TODO: sind diese templates überhaupt sinnvoll?? was passiert bei anderen Werten der Template-Parameter ??
-template <>
-herr_t find_names_of_type<h5xx::group>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
-{
-    H5O_info_t obj_info;
-    herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);
-    if(obj_info.type == H5O_TYPE_GROUP)
-    {
-        // TODO: how about dynamic_cast/static_cast ?
-        std::vector<std::string> *vec_ptr = (std::vector<std::string> *) op_data;
-        (*vec_ptr).push_back((std::string) name);
-    }
-
-    return(retval);
-}
-
-
-template <>
-herr_t find_names_of_type<h5xx::dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
-{
-    H5O_info_t obj_info;
-    herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);
-    if(obj_info.type == H5O_TYPE_DATASET)
-    {
-        std::vector<std::string> *vec_ptr = (std::vector<std::string> *) op_data;
-        (*vec_ptr).push_back((std::string) name);
-    }
-
-    return(retval);
-}
-
-
 template <>
 h5xx::group iterator<h5xx::group>::operator*()
 {
@@ -254,6 +239,43 @@ void iterator<T>::print_names()
         std::cout << *it << std::endl;
     }
 }
-} // ! h5xx
 
-#endif // ! H5XX_ITERATOR
+namespace detail {
+
+// TODO: sind diese templates überhaupt sinnvoll?? was passiert bei anderen Werten der Template-Parameter ??
+template <>
+herr_t find_names_of_type<h5xx::group>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept
+{
+    H5O_info_t obj_info;
+    herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);
+    // FIXME check return value
+    // filter for groups
+    if(obj_info.type == H5O_TYPE_GROUP)
+    {
+        std::vector<std::string> *vec_ptr = reinterpret_cast<std::vector<std::string> *>(op_data);
+        vec_ptr->push_back(name);  // FIXME std::string
+    }
+
+    return(retval);
+}
+
+template <>
+herr_t find_names_of_type<h5xx::dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept
+{
+    H5O_info_t obj_info;
+    herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);
+    // filter for datasets
+    if(obj_info.type == H5O_TYPE_DATASET)
+    {
+        std::vector<std::string> *vec_ptr = (std::vector<std::string> *) op_data;
+        (*vec_ptr).push_back((std::string) name); // FIXME see above
+    }
+
+    return(retval);
+}
+
+} // namespace detail
+
+} // namespace h5xx
+
+#endif // ! H5XX_ITERATOR_HPP

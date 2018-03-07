@@ -1,26 +1,30 @@
-// FIXME copyright header
+/**
+ *  Copyright © 2018      Matthias Werner and Felix Höfling
+ *  All rights reserved.
+ *
+ *  This file is part of h5xx — a C++ wrapper for the HDF5 library.
+ */
 
 #ifndef H5XX_ITERATOR_HPP
 #define H5XX_ITERATOR_HPP
 
+#include <h5xx/hdf5_compat.hpp>  // FIXME: I guess this will do as include hdf5.h?
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
 
-// FIXME #include <hdf5.h>
 
 namespace h5xx
 {
 
 /**
- *
- *  FIXME description
- *
- *  what iterator concepts are implemented? (Forward, RandomAccess, ...)
+ *  This class implements a forward-iterator for h5xx::group.
+ *  Via a template parameter the type of element to iterate over is determined
+ *  So far possible types are h5xx::group, for iteration over subgroups, and
+ *  h5xx::dataset, for iteration over the datasets within the group.
  */
 
 template <typename T>
-class iterator
-// FIXME inherit from std::iterator ???
+class iterator : public std::iterator<std::forward_iterator_tag, T>
 {
 
 public:
@@ -29,81 +33,66 @@ public:
     iterator(const iterator&);
     ~iterator();
 
-	/** operators for iterator arithmetic **/ // FIXME needed?
-	int operator+(const iterator&);
-	int operator-(const iterator&);
-
 	//iterator operator+(int);
-        //iterator operator-(int);
+    //iterator operator-(int);
 
 	iterator operator+=(int);
 	iterator operator-=(int);
 
-        /** increment and decrement operators move to next element **/
-        iterator& operator++();
-        iterator& operator++(int);
+    /** increment and decrement operators move to next element **/
+    iterator& operator++();
+    iterator& operator++(int);
 
-        iterator& operator--();
-        iterator& operator--(int);
+    iterator& operator--();
+    iterator& operator--(int);
 
-        /** returns h5xx-object **/
-        T operator*();
-        const T operator*() const; // FIXME
+    /** returns h5xx-object **/
+    const T operator*() const; // FIXME: const T -> dereferenced object can't be altered? T == h5xx::dataset could not be read/written to
 
-        /** comparison operators **/
-        /** determined on basis of hdf5 id **/
-        bool operator==(const iterator&);
-        bool operator!=(const iterator&);
+    /** comparison operators **/
+    /** determined on basis of hdf5 id **/
+    bool operator==(const iterator&) const;
+    bool operator!=(const iterator&) const;
 
-        /** begin() and end() methods FIXME move to containers **/
-        iterator begin();
-//        const_iterator begin() const;
-
-        iterator end();
-
-        // TODO get current name
-//        std::string get_name() const;
-
-        void print_names(); // FIXME debugging
 
 private:
-    /** reference to container group **/
-	group& container_group; // TODO how is the collection to be iterated stored in other implementations (std::list)
 
-        /** id of container group **/
-        hid_t container_group_id;
+    /** id of container group **/
+    const h5xx::group container_group;
 
-        /** container of names of elements in group **/
-        std::vector<std::string> names_of_elements;
+    /** index of element in group as used by H5Literate **/
+    hsize_t stop_idx;
 
-        /** internal iterator over element names **/
-        std::vector<std::string>::iterator internal_iter;
-}; // ! iterator
+    /** name of element pointed to **/
+    std::string name_of_current_element;
+
+}; // class iterator
+
 
 namespace detail {
-    // TODO: is there a better way using more h5xx than hdf5?
-    template <typename T>
-    herr_t find_names_of_type(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept;
-}
+
+// TODO: is there a better way using more h5xx than hdf5?
+template <typename T>
+herr_t find_names_of_type(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept;
+
+} // namespace detail
+
 
 template <typename T>
 inline iterator<T>::iterator(group& group) : container_group(group)
 {
-    // assuming container_group is legit h5xx::group object and open
-    container_group_id = container_group.hid();
-    hsize_t stop_idx = 0; // TODO: does this work in the general case ?? FIXME why initialising to 0?
-    H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_NATIVE, &stop_idx, detail::find_names_of_type<T>, &names_of_elements);
-    // FIXME evaluate stop_idx??
-    internal_iter = names_of_elements.begin(); //TODO: this is only a foreward iterator. should there be backward too??
+    stop_idx = 0;
+    
+    // find first element in group
+    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);    
 }
 
 
 template <typename T>
 inline iterator<T>::iterator(const iterator& other) : container_group(other.container_group)
 {
-    container_group_id = other.container_group_id;
-    names_of_elements = other.names_of_elements;
-    internal_iter = names_of_elements.begin() + (other.internal_iter - other.names_of_elements.begin());
+    name_of_current_element = other.name_of_current_element;
+    stop_idx = other.stop_idx;
 }
 
 
@@ -111,11 +100,11 @@ template <typename T>
 inline iterator<T>::~iterator(){}
 
 
+// FIXME == and != operator must be implemented for h5xx::group
 template <typename T>
 inline bool iterator<T>::operator==(const iterator& other)
 {
-    if(internal_iter == other.internal_iter // TODO: sollte nur das referenzierte objekt betrachtet werden?
-       && container_group_id == other.container_group_id)
+    if(stop_idx == other.stop_idx && container_group == other.container_group)
         return true;
     else
         return false;
@@ -125,8 +114,7 @@ inline bool iterator<T>::operator==(const iterator& other)
 template <typename T>
 inline bool iterator<T>::operator!=(const iterator& other)
 {
-    if(internal_iter == other.internal_iter
-       && container_group_id == other.container_group_id)
+    if(stop_idx == other.stop_idx && container_group == other.container_group)
         return false;
     else
         return true;
@@ -134,73 +122,66 @@ inline bool iterator<T>::operator!=(const iterator& other)
 
 
 template <typename T>
-inline int iterator<T>::operator+(const iterator& other)
+inline iterator<T>& iterator<T>::operator++() // ++it
 {
-    if(container_group_id == other.container_group_id)
+    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element); // FIXME: H5_ITER_NATIVE faster?? see alse operator--
+    
+    // evaluate return value
+    // retval is return-value of operator (usually > 0), == 0 iff all elements have been iterated over with no non-zero operator
+    // on failure or if operator returns negative, returns the negative
+    if(retval < 0) // there has been an error upon iteration or reading of  object info
     {
-        int internal_offset = internal_iter - names_of_elements.begin();
-        int other_offset = other.internal_iter - other.names_of_elements.begin();
-        return(internal_offset + other_offset);
+        throw std::run:time_error("Error within H5Literate or detail::find_name_of_type")
     }
-    else
+    else if(retval == 0) // there is no more elements of T in container group
     {
-        throw std::domain_error("Container groups are not identical");
+        throw std::out_of_range("Iterator out of range");
     }
-}
-
-
-template <typename T>
-inline int iterator<T>::operator-(const iterator& other)
-{
-    if(container_group_id == other.container_group_id)
-    {
-        int internal_offset = internal_iter - names_of_elements.begin();
-        int other_offset = other.internal_iter - other.names_of_elements.begin();
-        return(internal_offset - other_offset);
-    }
-    else
-    {
-        throw std::domain_error("Container groups are not identical");
-    }
-}
-
-
-template <typename T>
-inline iterator<T>& iterator<T>::operator++()
-{
-    internal_iter++; // TODO: scope checking??
+      
     return(*this);
 }
 
 
 template <typename T>
-inline iterator<T>& iterator<T>::operator++(int)
+inline iterator<T>& iterator<T>::operator++(int) // it++
 {
-    internal_iter++;
+    ++(*this);
     return(*this);
 }
 
 
 template <typename T>
-inline iterator<T>& iterator<T>::operator--()
+inline iterator<T>& iterator<T>::operator--() // --it
 {
-    internal_iter--;
+    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_DEC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);
+    
+    // evaluate return value
+    // retval is return-value of operator (usually > 0), == 0 iff all elements have been iterated over with no non-zero operator
+    // on failure or if operator returns negative, returns the negative
+    if(retval < 0) // there has been an error upon iteration or reading of  object info
+    {
+        throw std::run:time_error("Error within H5Literate or detail::find_name_of_type")
+    }
+    else if(retval == 0) // there is no more elements of T in container group
+    {
+        throw std::out_of_range("Iterator out of range");
+    }
+      
     return(*this);
 }
 
 
 template <typename T>
-inline iterator<T>& iterator<T>::operator--(int)
+inline iterator<T>& iterator<T>::operator--(int) // it--
 {
-    internal_iter--;
+    --(*this);
     return(*this);
 }
 
 template <>
 h5xx::group iterator<h5xx::group>::operator*()
 {
-    h5xx::group group(container_group, *internal_iter);
-    std::cout << *internal_iter << std::endl;
+    h5xx::group group(container_group_id, name_of_current_element);
     return(h5xx::move(group));
 }
 
@@ -213,62 +194,49 @@ h5xx::dataset iterator<h5xx::dataset>::operator*()
 }
 
 
-template <typename T>
-iterator<T> iterator<T>::begin()
-{
-    iterator<T> iter_begin(*this);
-    iter_begin.internal_iter = iter_begin.names_of_elements.begin();
-    return(iter_begin);
-}
-
-
-template <typename T>
-iterator<T> iterator<T>::end()
-{
-    iterator<T> iter_end(*this);
-    iter_end.internal_iter = iter_end.names_of_elements.end();
-    return(iter_end);
-}
-
-
-template <typename T>
-void iterator<T>::print_names()
-{
-    for(std::vector<std::string>::iterator it = names_of_elements.begin(); it != names_of_elements.end(); it++)
-    {
-        std::cout << *it << std::endl;
-    }
-}
-
 namespace detail {
 
 // TODO: sind diese templates überhaupt sinnvoll?? was passiert bei anderen Werten der Template-Parameter ??
 template <>
-herr_t find_names_of_type<h5xx::group>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept
+herr_t find_name_of_type<h5xx::group>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept
 {
     H5O_info_t obj_info;
-    herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);
-    // FIXME check return value
-    // filter for groups
-    if(obj_info.type == H5O_TYPE_GROUP)
-    {
-        std::vector<std::string> *vec_ptr = reinterpret_cast<std::vector<std::string> *>(op_data);
-        vec_ptr->push_back(name);  // FIXME std::string
+    herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT); // returns non-negative upon success, negative if failed
+    
+    // check retval
+    if(retval >= 0)
+    {   
+        // filter for groups
+        if(obj_info.type == H5O_TYPE_GROUP)
+        {
+            std::string *str_ptr = reinterpret_cast<std::string *>(op_data);
+            *str_ptr = name;
+            retval++; // ensure retval is > 0 for short-circuit success
+        }
+        else // if element name was not a group, continue iteration
+            retval = 0;
     }
-
+    
     return(retval);
 }
 
 template <>
-herr_t find_names_of_type<h5xx::dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept
+herr_t find_name_of_type<h5xx::dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept
 {
     H5O_info_t obj_info;
     herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);
-    // filter for datasets
-    if(obj_info.type == H5O_TYPE_DATASET)
+    
+    if(retval >= 0)
     {
-        std::vector<std::string> *vec_ptr = (std::vector<std::string> *) op_data;
-        (*vec_ptr).push_back((std::string) name); // FIXME see above
+        // filter for datasets
+        if(obj_info.type == H5O_TYPE_DATASET)
+        {
+            std::string *str_ptr = reinterpret_cast<std::string *>(op_data);
+            *str_prt = name;
+            retval++; // ensure retval is > 0 for short-circuit success
+        }
+        else // if element name was not a dataset, continue iteration
+            retval = 0;
     }
 
     return(retval);

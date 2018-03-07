@@ -33,11 +33,11 @@ public:
     iterator(const iterator&);
     ~iterator();
 
-	//iterator operator+(int);
+    //iterator operator+(int);
     //iterator operator-(int);
 
-	iterator operator+=(int);
-	iterator operator-=(int);
+    iterator operator+=(int);
+    iterator operator-=(int);
 
     /** increment and decrement operators move to next element **/
     iterator& operator++();
@@ -73,7 +73,7 @@ namespace detail {
 
 // TODO: is there a better way using more h5xx than hdf5?
 template <typename T>
-herr_t find_names_of_type(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept;
+herr_t find_name_of_type(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept;
 
 } // namespace detail
 

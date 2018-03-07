@@ -3,6 +3,9 @@
  *  All rights reserved.
  *
  *  This file is part of h5xx — a C++ wrapper for the HDF5 library.
+ *
+ *  This software may be modified and distributed under the terms of the
+ *  3-clause BSD license.  See accompanying file LICENSE for details.
  */
 
 #ifndef H5XX_ITERATOR_HPP

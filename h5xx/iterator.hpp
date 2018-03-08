@@ -1,5 +1,5 @@
 /**
- *  Copyright © 2018      Matthias Werner and Felix Höfling
+ *  Copyright © 2017-2018      Matthias Werner and Felix Höfling
  *  All rights reserved.
  *
  *  This file is part of h5xx — a C++ wrapper for the HDF5 library.
@@ -61,7 +61,7 @@ public:
 private:
 
     /** id of container group **/
-    const h5xx::group container_group;
+    const std::shared_ptr<h5xx::group> container_group; //FIXME: should it be a const group?
 
     /** index of element in group as used by H5Literate **/
     hsize_t stop_idx;
@@ -82,7 +82,7 @@ herr_t find_name_of_type(hid_t g_id, const char* name, const H5L_info_t *info, v
 
 
 template <typename T>
-inline iterator<T>::iterator(group& group) : container_group(group)
+inline iterator<T>::iterator(group& group) : container_group(&group)
 {
     stop_idx = 0;
     
@@ -103,7 +103,7 @@ template <typename T>
 inline iterator<T>::~iterator(){}
 
 
-// FIXME == and != operator must be implemented for h5xx::group
+// FIXME == and != operator must be implemented for h5xx::group or use group_id and group
 template <typename T>
 inline bool iterator<T>::operator==(const iterator& other)
 {

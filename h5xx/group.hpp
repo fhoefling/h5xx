@@ -71,6 +71,10 @@ public:
 
     /** close handle to HDF5 group (called by default destructor) */
     void close();
+    
+    /** construct iterator over **/
+    detail::elem_split subgroups() const; // FIXME: introduction of new class elem_split necessary? Where should it be defined?
+    detail::elem_split datasets() const;
 
 private:
     /** HDF5 object ID */

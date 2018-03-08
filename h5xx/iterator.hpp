@@ -11,7 +11,7 @@
 #ifndef H5XX_ITERATOR_HPP
 #define H5XX_ITERATOR_HPP
 
-#include <h5xx/hdf5_compat.hpp>  // FIXME: I guess this will do as include hdf5.h?
+#include <h5xx/hdf5_compat.hpp>
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
 
@@ -36,32 +36,30 @@ public:
     iterator(const iterator&);
     ~iterator();
 
-    //iterator operator+(int);
-    //iterator operator-(int);
-
-    iterator operator+=(int);
-    iterator operator-=(int);
-
     /** increment and decrement operators move to next element **/
     iterator& operator++();
     iterator& operator++(int);
 
-    iterator& operator--();
+/*    iterator& operator--();
     iterator& operator--(int);
-
+*/
     /** returns h5xx-object **/
-    const T operator*() const; // FIXME: const T -> dereferenced object can't be altered? T == h5xx::dataset could not be read/written to
+    T operator*();
 
     /** comparison operators **/
     /** determined on basis of hdf5 id **/
     bool operator==(const iterator&) const;
     bool operator!=(const iterator&) const;
-
+/*
+    str::string const& name() const
+    {   return name_of_current_element;
+    }
+*/
 
 private:
 
     /** id of container group **/
-    const std::shared_ptr<h5xx::group> container_group; //FIXME: should it be a const group?
+    h5xx::group* container_group;
 
     /** index of element in group as used by H5Literate **/
     hsize_t stop_idx;
@@ -71,6 +69,8 @@ private:
 
 }; // class iterator
 
+
+// FIXME the same again for const_iterator and "const T", compare with /usr/include/c++/4.9.2/bits/stl_list.h
 
 namespace detail {
 
@@ -86,8 +86,8 @@ inline iterator<T>::iterator(group& group) : container_group(&group)
 {
     stop_idx = 0;
     
-    // find first element in group
-    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);    
+    // find first element in group, do this in operator*()
+//    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);    
 }
 
 
@@ -107,6 +107,7 @@ inline iterator<T>::~iterator(){}
 template <typename T>
 inline bool iterator<T>::operator==(const iterator& other)
 {
+    // compare string as well
     if(stop_idx == other.stop_idx && container_group == other.container_group)
         return true;
     else
@@ -138,7 +139,7 @@ inline iterator<T>& iterator<T>::operator++() // ++it
     }
     else if(retval == 0) // there is no more elements of T in container group
     {
-        throw std::out_of_range("Iterator out of range");
+        throw std::out_of_range("Iterator out of range");  // set to 'invalid' iterator, e.g., stop_idx = -1
     }
       
     return(*this);
@@ -184,6 +185,11 @@ inline iterator<T>& iterator<T>::operator--(int) // it--
 template <>
 h5xx::group iterator<h5xx::group>::operator*()
 {
+    if (stop_idx == 0) {
+        herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);
+        // evaluate retval.
+    }
+
     h5xx::group group(container_group_id, name_of_current_element);
     return(h5xx::move(group));
 }

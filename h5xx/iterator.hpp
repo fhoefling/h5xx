@@ -11,7 +11,7 @@
 #ifndef H5XX_ITERATOR_HPP
 #define H5XX_ITERATOR_HPP
 
-#include <h5xx/hdf5_compat.hpp>  // FIXME: I guess this will do as include hdf5.h?
+#include <h5xx/hdf5_compat.hpp>
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
 
@@ -36,35 +36,33 @@ public:
     iterator(const iterator&);
     ~iterator();
 
-    //iterator operator+(int);
-    //iterator operator-(int);
-
-    iterator operator+=(int);
-    iterator operator-=(int);
-
     /** increment and decrement operators move to next element **/
     iterator& operator++();
     iterator& operator++(int);
 
-    iterator& operator--();
+/*    iterator& operator--();
     iterator& operator--(int);
-
+*/
     /** returns h5xx-object **/
-    const T operator*() const; // FIXME: const T -> dereferenced object can't be altered? T == h5xx::dataset could not be read/written to
+    T operator*();
 
     /** comparison operators **/
     /** determined on basis of hdf5 id **/
     bool operator==(const iterator&) const;
     bool operator!=(const iterator&) const;
-
+/*
+    str::string const& name() const
+    {   return name_of_current_element;
+    }
+*/
 
 private:
 
-
-    /** pointer to container group **/
-    const std::shared_ptr<h5xx::group> container_group; //FIXME: should it be a const group?
+    /** id of container group **/
+    h5xx::group* container_group;
 
     /** index of element in group as used by H5Literate **/
+    // if stop_idx == -1, iterator points to end
     hsize_t stop_idx;
 
     /** name of element pointed to **/
@@ -72,6 +70,8 @@ private:
 
 }; // class iterator
 
+
+// FIXME the same again for const_iterator and "const T", compare with /usr/include/c++/4.9.2/bits/stl_list.h
 
 namespace detail {
 
@@ -85,10 +85,7 @@ herr_t find_name_of_type(hid_t g_id, const char* name, const H5L_info_t *info, v
 template <typename T>
 inline iterator<T>::iterator(group& group) : container_group(&group)
 {
-    stop_idx = 0;
-    
-    // find first element in group
-    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);    
+    stop_idx = -1u;  // constructor gives end()-iterator by default
 }
 
 
@@ -104,10 +101,10 @@ template <typename T>
 inline iterator<T>::~iterator(){}
 
 
-// FIXME: should it compare the pointer or object id?
 template <typename T>
 inline bool iterator<T>::operator==(const iterator& other)
 {
+    // compare string as well
     if(stop_idx == other.stop_idx && container_group == other.container_group)
         return true;
     else
@@ -128,7 +125,7 @@ inline bool iterator<T>::operator!=(const iterator& other)
 template <typename T>
 inline iterator<T>& iterator<T>::operator++() // ++it
 {
-    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element); // FIXME: H5_ITER_NATIVE faster?? see alse operator--
+    herr_t retval = H5Literate(container_group->hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element); // FIXME: H5_ITER_NATIVE faster?? see alse operator-- / operator*
     
     // evaluate return value
     // retval is return-value of operator (usually > 0), == 0 iff all elements have been iterated over with no non-zero operator
@@ -139,7 +136,7 @@ inline iterator<T>& iterator<T>::operator++() // ++it
     }
     else if(retval == 0) // there is no more elements of T in container group
     {
-        throw std::out_of_range("Iterator out of range");
+        throw std::out_of_range("Iterator out of range");  // set to 'invalid' iterator, e.g., stop_idx = -1
     }
       
     return(*this);
@@ -157,7 +154,7 @@ inline iterator<T>& iterator<T>::operator++(int) // it++
 template <typename T>
 inline iterator<T>& iterator<T>::operator--() // --it
 {
-    herr_t retval = H5Literate(container_group.hid(), H5_INDEX_NAME, H5_ITER_DEC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);
+    herr_t retval = H5Literate(container_group->hid(), H5_INDEX_NAME, H5_ITER_DEC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);
     
     // evaluate return value
     // retval is return-value of operator (usually > 0), == 0 iff all elements have been iterated over with no non-zero operator
@@ -185,6 +182,24 @@ inline iterator<T>& iterator<T>::operator--(int) // it--
 template <>
 h5xx::group iterator<h5xx::group>::operator*()
 {
+    if (stop_idx == -1u) // iterator is end
+    {
+        stop_idx = 0;
+        herr_t retval = H5Literate(container_group->hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<h5xx::group>, &name_of_current_element);
+        
+        // evaluate retval
+        // positive retval -> all is good
+        if(retval < 0) // negative retval means error in H5Literate
+        {
+            throw std::run:time_error("Error within H5Literate or detail::find_name_of_type");
+        }
+        else // retval == 0 means no element of type T was found
+        {
+            stop_idx = -1u; // remain at end
+            // FIXME: what else to do when end-iterator gets dereferenced? (e.g. std::vector end-iterator can dereferenced, although might get seg fault at runtime)
+        }
+    }
+
     h5xx::group group(container_group_id, name_of_current_element);
     return(h5xx::move(group));
 }
@@ -193,6 +208,24 @@ h5xx::group iterator<h5xx::group>::operator*()
 template <>
 h5xx::dataset iterator<h5xx::dataset>::operator*()
 {
+    if (stop_idx == -1u) // iterator is end
+    {
+        stop_idx = 0;
+        herr_t retval = H5Literate(container_group->hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<h5xx::dataset>, &name_of_current_element);
+        
+        // evaluate retval
+        // positive retval -> all is good
+        if(retval < 0) // negative retval means error in H5Literate
+        {
+            throw std::run:time_error("Error within H5Literate or detail::find_name_of_type");
+        }
+        else // retval == 0 means no element of type T was found
+        {
+            stop_idx = -1u; // remain at end
+            // FIXME: what else to do when end-iterator gets dereferenced? (e.g. std::vector end-iterator can dereferenced, although might get seg fault at runtime)
+        }
+    }
+
     h5xx::dataset dset(container_group, *internal_iter);
     return(h5xx::move(dset));
 }
@@ -200,7 +233,6 @@ h5xx::dataset iterator<h5xx::dataset>::operator*()
 
 namespace detail {
 
-// TODO: sind diese templates überhaupt sinnvoll?? was passiert bei anderen Werten der Template-Parameter ??
 template <>
 herr_t find_name_of_type<h5xx::group>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data) noexcept
 {

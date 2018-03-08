@@ -60,7 +60,8 @@ public:
 
 private:
 
-    /** id of container group **/
+
+    /** pointer to container group **/
     const std::shared_ptr<h5xx::group> container_group; //FIXME: should it be a const group?
 
     /** index of element in group as used by H5Literate **/
@@ -103,7 +104,7 @@ template <typename T>
 inline iterator<T>::~iterator(){}
 
 
-// FIXME == and != operator must be implemented for h5xx::group or use group_id and group
+// FIXME: should it compare the pointer or object id?
 template <typename T>
 inline bool iterator<T>::operator==(const iterator& other)
 {

@@ -58,7 +58,7 @@ public:
 
 private:
 
-    /** id of container group **/
+    /** pointer to container group **/
     h5xx::group* container_group;
 
     /** index of element in group as used by H5Literate **/

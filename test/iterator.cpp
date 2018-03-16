@@ -52,9 +52,7 @@ BOOST_AUTO_TEST_CASE( empty_group )
     //BOOST_CHECK_NO_THROW(group::subgroup_iterator());
     BOOST_CHECK_NO_THROW(group::dataset_iterator(container_group));
     BOOST_CHECK_NO_THROW(group::subgroup_iterator(container_group));
-    
-    
-    
+
     BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_begin = container_group.begin());
     BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_end = container_group.end());
     BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_begin = container_group.begin());

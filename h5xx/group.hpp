@@ -18,6 +18,7 @@
 #include <h5xx/utility.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/property.hpp>
+#include <h5xx/iterator.hpp>
 
 namespace h5xx {
 
@@ -72,9 +73,15 @@ public:
     /** close handle to HDF5 group (called by default destructor) */
     void close();
     
-    /** construct iterator over **/
-    detail::elem_split subgroups() const; // FIXME: introduction of new class elem_split necessary? Where should it be defined?
-    detail::elem_split datasets() const;
+    /** typedefs and methods for iterators **/
+    typedef iterator<group> subgroup_iterator;
+    typedef iterator<dataset> dataset_iterator;
+    
+    subgroup_iterator begin();
+    subgroup_iterator end();
+    dataset_iterator begin();
+    dataset_iterator end();
+    // TODO: also for const iterator!
 
 private:
     /** HDF5 object ID */
@@ -172,6 +179,30 @@ inline hid_t open_group(hid_t loc_id, std::string const& path)
         group_id = H5Gopen(loc_id, path.c_str(), H5P_DEFAULT);
     } H5E_END_TRY
     return group_id;
+}
+
+subgroup_iterator group::begin()
+{
+    subgroup_iterator grp_it(*this);
+    *grp_it;        // TODO: this should "initialize" the iterator (see *operator) / better way ??
+    return(grp_it);
+}
+
+subgroup_iterator group::end()
+{
+    return(subgroup_iterator(*this));
+}
+
+dataset_iterator group::begin()
+{
+    dataset_iterator dset_it(*this);
+    *dset_it;       // TODO: this should "initialize" the iterator (see *operator) / better way ??
+    return(dset_it);
+}
+
+dataset_iterator group::end()
+{
+    return(dataset_iterator(*this));
 }
 
 } // namespace h5xx

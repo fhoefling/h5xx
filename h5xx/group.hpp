@@ -18,10 +18,12 @@
 #include <h5xx/utility.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/property.hpp>
-#include <h5xx/iterator.hpp>
+//#include <h5xx/iterator.hpp>
 
 namespace h5xx {
 
+template <typename T>
+class iterator;
 // this class is meant to replace the H5::Group class
 class group
 {
@@ -77,10 +79,12 @@ public:
     typedef iterator<group> subgroup_iterator;
     typedef iterator<dataset> dataset_iterator;
     
-    subgroup_iterator begin();
-    subgroup_iterator end();
-    dataset_iterator begin();
-    dataset_iterator end();
+    template <typename T>
+    iterator<T> begin() const;
+    template <typename T>
+    iterator<T> end() const;
+    //dataset_iterator begin() const;
+    //dataset_iterator end() const;
     // TODO: also for const iterator!
 
 private:
@@ -181,6 +185,7 @@ inline hid_t open_group(hid_t loc_id, std::string const& path)
     return group_id;
 }
 
+/*
 subgroup_iterator group::begin()
 {
     subgroup_iterator grp_it(*this);
@@ -203,6 +208,22 @@ dataset_iterator group::begin()
 dataset_iterator group::end()
 {
     return(dataset_iterator(*this));
+}
+*/
+
+// TODO: why does this work?? *operator should not be known?
+template <typename T>
+iterator<T> group::begin() const
+{
+    iterator<T> iter(*this);
+    *iter;
+    return(iter);
+}
+
+template <typename T>
+iterator<T> group::end() const
+{
+    return(iterator<T>(*this));
 }
 
 } // namespace h5xx

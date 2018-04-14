@@ -13,7 +13,6 @@
 
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
-#include <h5xx/iterator.hpp>
 
 #include <test/ctest_full_output.hpp>
 #include <test/catch_boost_no_throw.hpp>
@@ -52,19 +51,19 @@ BOOST_AUTO_TEST_CASE( empty_group )
     //BOOST_CHECK_NO_THROW(group::dataset_iterator());
     //BOOST_CHECK_NO_THROW(group::subgroup_iterator());
     
-    BOOST_CHECK_NO_THROW(group::dataset_iterator(container_group));
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator(container_group));
+    BOOST_CHECK_NO_THROW(dataset_container::iterator(container_group));
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator(container_group));
 
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
     
 
-    group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>(); 
-    group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>();
-    group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>();
-    group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>();
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin(); 
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
     // begin- and end-iterator should be equal in empty group
     BOOST_CHECK_EQUAL(dset_iter_begin, dset_iter_end);
@@ -89,16 +88,16 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     dataset dset3 = create_dataset<int>(container_group, "test_dset3");
     dataset temp_set;
     
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
     
 
-    group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>(); 
-    group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>();
-    group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>();
-    group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>();
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin(); 
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
     // begin- and end-iterator over subgroups should be equal
     BOOST_CHECK_EQUAL(sgroup_iter_begin, sgroup_iter_end);
@@ -112,7 +111,7 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
     
     // check == and !=
-    group::dataset_iterator dset_iterator_2 = container_group.begin<h5xx::dataset>();
+    dataset_container::iterator dset_iterator_2 = container_group.datasets().begin();
     BOOST_CHECK(dset_iter_begin != dset_iterator_2);
     dset_iter_begin++;
     BOOST_CHECK(dset_iter_begin == dset_iterator_2);
@@ -142,15 +141,15 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     group grp3(container_group, "test_grp3");
     group temp_grp;
     
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
 
-    group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>(); 
-    group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>();
-    group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>();
-    group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>();
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin(); 
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
 
 
@@ -166,7 +165,7 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
     
     // check == and !=
-    group::subgroup_iterator sgroup_iter_2 = container_group.begin<h5xx::group>();
+    subgroup_container::iterator sgroup_iter_2 = container_group.subgroups().begin();
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_2);
     sgroup_iter_2++;
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_2);
@@ -198,15 +197,15 @@ BOOST_AUTO_TEST_CASE( mixed_1 )
     group temp_grp;
     dataset temp_set;
         
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>());
-
-    group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>(); 
-    group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>();
-    group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>();
-    group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>();
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin(); 
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
 
 
@@ -246,15 +245,15 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     dataset temp_set;
     
     
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
 
-    group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>(); 
-    group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>();
-    group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>();
-    group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>();
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin(); 
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
 
 
@@ -294,15 +293,15 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     group temp_grp;
     dataset temp_set;
        
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>());
-    BOOST_CHECK_NO_THROW(group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
 
-    group::dataset_iterator dset_iter_begin = container_group.begin<h5xx::dataset>(); 
-    group::dataset_iterator dset_iter_end = container_group.end<h5xx::dataset>();
-    group::subgroup_iterator sgroup_iter_begin = container_group.begin<h5xx::group>();
-    group::subgroup_iterator sgroup_iter_end = container_group.end<h5xx::group>();
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin(); 
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
 
 

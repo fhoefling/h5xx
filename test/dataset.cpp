@@ -24,7 +24,7 @@
 
 using namespace h5xx;
 
-BOOST_GLOBAL_FIXTURE( ctest_full_output )
+BOOST_GLOBAL_FIXTURE( ctest_full_output );
 
 namespace fixture { // preferred over BOOST_FIXTURE_TEST_SUITE
 

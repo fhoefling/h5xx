@@ -15,15 +15,19 @@
 #define H5XX_GROUP_HPP
 
 #include <h5xx/file.hpp>
+#include <h5xx/dataset.hpp>
 #include <h5xx/utility.hpp>
 #include <h5xx/error.hpp>
 #include <h5xx/property.hpp>
-//#include <h5xx/iterator.hpp>
+#include <h5xx/iterator.hpp>
+
 
 namespace h5xx {
 
-template <typename T>
-class iterator;
+/** forward declaration **/
+class dataset_container;
+class subgroup_container;
+
 // this class is meant to replace the H5::Group class
 class group
 {
@@ -75,17 +79,10 @@ public:
     /** close handle to HDF5 group (called by default destructor) */
     void close();
     
-    /** typedefs and methods for iterators **/
-    typedef iterator<group> subgroup_iterator;
-    typedef iterator<dataset> dataset_iterator;
-    
-    template <typename T>
-    iterator<T> begin() const;
-    template <typename T>
-    iterator<T> end() const;
-    //dataset_iterator begin() const;
-    //dataset_iterator end() const;
-    // TODO: also for const iterator!
+    /** methods for iterator-adapters **/
+    dataset_container datasets();
+    subgroup_container subgroups();
+
 
 private:
     /** HDF5 object ID */
@@ -94,6 +91,47 @@ private:
     template <typename h5xxObject>
     friend void swap(h5xxObject& left, h5xxObject& right);
 };
+
+
+/** 
+ * adapter classes for iterators
+ */
+class dataset_container
+{
+
+public:
+    
+    typedef _group_iterator<dataset> iterator;	
+    dataset_container(const group&);
+
+    iterator begin();
+    iterator end();
+
+    // TODO: same for cbegin/cend
+
+private:
+
+    const group& container_group;
+};
+
+class subgroup_container
+{
+
+public:
+    
+    typedef _group_iterator<group> iterator;
+    subgroup_container(const group&);
+
+    iterator begin();
+    iterator end();
+    
+    // TODO: same for cbegin/cend
+
+private:
+    
+    const group& container_group;
+};
+
 
 /**
  * return true if group "name" exists in group "grp"
@@ -185,47 +223,47 @@ inline hid_t open_group(hid_t loc_id, std::string const& path)
     return group_id;
 }
 
-/*
-subgroup_iterator group::begin()
+inline dataset_container group::datasets()
 {
-    subgroup_iterator grp_it(*this);
-    *grp_it;        // TODO: this should "initialize" the iterator (see *operator) / better way ??
-    return(grp_it);
+    dataset_container container(*this);
+    return(container);
 }
 
-subgroup_iterator group::end()
+inline subgroup_container group::subgroups()
 {
-    return(subgroup_iterator(*this));
+    subgroup_container container(*this);
+    return(container);
 }
 
-dataset_iterator group::begin()
-{
-    dataset_iterator dset_it(*this);
-    *dset_it;       // TODO: this should "initialize" the iterator (see *operator) / better way ??
-    return(dset_it);
-}
+inline dataset_container::dataset_container(const group& grp) : container_group(grp) {}
 
-dataset_iterator group::end()
+inline dataset_container::iterator dataset_container::begin()
 {
-    return(dataset_iterator(*this));
-}
-*/
-
-// TODO: why does this work?? *operator should not be known?
-template <typename T>
-iterator<T> group::begin() const
-{
-    iterator<T> iter(*this);
+    iterator iter(container_group);
     *iter;
     return(iter);
 }
 
-template <typename T>
-iterator<T> group::end() const
+inline dataset_container::iterator dataset_container::end()
 {
-    return(iterator<T>(*this));
+    iterator iter(container_group);
+    return(iter);
 }
 
+inline subgroup_container::subgroup_container(const group& grp) : container_group(grp) {}
+
+inline subgroup_container::iterator subgroup_container::begin()
+{
+    iterator iter(container_group);
+    *iter;
+    return(iter);
+}
+
+inline subgroup_container::iterator subgroup_container::end()
+{
+    iterator iter(container_group);
+    return(iter);
+}
 } // namespace h5xx
 
 #endif /* ! H5XX_GROUP_HPP */

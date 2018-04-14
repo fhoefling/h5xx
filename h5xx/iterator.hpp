@@ -203,7 +203,7 @@ inline _group_iterator<T>& _group_iterator<T>::operator++(int) // it++
 
 
 template <>
-group _group_iterator<group>::operator*()
+inline group _group_iterator<group>::operator*()
 {
     if (stop_idx == -1u) // iterator is end
     {
@@ -229,7 +229,7 @@ group _group_iterator<group>::operator*()
 
 
 template <>
-dataset _group_iterator<dataset>::operator*()
+inline dataset _group_iterator<dataset>::operator*()
 {
     if (stop_idx == -1u) // iterator is end
     {

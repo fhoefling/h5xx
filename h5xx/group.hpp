@@ -149,6 +149,10 @@ namespace detail {
 template <typename T>
 herr_t find_name_of_type(hid_t g_id, const char* name, const H5L_info_t* info, void* op_data);
 
+herr_t find_name_of_dataset_impl(hid_t g_id, const char* name, const H5L_info_t* info, void* op_data);
+
+herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t* info, void* op_data);
+
 } // namespace detail
 
 
@@ -181,7 +185,7 @@ class subgroup_container
 public:
     
     typedef _group_iterator<group> iterator;
-    typeder _group_iterator<group const> const_iterator;
+    typedef _group_iterator<group const> const_iterator;
     subgroup_container(const group&);
 
     iterator begin();
@@ -315,7 +319,7 @@ inline dataset_container::iterator dataset_container::end()
 
 inline dataset_container::const_iterator dataset_container::cbegin()
 {
-    const_iterator iter(container_goup);
+    const_iterator iter(container_group);
     *iter;
     return(iter);
 }
@@ -341,7 +345,7 @@ inline subgroup_container::iterator subgroup_container::end()
     return(iter);
 }
 
-inline subgroup_container::const_iterator subgoup_container::cbegin()
+inline subgroup_container::const_iterator subgroup_container::cbegin()
 {
     const_iterator iter(container_group);
     *iter;
@@ -402,7 +406,7 @@ herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t *i
     return(retval);
 }
 
-herr_t find_name_of_dataset_impl<dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
+herr_t find_name_of_dataset_impl(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
     H5O_info_t obj_info;
     herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);

@@ -96,7 +96,7 @@ class _group_iterator : public std::iterator<std::forward_iterator_tag, T>
 {
 
 public:
-
+    //FIXME: noexcept?
     _group_iterator() {};
     _group_iterator(const group&);
     _group_iterator(const _group_iterator&);
@@ -161,12 +161,14 @@ class dataset_container
 public:
     
     typedef _group_iterator<dataset> iterator;	
+    typedef _group_iterator<dataset const> const_iterator;
     dataset_container(const group&);
 
     iterator begin();
     iterator end();
 
-    // TODO: same for cbegin/cend
+    const_iterator cbegin();
+    const_iterator cend();
 
 private:
 
@@ -179,12 +181,14 @@ class subgroup_container
 public:
     
     typedef _group_iterator<group> iterator;
+    typeder _group_iterator<group const> const_iterator;
     subgroup_container(const group&);
 
     iterator begin();
     iterator end();
     
-    // TODO: same for cbegin/cend
+    const_iterator cbegin();
+    const_iterator cend();
 
 private:
     
@@ -309,6 +313,19 @@ inline dataset_container::iterator dataset_container::end()
     return(iter);
 }
 
+inline dataset_container::const_iterator dataset_container::cbegin()
+{
+    const_iterator iter(container_goup);
+    *iter;
+    return(iter);
+}
+
+inline dataset_container::const_iterator dataset_container::cend()
+{
+    const_iterator iter(container_group);
+    return(iter);
+}
+
 inline subgroup_container::subgroup_container(const group& grp) : container_group(grp) {}
 
 inline subgroup_container::iterator subgroup_container::begin()
@@ -324,10 +341,46 @@ inline subgroup_container::iterator subgroup_container::end()
     return(iter);
 }
 
+inline subgroup_container::const_iterator subgoup_container::cbegin()
+{
+    const_iterator iter(container_group);
+    *iter;
+    return(iter);
+}
+
+inline subgroup_container::const_iterator subgroup_container::cend()
+{
+    const_iterator iter(container_group);
+    return(iter);
+}
+
 namespace detail{
 
 template <>
 herr_t find_name_of_type<group>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
+{
+    return(find_name_of_group_impl(g_id, name, info, op_data));
+}
+
+template <>
+herr_t find_name_of_type<group const>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
+{
+    return(find_name_of_group_impl(g_id, name, info, op_data));
+}
+
+template <>
+herr_t find_name_of_type<dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
+{
+    return(find_name_of_dataset_impl(g_id, name, info, op_data));
+}
+
+template <>
+herr_t find_name_of_type<dataset const>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
+{
+    return(find_name_of_dataset_impl(g_id, name, info, op_data));
+}
+
+herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
     H5O_info_t obj_info;
     herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT); // returns non-negative upon success, negative if failed
@@ -349,9 +402,7 @@ herr_t find_name_of_type<group>(hid_t g_id, const char* name, const H5L_info_t *
     return(retval);
 }
 
-
-template <>
-herr_t find_name_of_type<dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
+herr_t find_name_of_dataset_impl<dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
     H5O_info_t obj_info;
     herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);

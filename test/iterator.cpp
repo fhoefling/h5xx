@@ -10,7 +10,7 @@
  
  #define BOOST_TEST_MODULE h5xx_group
 #include <boost/test/unit_test.hpp>
-
+#include <iostream>
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
 
@@ -50,9 +50,9 @@ BOOST_AUTO_TEST_CASE( empty_group )
     // checking constructors TODO: default constructors?
     //BOOST_CHECK_NO_THROW(group::dataset_iterator());
     //BOOST_CHECK_NO_THROW(group::subgroup_iterator());
-    
-    BOOST_CHECK_NO_THROW(dataset_container::iterator(container_group));
+     
     BOOST_CHECK_NO_THROW(subgroup_container::iterator(container_group));
+    BOOST_CHECK_NO_THROW(dataset_container::iterator(container_group));
 
     BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
     BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
@@ -106,8 +106,10 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
     
     // check operators
-    temp_set = *dset_iter_begin++;
-    BOOST_CHECK_EQUAL(temp_set.hid(), dset1.hid());
+    BOOST_CHECK_EQUAL((*dset_iter_begin).hid(), dset1.hid());
+    ++dset_iter_begin;
+    temp_set = *dset_iter_begin;
+    BOOST_CHECK_EQUAL(temp_set.hid(), dset2.hid());
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
     
     // check == and !=

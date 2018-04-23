@@ -8,7 +8,7 @@
  * 3-clause BSD license.  See accompanying file LICENSE for details.
  */
  
- #define BOOST_TEST_MODULE h5xx_group
+#define BOOST_TEST_MODULE h5xx_group
 #include <boost/test/unit_test.hpp>
 
 #include <h5xx/group.hpp>
@@ -18,16 +18,15 @@
 #include <test/catch_boost_no_throw.hpp>
 #include <test/fixture.hpp>
 
-
 namespace fixture
 {
 
-char filename[] = "test_h5xx_group.h5";
+char filename[] = "test_h5xx_iterator.h5";
 typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
 using namespace h5xx;
 
-BOOST_AUTO_TEST_CASE( defaut_group )
+BOOST_AUTO_TEST_CASE( default_group )
 {
     group container_group();
     //group::dataset_iterator dset_iter;
@@ -41,7 +40,6 @@ BOOST_AUTO_TEST_CASE( defaut_group )
     BOOST_CHECK_THROW(sgroup_iter = container_group.end());
     */
 }
-
 
 BOOST_AUTO_TEST_CASE( empty_group )
 {
@@ -66,8 +64,8 @@ BOOST_AUTO_TEST_CASE( empty_group )
     subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
     // begin- and end-iterator should be equal in empty group
-    BOOST_CHECK_EQUAL(dset_iter_begin, dset_iter_end);
-    BOOST_CHECK_EQUAL(sgroup_iter_begin, sgroup_iter_end);
+    BOOST_CHECK(dset_iter_begin == dset_iter_end);
+    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
     
     // check ==- and !=-operator
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
@@ -100,7 +98,7 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
     // begin- and end-iterator over subgroups should be equal
-    BOOST_CHECK_EQUAL(sgroup_iter_begin, sgroup_iter_end);
+    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
     
     // begin- and end-iterator over datasets should not be equal
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
@@ -129,7 +127,7 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
     
     dset_iter_begin++;
-    BOOST_CHECK_EQUAL(dset_iter_begin, dset_iter_end); // TODO: is this equal to BOOST_CHECK(dset_iter_begin == dset_iter_end) ?
+    BOOST_CHECK(dset_iter_begin == dset_iter_end);
 }
 
 
@@ -157,7 +155,7 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
     
     // begin- and end-iterator over datasets should be equal
-    BOOST_CHECK_EQUAL(dset_iter_begin, dset_iter_end);
+    BOOST_CHECK(dset_iter_begin == dset_iter_end);
     
     // check operators
     temp_grp = *sgroup_iter_begin++;
@@ -183,7 +181,7 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
     
     sgroup_iter_begin++;
-    BOOST_CHECK_EQUAL(sgroup_iter_begin, sgroup_iter_end); // TODO: see above
+    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
 }
 
 
@@ -220,7 +218,7 @@ BOOST_AUTO_TEST_CASE( mixed_1 )
     temp_grp = *sgroup_iter_begin++;
     BOOST_CHECK_EQUAL(temp_grp.hid(), grp1.hid());
     
-    BOOST_CHECK_EQUAL(sgroup_iter_begin, sgroup_iter_end);
+    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
     
     // iterate dataset iter
     temp_set = *dset_iter_begin++;
@@ -230,7 +228,7 @@ BOOST_AUTO_TEST_CASE( mixed_1 )
     temp_set = *dset_iter_begin++;
     BOOST_CHECK_EQUAL(temp_set.hid(), dset2.hid());
     
-    BOOST_CHECK_EQUAL(dset_iter_begin, dset_iter_end); 
+    BOOST_CHECK(dset_iter_begin == dset_iter_end); 
 }
 
 
@@ -272,13 +270,13 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     temp_grp = *sgroup_iter_begin++;
     BOOST_CHECK_EQUAL(temp_grp.hid(), grp2.hid());
     
-    BOOST_CHECK_EQUAL(sgroup_iter_begin, sgroup_iter_end);
+    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
     
     // iterate dataset iter
     temp_set = *dset_iter_begin++;
     BOOST_CHECK_EQUAL(temp_set.hid(), dset1.hid());
     
-    BOOST_CHECK_EQUAL(dset_iter_begin, dset_iter_end);
+    BOOST_CHECK(dset_iter_begin == dset_iter_end);
 }
 
 
@@ -324,7 +322,7 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     temp_grp = *sgroup_iter_begin++;
     BOOST_CHECK_EQUAL(temp_grp.hid(), grp2.hid());
     
-    BOOST_CHECK_EQUAL(sgroup_iter_begin, sgroup_iter_end);
+    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
     
     // iterate dataset iter
     temp_set = *dset_iter_begin++;
@@ -334,6 +332,6 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     temp_set = *dset_iter_begin++;
     BOOST_CHECK_EQUAL(temp_set.hid(), dset2.hid());
     
-    BOOST_CHECK_EQUAL(dset_iter_begin, dset_iter_end);
+    BOOST_CHECK(dset_iter_begin == dset_iter_end);
 }
 } // namespace fixture

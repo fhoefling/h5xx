@@ -96,10 +96,12 @@ class _group_iterator : public std::iterator<std::forward_iterator_tag, T>
 {
 
 public:
-    //FIXME: noexcept?
-    _group_iterator() {};
-    _group_iterator(const group&);
-    _group_iterator(const _group_iterator&);
+
+    //FIXME: swappable?
+    //FIXME: noexcept in constructor?
+    _group_iterator() noexcept {};
+    _group_iterator(const group&) noexcept;
+    _group_iterator(const _group_iterator&) noexcept;
     ~_group_iterator() {};
 
     /** increment and decrement operators move to next element **/
@@ -168,11 +170,11 @@ public:
     typedef _group_iterator<dataset const> const_iterator;
     dataset_container(const group&);
 
-    iterator begin();
-    iterator end();
+    iterator begin() noexcept;
+    iterator end() noexcept;
 
-    const_iterator cbegin();
-    const_iterator cend();
+    const_iterator cbegin() const noexcept;
+    const_iterator cend() const noexcept;
 
 private:
 
@@ -188,11 +190,11 @@ public:
     typedef _group_iterator<group const> const_iterator;
     subgroup_container(const group&);
 
-    iterator begin();
-    iterator end();
+    iterator begin() noexcept;
+    iterator end() noexcept;
     
-    const_iterator cbegin();
-    const_iterator cend();
+    const_iterator cbegin() const noexcept;
+    const_iterator cend() const noexcept;
 
 private:
     
@@ -304,27 +306,27 @@ inline subgroup_container group::subgroups()
 
 inline dataset_container::dataset_container(const group& grp) : container_group(grp) {}
 
-inline dataset_container::iterator dataset_container::begin()
+inline dataset_container::iterator dataset_container::begin() noexcept
 {
     iterator iter(container_group);
     *iter;
     return(iter);
 }
 
-inline dataset_container::iterator dataset_container::end()
+inline dataset_container::iterator dataset_container::end() noexcept
 {
     iterator iter(container_group);
     return(iter);
 }
 
-inline dataset_container::const_iterator dataset_container::cbegin()
+inline dataset_container::const_iterator dataset_container::cbegin() const noexcept
 {
     const_iterator iter(container_group);
     *iter;
     return(iter);
 }
 
-inline dataset_container::const_iterator dataset_container::cend()
+inline dataset_container::const_iterator dataset_container::cend() const noexcept
 {
     const_iterator iter(container_group);
     return(iter);
@@ -332,27 +334,27 @@ inline dataset_container::const_iterator dataset_container::cend()
 
 inline subgroup_container::subgroup_container(const group& grp) : container_group(grp) {}
 
-inline subgroup_container::iterator subgroup_container::begin()
+inline subgroup_container::iterator subgroup_container::begin() noexcept
 {
     iterator iter(container_group);
     *iter;
     return(iter);
 }
 
-inline subgroup_container::iterator subgroup_container::end()
+inline subgroup_container::iterator subgroup_container::end() noexcept
 {
     iterator iter(container_group);
     return(iter);
 }
 
-inline subgroup_container::const_iterator subgroup_container::cbegin()
+inline subgroup_container::const_iterator subgroup_container::cbegin() const noexcept
 {
     const_iterator iter(container_group);
     *iter;
     return(iter);
 }
 
-inline subgroup_container::const_iterator subgroup_container::cend()
+inline subgroup_container::const_iterator subgroup_container::cend() const noexcept
 {
     const_iterator iter(container_group);
     return(iter);
@@ -431,14 +433,14 @@ herr_t find_name_of_dataset_impl(hid_t g_id, const char* name, const H5L_info_t 
 
 
 template <typename T>
-inline _group_iterator<T>::_group_iterator(const group& group) : container_group(&group)
+inline _group_iterator<T>::_group_iterator(const group& group) noexcept : container_group(&group)
 {
     stop_idx = -1u;  // constructor gives end()-iterator by default
 }
 
 
 template <typename T>
-inline _group_iterator<T>::_group_iterator(const _group_iterator& other) : container_group(other.container_group)
+inline _group_iterator<T>::_group_iterator(const _group_iterator& other) noexcept : container_group(other.container_group)
 {
     name_of_current_element = other.name_of_current_element;
     stop_idx = other.stop_idx;
@@ -491,8 +493,9 @@ inline _group_iterator<T>& _group_iterator<T>::operator++() // ++it
 template <typename T>
 inline _group_iterator<T>& _group_iterator<T>::operator++(int) // it++
 {
+    _group_iterator<T> this_temp = *this;
     ++(*this);
-    return(*this);
+    return(this_temp);
 }
 
 

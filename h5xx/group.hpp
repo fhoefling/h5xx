@@ -488,25 +488,15 @@ inline bool _group_iterator<T>::operator!=(const _group_iterator& other) const
 template <typename T>
 inline _group_iterator<T>& _group_iterator<T>::operator++() // ++it
 {
-    unsigned int old_stop_idx = stop_idx;
-
     herr_t retval = H5Literate(container_group->hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element); // FIXME: H5_ITER_NATIVE faster?? see alse operator-- / operator*
-
+    
     // evaluate return value
     // retval is return-value of operator (usually > 0), == 0 iff all elements have been iterated over with no non-zero operator
     // on failure or if operator returns negative, returns the negative
-    if(stop_idx == old_stop_idx && retval < 0)
-    {
-        stop_idx = -1u; // FIXME: when no more elements are found, H5Literate should  actually return negative. see issues!
-    }
-    else if(retval < 0) // there has been an error upon iteration or reading of  object info
-    {
-        throw std::runtime_error("Error within H5Literate");
-    }
-    else if(retval == 0) // there is no more elements of T in container group
-    {
-        throw std::out_of_range("Iterator out of range");  // set to 'invalid' iterator, e.g., stop_idx = -1
-    }
+    //
+    // if H5Literate fails or no more elements are found, set _group_iterator to past-the-end
+    if(retval <= 0)
+        stop_idx = -1u; // FIXME: when no more elements are found, H5Literate should  actually return negative. see issues
       
     return(*this);
 }
@@ -515,7 +505,7 @@ inline _group_iterator<T>& _group_iterator<T>::operator++() // ++it
 template <typename T>
 inline _group_iterator<T> _group_iterator<T>::operator++(int) // it++
 {
-    _group_iterator<T> this_temp = *this;
+    _group_iterator<T> this_temp(*this);
     ++(*this);
     return(this_temp); // FIXME: returns reference to local variable
 }

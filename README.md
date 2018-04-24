@@ -30,7 +30,7 @@ the 3-clause BSD license.
 
 ## Requirements
 
-* A compiler that supports at least C++98 is required.  h5xx was developed
+* A compiler that supports at least C++11 is required.  h5xx was developed
 and tested using g++ on x86_64 Linux.  h5xx was tested in addition with Intel
 icpc.
 * HDF5: h5xx requires an installation of the HDF5 library.  HDF5 may be built

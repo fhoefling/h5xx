@@ -106,7 +106,7 @@ public:
 
     /** increment and decrement operators move to next element **/
     _group_iterator& operator++();
-    _group_iterator& operator++(int);
+    _group_iterator operator++(int);
 
     /** returns h5xx-object **/
     T operator*();
@@ -411,6 +411,10 @@ herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t *i
         else // if element name was not a group, continue iteration
             retval = 0;
     }
+    else
+    {
+        throw std::runtime_error("Error in H5Oget_info_by_name in detail::find_name_of_group_impl");
+    }
     
     return(retval);
 }
@@ -433,6 +437,10 @@ herr_t find_name_of_dataset_impl(hid_t g_id, const char* name, const H5L_info_t 
         }
         else // if element name was not a dataset, continue iteration
             retval = 0;
+    }
+    else
+    {
+        throw std::runtime_error("Error in H5Oget_info_by_name in detail::find_name_of_dataset_impl");
     }
 
     return(retval);
@@ -480,14 +488,20 @@ inline bool _group_iterator<T>::operator!=(const _group_iterator& other) const
 template <typename T>
 inline _group_iterator<T>& _group_iterator<T>::operator++() // ++it
 {
+    unsigned int old_stop_idx = stop_idx;
+
     herr_t retval = H5Literate(container_group->hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element); // FIXME: H5_ITER_NATIVE faster?? see alse operator-- / operator*
-    
+
     // evaluate return value
     // retval is return-value of operator (usually > 0), == 0 iff all elements have been iterated over with no non-zero operator
     // on failure or if operator returns negative, returns the negative
-    if(retval < 0) // there has been an error upon iteration or reading of  object info
+    if(stop_idx == old_stop_idx && retval < 0)
     {
-        throw std::runtime_error("Error within H5Literate or detail::find_name_of_type");
+        stop_idx = -1u; // FIXME: when no more elements are found, H5Literate should  actually return negative. see issues!
+    }
+    else if(retval < 0) // there has been an error upon iteration or reading of  object info
+    {
+        throw std::runtime_error("Error within H5Literate");
     }
     else if(retval == 0) // there is no more elements of T in container group
     {
@@ -499,7 +513,7 @@ inline _group_iterator<T>& _group_iterator<T>::operator++() // ++it
 
 
 template <typename T>
-inline _group_iterator<T>& _group_iterator<T>::operator++(int) // it++
+inline _group_iterator<T> _group_iterator<T>::operator++(int) // it++
 {
     _group_iterator<T> this_temp = *this;
     ++(*this);

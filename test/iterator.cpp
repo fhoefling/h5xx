@@ -8,7 +8,6 @@
  * 3-clause BSD license.  See accompanying file LICENSE for details.
  */
 
-
 /** Requirements fo Iterator(It) (according to en.cppreference.com/w/cpp/concept/ForwarsIterator)
  *  
  *  - DefaultConstructible
@@ -36,6 +35,7 @@
 
 #define BOOST_TEST_MODULE h5xx_group
 #include <boost/test/unit_test.hpp>
+
 #include <iostream>
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
@@ -63,7 +63,6 @@ BOOST_AUTO_TEST_CASE( basic_forwarditerator_requirements )
 {
     
 }
-
 
 BOOST_AUTO_TEST_CASE( empty_group )
 {

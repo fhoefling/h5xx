@@ -28,6 +28,7 @@ foreach(module
   dataspace
   file
   group
+  iterator
   )
   add_executable(test_h5xx_${module}
     ${module}.cpp

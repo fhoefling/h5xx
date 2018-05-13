@@ -144,8 +144,8 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     BOOST_CHECK_THROW(dset_iter++, std::invalid_argument);
     BOOST_CHECK_THROW(sgroup_iter++, std::invalid_argument);
     
-    /** check (void) i++ == (void)++i */
-    
+    /** TODO: check (void) i++ == (void)++i */
+     
     
     /** check operator!= / operator== */ 
     BOOST_CHECK(dset_iter == dset_iter_2);
@@ -153,7 +153,7 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
     BOOST_CHECK(!(sgroup_iter != sgroup_iter_2));
     
-    /** check Multipass guarantee */
+    /** TODO: check Multipass guarantee */
 
 }
 
@@ -214,14 +214,12 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     dataset dset3 = create_dataset<int>(container_group, "dset3");
 
     // testing begin(), end()
-    dataset_container::iterator dset_iter_begin, dset_iter_end, dset_iter_begin_2;
-    BOOST_CHECK_NO_THROW(dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(dset_iter_begin_2 = container_group.datasets().begin());
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    dataset_container::iterator dset_iter_begin_2 = container_group.datasets().begin();
 
-    subgroup_container::iterator sgroup_iter_begin, sgroup_iter_end;
-    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.subgroups().end());
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
 
     // no subgroups: begin and end iterators over subgroups should be equal
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);

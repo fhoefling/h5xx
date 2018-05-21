@@ -464,7 +464,7 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     BOOST_CHECK(dset_iter_begin.get_current_name() == "dset2");
     
     dset_iter_begin++;
-    sgroup_iter begin++;
+    sgroup_iter_begin++;
    
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end); 
     BOOST_CHECK(dset_iter_begin == dset_iter_end);

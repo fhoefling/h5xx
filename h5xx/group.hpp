@@ -120,15 +120,15 @@ public:
     /** return name of current element
      * just for testing 
      */
-    std::string _get_name_of_current_element() // get_name()
+    std::string get_current_name()
     {
         return(name_of_current_element);
     };
 
     /** initialize iterator
-     *  return return-value of H5Literate
+     *  as past-the-end
      */
-    herr_t set_to_begin_() noexcept;
+    void set_to_end_() noexcept;
 
 
 private:
@@ -164,9 +164,8 @@ namespace detail {
 template <typename T>
 herr_t find_name_of_type(hid_t g_id, const char* name, const H5L_info_t* info, void* op_data);
 
-herr_t find_name_of_dataset_impl(hid_t g_id, const char* name, const H5L_info_t* info, void* op_data);
-
-herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t* info, void* op_data);
+template <H5O_type_t>
+herr_t find_name_of_type_impl(hid_t g_id, const char* name, const H5L_info_t* info, void* op_data);
 
 } // namespace detail
 
@@ -322,26 +321,26 @@ inline dataset_container::dataset_container(const group& grp) : container_group_
 inline dataset_container::iterator dataset_container::begin() noexcept
 {
     iterator iter(*container_group_);
-    iter.set_to_begin_();
     return(iter);
 }
 
 inline dataset_container::iterator dataset_container::end() noexcept
 {
     iterator iter(*container_group_);
+    iter.set_to_end_();
     return(iter);
 }
 
 inline dataset_container::const_iterator dataset_container::cbegin() const noexcept
 {
     const_iterator iter(*container_group_);
-    iter.set_to_begin_();
     return(iter);
 }
 
 inline dataset_container::const_iterator dataset_container::cend() const noexcept
 {
     const_iterator iter(*container_group_);
+    iter.set_to_end_();
     return(iter);
 }
 
@@ -350,26 +349,26 @@ inline subgroup_container::subgroup_container(const group& grp) : container_grou
 inline subgroup_container::iterator subgroup_container::begin() noexcept
 {
     iterator iter(*container_group_);
-    iter.set_to_begin_();
     return(iter);
 }
 
 inline subgroup_container::iterator subgroup_container::end() noexcept
 {
     iterator iter(*container_group_);
+    iter.set_to_end_();
     return(iter);
 }
 
 inline subgroup_container::const_iterator subgroup_container::cbegin() const noexcept
 {
     const_iterator iter(*container_group_);
-    iter.set_to_begin_();
     return(iter);
 }
 
 inline subgroup_container::const_iterator subgroup_container::cend() const noexcept
 {
     const_iterator iter(*container_group_);
+    iter.set_to_end_();
     return(iter);
 }
 
@@ -378,28 +377,29 @@ namespace detail{
 template <>
 herr_t find_name_of_type<group>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
-    return(find_name_of_group_impl(g_id, name, info, op_data));
+    return(find_name_of_type_impl<H5O_TYPE_GROUP>(g_id, name, info, op_data));
 }
 
 template <>
 herr_t find_name_of_type<group const>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
-    return(find_name_of_group_impl(g_id, name, info, op_data));
+    return(find_name_of_type_impl<H5O_TYPE_GROUP>(g_id, name, info, op_data));
 }
 
 template <>
 herr_t find_name_of_type<dataset>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
-    return(find_name_of_dataset_impl(g_id, name, info, op_data));
+    return(find_name_of_type_impl<H5O_TYPE_DATASET>(g_id, name, info, op_data));
 }
 
 template <>
 herr_t find_name_of_type<dataset const>(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
-    return(find_name_of_dataset_impl(g_id, name, info, op_data));
+    return(find_name_of_type_impl<H5O_TYPE_DATASET>(g_id, name, info, op_data));
 }
 
-herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
+template <H5O_type_t type>
+herr_t find_name_of_type_impl(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
 {
     H5O_info_t obj_info;
 
@@ -410,7 +410,7 @@ herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t *i
     if(retval >= 0)
     {   
         /** filter for groups */
-        if(obj_info.type == H5O_TYPE_GROUP)
+        if(obj_info.type == type)
         {
             std::string *str_ptr = reinterpret_cast<std::string *>(op_data);
             *str_ptr = name;
@@ -421,39 +421,11 @@ herr_t find_name_of_group_impl(hid_t g_id, const char* name, const H5L_info_t *i
     }
     else
     {
-        throw std::runtime_error("Error when getting object info of "+name);
+        throw std::runtime_error("Error when getting object info of "+std::string(name));
     }
     
     return(retval);
 }
-
-herr_t find_name_of_dataset_impl(hid_t g_id, const char* name, const H5L_info_t *info, void *op_data)
-{
-    H5O_info_t obj_info;
-
-    /** returns non-negative upon success, negative if failed */
-    herr_t retval = H5Oget_info_by_name(g_id, name, &obj_info, H5P_DEFAULT);
-    
-    if(retval >= 0)
-    {
-        /** filter for datasets */
-        if(obj_info.type == H5O_TYPE_DATASET)
-        {
-            std::string *str_ptr = reinterpret_cast<std::string *>(op_data);
-            *str_ptr = name;
-            retval++; // ensure retval is > 0 for short-circuit success
-        }
-        else // if element name was not a dataset, continue iteration
-            retval = 0;
-    }
-    else
-    {
-        throw std::runtime_error("Error when getting object info of "+name);
-    }
-
-    return(retval);
-}
-
 } // namespace detail
 
 template <typename T>
@@ -466,7 +438,7 @@ inline group_iterator<T>::group_iterator() noexcept
 template <typename T>
 inline group_iterator<T>::group_iterator(const group& group) noexcept : container_group_(&group)
 {
-    stop_idx = -1U;  // constructor gives end()-iterator by default
+    stop_idx = 0;
 }
 
 
@@ -480,13 +452,14 @@ inline group_iterator<T>::group_iterator(const group_iterator& other) noexcept
 template <typename T>
 inline bool group_iterator<T>::operator==(const group_iterator& other) const
 {
-/*    if (stop_idx == 0) {
+    if (stop_idx == 0) {
         const_cast<group_iterator*>(this)->increment_();
     }
+    
     if (other.stop_idx == 0) {
         const_cast<group_iterator*>(&other)->increment_();
     }
-*/
+    
     return stop_idx == other.stop_idx;
 }
 
@@ -505,7 +478,10 @@ inline group_iterator<T>& group_iterator<T>::operator++() // ++it
         throw std::invalid_argument("group_iterator was default constructed; doesn't point to a group");
     }
 
-    bool out_of_range = increment_();
+    if(stop_idx == 0)
+        increment_();
+
+    bool out_of_range = !increment_();
 
     // evaluate return value
     if(out_of_range)
@@ -526,22 +502,33 @@ inline group_iterator<T> group_iterator<T>::operator++(int) // it++
 template <typename T>
 inline bool group_iterator<T>::increment_()
 {
+    /** check if container_group is valid
+     *  if not, set iterator past the end
+     *  and return false
+     *
+     *  FIXME: is this good style?
+     */
+    if(container_group_->hid() < 0){
+        stop_idx = -1U;
+	return false;
+    }
+
     herr_t retval = H5Literate(
         container_group_->hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx
       , detail::find_name_of_type<T>, &name_of_current_element
     );
-
+    
     // evaluate return code
-    if(retval == 0) // no element of type T was found
+    if(retval <= 0) // no element of type T was found
     {
-        stop_idx = -1u; // set iterator to past-the-end iterator
+        stop_idx = -1U; // set iterator to past-the-end iterator
         name_of_current_element = std::string();
     }
     else if(retval < 0) // unspecific error in H5Literate
     {
         throw std::runtime_error("Error within H5Literate or detail::find_name_of_type in group_iterator<T>::increment_ over group "+get_name(*container_group_));
     }
-
+    
     return retval > 0;  // all is good
 }
 
@@ -566,7 +553,6 @@ inline group group_iterator<group>::operator*()
     return(move(grp));
 }
 
-
 template <>
 inline dataset group_iterator<dataset>::operator*()
 {
@@ -589,15 +575,9 @@ inline dataset group_iterator<dataset>::operator*()
 }
 
 template <typename T>
-inline herr_t group_iterator<T>::set_to_begin_() noexcept
+inline void group_iterator<T>::set_to_end_() noexcept
 {
-    stop_idx = 0;
-    herr_t retval = H5Literate(container_group_->hid(), H5_INDEX_NAME, H5_ITER_INC, &stop_idx, detail::find_name_of_type<T>, &name_of_current_element);
-
-    if(retval <= 0) //FIXME: should there be more differentiation between cases? / returning retval?
-        stop_idx = -1u; // no element  found
-    
-    return(retval);
+    stop_idx = -1U;
 }
 
 } // namespace h5xx

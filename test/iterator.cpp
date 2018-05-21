@@ -56,30 +56,30 @@ using namespace h5xx;
 // FIXME test begin(), end() in test/group.cpp,
 // for default constructed group, empty group, group with 1 and 2 members.
 
-BOOST_AUTO_TEST_CASE( default_group )
+BOOST_AUTO_TEST_CASE( iterator_constructors)
 {
-    BOOST_TEST_MESSAGE("Testing iterator over default constructed group");
-    group container_group();
-/**
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_TEST_MESSAGE("\nTesting iterator constructors");
+    
+    group container_group(file);
+    dataset_container::iterator dset_iter;
+    subgroup_container::iterator sgroup_iter;
 
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
+    /** check default constructor */
+    BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator());
+    BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator());
 
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_begin);
-**/
+    /** check non-default constructor */
+    BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator(container_group));
+    BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator(container_group));
+
+    /** check copy constructor */
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_2 = dset_iter);
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_2 = sgroup_iter);
 }
-
 
 BOOST_AUTO_TEST_CASE( iterator_requirements )
 {
-    BOOST_TEST_MESSAGE("Testing basic requirements of ForwardIterator");
+    BOOST_TEST_MESSAGE("\nTesting basic requirements of ForwardIterator");
     
     dataset_container::iterator dset_iter, dset_iter_2, dset_iter_3;
     subgroup_container::iterator sgroup_iter, sgroup_iter_2, sgroup_iter_3;
@@ -118,7 +118,7 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
 
 BOOST_AUTO_TEST_CASE( iterator_expressions )
 {
-    BOOST_TEST_MESSAGE("Testing basic iterator expressions");
+    BOOST_TEST_MESSAGE("\nTesting basic iterator expressions");
 
     dataset_container::iterator dset_iter;
     dataset_container::iterator dset_iter_2;
@@ -155,6 +155,22 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     
     /** TODO: check Multipass guarantee */
 
+}
+
+BOOST_AUTO_TEST_CASE( default_group )
+{
+    BOOST_TEST_MESSAGE("\nTesting iterator over default constructed group");
+    group container_group = group();
+
+    BOOST_TEST_MESSAGE("setting up iterators"); 
+    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
+    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
+
+    BOOST_TEST_MESSAGE("testing for equality of begin and end iterators");
+    BOOST_CHECK(dset_iter_begin == dset_iter_end);
+    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_begin);
 }
 
 BOOST_AUTO_TEST_CASE( empty_group )
@@ -207,6 +223,7 @@ BOOST_AUTO_TEST_CASE( empty_group )
 
 BOOST_AUTO_TEST_CASE( only_datasets )
 {
+    BOOST_TEST_MESSAGE("\nTesting iterator over dataset-only group");
     group container_group(file);
 
     dataset dset1 = create_dataset<int>(container_group, "dset1");
@@ -214,37 +231,46 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     dataset dset3 = create_dataset<int>(container_group, "dset3");
 
     // testing begin(), end()
+    BOOST_TEST_MESSAGE("testing begin/end");
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+
     dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
     dataset_container::iterator dset_iter_end = container_group.datasets().end();
     dataset_container::iterator dset_iter_begin_2 = container_group.datasets().begin();
 
     subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
     subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
-
+ 
     // no subgroups: begin and end iterators over subgroups should be equal
+    BOOST_TEST_MESSAGE("testing inequality begin and end iterators");
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
 
     // begin and end iterators over datasets should not be equal
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin == dset_iter_begin_2++);    // test post-increment
-
-// FIXME    BOOST_CHECK_EQUAL(dset_iter_begin.name() == "dset1");
+    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset1"); // FIXME: do we have a guarantee that the order is  maintained?
+    BOOST_CHECK(dset_iter_begin == dset_iter_begin_2);
 
     // check operators / expressions FIXME to seperate test
+    BOOST_TEST_MESSAGE("testing dereference operator");
     BOOST_CHECK((*dset_iter_begin).valid());
 
+    BOOST_TEST_MESSAGE("testing 1st increment operator");
+    BOOST_CHECK((*dset_iter_begin).valid());
+    BOOST_CHECK(dset_iter_begin++ != dset_iter_end);
+    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset2");
+
+    BOOST_TEST_MESSAGE("testing 2nd increment operator");
     ++dset_iter_begin;
     BOOST_CHECK((*dset_iter_begin).valid());
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-
-    ++dset_iter_begin;
-    BOOST_CHECK((*dset_iter_begin).valid());
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-
+    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset3");
     ++dset_iter_begin;
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
 
-    BOOST_CHECK(dset_iter_begin != dset_iter_begin_2);
+    BOOST_TEST_MESSAGE("testing increment operator of dset_iter_begin_2");
+    BOOST_CHECK(dset_iter_begin != dset_iter_begin_2++);
     ++dset_iter_begin_2;
     ++dset_iter_begin_2;
     BOOST_CHECK(dset_iter_begin_2 == dset_iter_end);
@@ -253,6 +279,7 @@ BOOST_AUTO_TEST_CASE( only_datasets )
 
 BOOST_AUTO_TEST_CASE( only_subgroups )
 {
+    BOOST_TEST_MESSAGE("\nTesting iterator over subgroup-only group");
     group container_group(file);
     group grp1(container_group, "test_grp1");
     group grp2(container_group, "test_grp2");
@@ -278,19 +305,24 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
 
     // check operators
+    BOOST_TEST_MESSAGE("testing operator*()");
     BOOST_CHECK((*sgroup_iter_begin).valid());
 
+    BOOST_TEST_MESSAGE("testing 1st use of operator++()");
     ++sgroup_iter_begin;
     BOOST_CHECK((*sgroup_iter_begin).valid());
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
 
+    BOOST_TEST_MESSAGE("testing 2nd use of operator++()");
     ++sgroup_iter_begin;
     BOOST_CHECK((*sgroup_iter_begin).valid());
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
 
+    BOOST_TEST_MESSAGE("testing 3rd use of operator++()");
     ++sgroup_iter_begin;
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
 
+    BOOST_TEST_MESSAGE("testing use of operator++() of sgroup_iter_begin_2");
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_begin_2);
     ++sgroup_iter_begin_2;
     ++sgroup_iter_begin_2;
@@ -300,6 +332,7 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
 
 BOOST_AUTO_TEST_CASE( mixed_1 )
 {
+    BOOST_TEST_MESSAGE("\nTesting iterator over 1st mixed group");
     /** container group with 2 datasets and 1 subgroup **/
     group container_group(file);
     group grp1(container_group, "test_grp1");
@@ -335,6 +368,7 @@ BOOST_AUTO_TEST_CASE( mixed_1 )
 
 BOOST_AUTO_TEST_CASE( mixed_2 )
 {
+    BOOST_TEST_MESSAGE("\nTesting iterator over 2nd mixed group");
     /** container group with 1 dataset and 2 subgroups **/
     group container_group(file);
     group grp1(container_group, "test_grp1");
@@ -374,6 +408,7 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
 
 BOOST_AUTO_TEST_CASE( mixed_3 )
 {
+    BOOST_TEST_MESSAGE("\nTesting iterator over 3rd mixed group");
     /** container group with 2 datasets and 2 subgroups **/
     group container_group(file);
     group grp1(container_group, "test_grp1");

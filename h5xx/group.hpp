@@ -519,14 +519,10 @@ inline bool group_iterator<T>::increment_()
     );
     
     // evaluate return code
-    if(retval <= 0) // no element of type T was found
+    if(retval == 0) // no element of type T was found
     {
         stop_idx = -1U; // set iterator to past-the-end iterator
         name_of_current_element = std::string();
-    }
-    else if(retval < 0) // unspecific error in H5Literate
-    {
-        throw std::runtime_error("Error within H5Literate or detail::find_name_of_type in group_iterator<T>::increment_ over group "+get_name(*container_group_));
     }
     
     return retval > 0;  // all is good
@@ -546,7 +542,15 @@ inline group group_iterator<group>::operator*()
     }
  
     if (out_of_range) {
-        throw std::out_of_range("access to HDF5 group " + get_name(*container_group_));
+        
+        std::string error_msg = std::string();
+
+        if (container_group_ != NULL)
+            error_msg = "dereference iterator without group";
+	else
+            error_msg = "container_group "+get_name(*container_group_);
+
+        throw std::out_of_range(error_msg);
     }
 
     group grp(*container_group_, name_of_current_element);
@@ -567,7 +571,15 @@ inline dataset group_iterator<dataset>::operator*()
     } 
 
     if (out_of_range) {
-        throw std::out_of_range("access to HDF5 group " + get_name(*container_group_));
+        
+        std::string error_msg = std::string();
+
+        if (container_group_ != NULL)
+            error_msg = "dereference iterator without group";
+	else
+            error_msg = "container_group "+get_name(*container_group_);
+
+        throw std::out_of_range(error_msg);
     }	
     
     dataset dset(*container_group_, name_of_current_element);

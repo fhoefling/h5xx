@@ -188,8 +188,8 @@ BOOST_AUTO_TEST_CASE( default_group )
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_begin);
     
-    BOOST_CHECK_THROW(*dset_iter_begin, std::invalid_argument);
-    BOOST_CHECK_THROW(*sgroup_iter_begin, std::invalid_argument);
+    BOOST_CHECK_THROW(*dset_iter_begin, std::out_of_range);
+    BOOST_CHECK_THROW(*sgroup_iter_begin, std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE( empty_group )
@@ -211,8 +211,8 @@ BOOST_AUTO_TEST_CASE( empty_group )
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
 
-    BOOST_CHECK_THROW(*dset_iter_begin, std::invalid_argument);
-    BOOST_CHECK_THROW(*sgroup_iter_begin, std::invalid_argument);
+    BOOST_CHECK_THROW(*dset_iter_begin, std::out_of_range);
+    BOOST_CHECK_THROW(*sgroup_iter_begin, std::out_of_range);
 }
 
 

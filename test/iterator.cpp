@@ -65,14 +65,17 @@ BOOST_AUTO_TEST_CASE( iterator_constructors)
     subgroup_container::iterator sgroup_iter;
 
     /** check default constructor */
+    BOOST_TEST_MESSAGE("testing default constructor");
     BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator());
     BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator());
 
     /** check non-default constructor */
+    BOOST_TEST_MESSAGE("testing constructor with group-parameter");
     BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator(container_group));
     BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator(container_group));
 
     /** check copy constructor */
+    BOOST_TEST_MESSAGE("testing copy constructor");
     BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_2 = dset_iter);
     BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_2 = sgroup_iter);
 }
@@ -85,24 +88,29 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     subgroup_container::iterator sgroup_iter, sgroup_iter_2, sgroup_iter_3;
 
     /** check DefaultConstructible and MoveAssignable*/
+    BOOST_TEST_MESSAGE("testing DefaultConstructible and MoveAssignable");
     BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator());
     BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator());
 
     /** check MoveConstructible */
+    BOOST_TEST_MESSAGE("testing MoveConstructible");
     BOOST_CHECK_NO_THROW(dataset_container::iterator temp = dataset_container::iterator());
     BOOST_CHECK_NO_THROW(dataset_container::iterator temp(dataset_container::iterator()));
     BOOST_CHECK_NO_THROW(subgroup_container::iterator temp = subgroup_container::iterator());
     BOOST_CHECK_NO_THROW(subgroup_container::iterator temp(subgroup_container::iterator()));
 
     /** check CopyConstructible */
+    BOOST_TEST_MESSAGE("testing CopyConstructible");
     BOOST_CHECK_NO_THROW(dset_iter_2 = dataset_container::iterator(dset_iter));
     BOOST_CHECK_NO_THROW(sgroup_iter_2 = subgroup_container::iterator(sgroup_iter));
 
     /** check CopyAssignable */
+    BOOST_TEST_MESSAGE("testing CopyAssignable");
     BOOST_CHECK_NO_THROW(dset_iter_3 = dset_iter;);
     BOOST_CHECK_NO_THROW(sgroup_iter_3 = sgroup_iter);
 
     /** check EqualityComparable */
+    BOOST_TEST_MESSAGE("testing EqualityComparable");
     BOOST_CHECK(dset_iter == dset_iter_2);
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
 
@@ -126,7 +134,9 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     subgroup_container::iterator sgroup_iter_2;
 
     /** check operator* 
-     *  should throw h5xx::error, since container_group_ does not exist */
+     *  should throw h5xx::error, since container_group_ does not exist
+     */
+    BOOST_TEST_MESSAGE("testing dereference operator");
     BOOST_CHECK_THROW(*sgroup_iter, std::invalid_argument);
     BOOST_CHECK_THROW(*dset_iter, std::invalid_argument);
 
@@ -137,17 +147,20 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
      **/
 
     /** check operator++() */
+    BOOST_TEST_MESSAGE("testing pre-increment operator");
     BOOST_CHECK_THROW(++dset_iter, std::invalid_argument);
     BOOST_CHECK_THROW(++sgroup_iter, std::invalid_argument);
 
     /** check operator++(int) */
+    BOOST_TEST_MESSAGE("testing post-increment operator");
     BOOST_CHECK_THROW(dset_iter++, std::invalid_argument);
     BOOST_CHECK_THROW(sgroup_iter++, std::invalid_argument);
     
     /** TODO: check (void) i++ == (void)++i */
      
     
-    /** check operator!= / operator== */ 
+    /** check operator!= / operator== */
+    BOOST_TEST_MESSAGE("testing (in)equality operators");
     BOOST_CHECK(dset_iter == dset_iter_2);
     BOOST_CHECK(!(dset_iter != dset_iter_2));
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
@@ -162,62 +175,44 @@ BOOST_AUTO_TEST_CASE( default_group )
     BOOST_TEST_MESSAGE("\nTesting iterator over default constructed group");
     group container_group = group();
 
-    BOOST_TEST_MESSAGE("setting up iterators"); 
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
+    BOOST_TEST_MESSAGE("setting up iterators");
+    dataset_container::iterator dset_iter_begin, dset_iter_end;
+    subgroup_container::iterator sgroup_iter_begin, sgroup_iter_end;
+    
+    BOOST_CHECK_NO_THROW(dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.subgroups().end());
 
     BOOST_TEST_MESSAGE("testing for equality of begin and end iterators");
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_begin);
+    
+    BOOST_CHECK_THROW(*dset_iter_begin, std::invalid_argument);
+    BOOST_CHECK_THROW(*sgroup_iter_begin, std::invalid_argument);
 }
 
 BOOST_AUTO_TEST_CASE( empty_group )
 {
+    BOOST_TEST_MESSAGE("\nTesting iterator over empty group");
     group container_group(file);
-    // check default constructors
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator());
 
-    // check constructors from file
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator(container_group));
-    BOOST_CHECK_NO_THROW(dataset_container::iterator(container_group));
-
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
-
-
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
-
-    // check CopyConstructor
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin_2(dset_iter_begin));
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin_2(sgroup_iter_begin));
-
-    // check CopyAssignable
-    dataset_container::iterator dset_iter_begin_2;
-    subgroup_container::iterator sgroup_iter_begin_2;
-
-    BOOST_CHECK_NO_THROW(dset_iter_begin_2 = dset_iter_begin);
-    BOOST_CHECK_NO_THROW(sgroup_iter_begin_2 = sgroup_iter_begin);
+    BOOST_TEST_MESSAGE("setting up iterators");
+    dataset_container::iterator dset_iter_begin, dset_iter_end;
+    subgroup_container::iterator sgroup_iter_begin, sgroup_iter_end;
+    
+    BOOST_CHECK_NO_THROW(dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.subgroups().begin());
+    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.subgroups().end());
 
     // begin- and end-iterator should be equal in empty group
+    BOOST_TEST_MESSAGE("testing for equality of begin and end iterators");
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
 
-    // check ==- and !=-operator
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-    BOOST_CHECK(!(dset_iter_begin != dset_iter_end));
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
-    BOOST_CHECK(!(sgroup_iter_begin != sgroup_iter_end));
-
-    // TODO: dereferencing in empty container?
-    // BOOST_CHECK_THROW(); // in stl doesnt throw, but might give seg fault
+    BOOST_CHECK_THROW(*dset_iter_begin, std::invalid_argument);
+    BOOST_CHECK_THROW(*sgroup_iter_begin, std::invalid_argument);
 }
 
 

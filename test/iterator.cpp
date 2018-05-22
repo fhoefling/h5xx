@@ -42,7 +42,6 @@
 // #include <h5xx/dataset.hpp>  FIXME dataset.hpp must be included after group.hpp
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
-#include <h5xx/iterator.hpp>
 
 #include <test/ctest_full_output.hpp>
 #include <test/catch_boost_no_throw.hpp>

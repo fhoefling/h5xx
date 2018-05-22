@@ -110,6 +110,7 @@ public:
 
     /** returns h5xx-object */
     T operator*();
+    //T* operator->():
 
     /** comparison operators
      *  determined on basis of hdf5 id
@@ -151,12 +152,6 @@ private:
 
 
 // FIXME the same again for const_group_iterator and "const T", compare with /usr/include/c++/4.9.2/bits/stl_list.h
-
-// declaration of specialisations of operators for group_iterator
-template <>
-group group_iterator<group>::operator*();
-template <>
-dataset group_iterator<dataset>::operator*();
 
 namespace detail {
 
@@ -528,37 +523,8 @@ inline bool group_iterator<T>::increment_()
     return retval > 0;  // all is good
 }
 
-template <>
-inline group group_iterator<group>::operator*()
-{
-    bool out_of_range = (stop_idx == -1U); // iterator is past the end
-
-    if (container_group_ == NULL) {
-        throw std::invalid_argument("group_iterator was default constructed; doesn't point to a group");
-    }
-
-    if (stop_idx == 0) {    // initialise iterator freshly returned by begin()
-        out_of_range = !increment_();
-    }
- 
-    if (out_of_range) {
-        
-        std::string error_msg = std::string();
-
-        if (container_group_ != NULL)
-            error_msg = "dereference iterator without group";
-	else
-            error_msg = "container_group "+get_name(*container_group_);
-
-        throw std::out_of_range(error_msg);
-    }
-
-    group grp(*container_group_, name_of_current_element);
-    return(move(grp));
-}
-
-template <>
-inline dataset group_iterator<dataset>::operator*()
+template <typename T>
+inline T group_iterator<T>::operator*()
 {
     bool out_of_range = (stop_idx == -1U); // iterator is past the end
 
@@ -582,8 +548,8 @@ inline dataset group_iterator<dataset>::operator*()
         throw std::out_of_range(error_msg);
     }	
     
-    dataset dset(*container_group_, name_of_current_element);
-    return(move(dset));
+    T retval(*container_group_, name_of_current_element);
+    return(move(retval));
 }
 
 template <typename T>

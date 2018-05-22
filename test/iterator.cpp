@@ -11,26 +11,26 @@
 
 /** Requirements fo Iterator(It) (according to http://en.cppreference.com/w/cpp/concept/ForwardIterator)
  *
- *  - DefaultConstructible
- *  - CopyConstructible
- *  - CopyAssignable
- *  - EqualityComparable
- *  - Destructible
- *  - lvalues are Swappable
- *  - std::iterator_traits<It> has member typedefs value_type, difference_type, reference, pointer and iterator_category
+ *  - DefaultConstructible - tested
+ *  - CopyConstructible - tested
+ *  - CopyAssignable - tested
+ *  - EqualityComparable - tested
+ *  - Destructible - tested
+ *  - lvalues are Swappable - tested
+ *  - has member typedefs value_type, difference_type, reference, pointer and iterator_category - tested
  *
  *  and
  *
- *  - operator* is defined
- *  - operator++() is defined (returns reference to iterator)
- *  - operator++(int)
- *  - (void) i++ equivalent (void)++i //FIXME what is this supposed to mean?
- *  - operator!= / operator==
- *  - It->m should be equivalent to (*It).m
+ *  - operator* is defined - tested
+ *  - operator++() is defined (returns reference to iterator) - tested
+ *  - operator++(int) - tested
+ *  - (void) i++ equivalent (void)++i - tested
+ *  - operator!= / operator== - tested
+ *  - It->m should be equivalent to (*It).m -tested
  *
  *  and (for ForwarIterator)
  *
- *  - Multipass guarantee
+ *  - Multipass guarantee - tested
  *
  **/
 
@@ -78,6 +78,11 @@ BOOST_AUTO_TEST_CASE( iterator_constructors)
     BOOST_TEST_MESSAGE("testing copy constructor");
     BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_2 = dset_iter);
     BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_2 = sgroup_iter);
+
+    /** check destructor */
+    BOOST_TEST_MESSAGE("testing destructor");
+    BOOST_CHECK_NO_THROW(dset_iter.~group_iterator());
+    BOOST_CHECK_NO_THROW(sgroup_iter.~group_iterator());
 }
 
 BOOST_AUTO_TEST_CASE( iterator_requirements )
@@ -103,25 +108,72 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     BOOST_TEST_MESSAGE("testing CopyConstructible");
     BOOST_CHECK_NO_THROW(dset_iter_2 = dataset_container::iterator(dset_iter));
     BOOST_CHECK_NO_THROW(sgroup_iter_2 = subgroup_container::iterator(sgroup_iter));
+    BOOST_CHECK_NO_THROW(dset_iter_2 == dset_iter);
+    BOOST_CHECK_NO_THROW(sgroup_iter_2 == sgroup_iter);
 
     /** check CopyAssignable */
     BOOST_TEST_MESSAGE("testing CopyAssignable");
     BOOST_CHECK_NO_THROW(dset_iter_3 = dset_iter;);
     BOOST_CHECK_NO_THROW(sgroup_iter_3 = sgroup_iter);
+    BOOST_CHECK(dset_iter_3 == dset_iter);
+    BOOST_CHECK(sgroup_iter_3 == sgroup_iter);
 
     /** check EqualityComparable */
     BOOST_TEST_MESSAGE("testing EqualityComparable");
     BOOST_CHECK(dset_iter == dset_iter_2);
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
 
-    /** check lvalues are Swappable
-     *  TODO: is this the same as MoveConstructible && MoveAssignable? */
+    /** check lvalues are Swappable */
+    BOOST_TEST_MESSAGE("testing lvalues are swappable");
     BOOST_CHECK_NO_THROW(std::swap(dset_iter, dset_iter_2));
     BOOST_CHECK_NO_THROW(std::swap(sgroup_iter, sgroup_iter_2));
+ 
+    /** check member typedefs value_type, difference_type, reference, pointer and iterator_category */
+    BOOST_TEST_MESSAGE("testing std::iterator_traits");
+    BOOST_CHECK(typeid(dataset_container::iterator::value_type) == typeid(dataset));
+    BOOST_CHECK(typeid(subgroup_container::iterator::value_type) == typeid(group));
+    
+    BOOST_CHECK(typeid(dataset_container::iterator::difference_type) == typeid(std::ptrdiff_t));
+    BOOST_CHECK(typeid(subgroup_container::iterator::difference_type) ==  typeid(std::ptrdiff_t));
 
-/*  TODO: std::iterator_traits<It> has member typedefs value_type, difference_type, reference, pointer and iterator_category
- */
+    BOOST_CHECK(typeid(dataset_container::iterator::reference) == typeid(dataset&));
+    BOOST_CHECK(typeid(subgroup_container::iterator::reference) == typeid(group&));
 
+    BOOST_CHECK(typeid(dataset_container::iterator::pointer) == typeid(std::unique_ptr<dataset>));
+    BOOST_CHECK(typeid(subgroup_container::iterator::pointer) == typeid(std::unique_ptr<group>));
+
+    BOOST_CHECK(typeid(dataset_container::iterator::iterator_category) == typeid(std::forward_iterator_tag));
+    BOOST_CHECK(typeid(subgroup_container::iterator::iterator_category) == typeid(std::forward_iterator_tag));
+
+    /** setting up further test with a real group */
+    group container_group(file);
+    dataset dset1 = create_dataset<int>(container_group, "dset1");
+    dataset dset2 = create_dataset<int>(container_group, "dset2");
+    dataset dset3 = create_dataset<int>(container_group, "dset3");
+    group grp1(container_group, "grp1");
+    group grp2(container_group, "grp2");
+    group grp3(container_group, "grp3");
+
+    dataset_container::iterator dset_multipass_1 = container_group.datasets().begin();
+    dataset_container::iterator dset_multipass_2 = container_group.datasets().begin();
+    subgroup_container::iterator sgroup_multipass_1 = container_group.subgroups().begin();
+    subgroup_container::iterator sgroup_multipass_2 = container_group.subgroups().begin();
+ 
+    /** check Multipass guarantee */
+    BOOST_TEST_MESSAGE("testing Multipass guarantee");
+    while(dset_multipass_1 != container_group.datasets().end()) {
+        BOOST_CHECK(dset_multipass_1 == dset_multipass_2);
+	BOOST_CHECK(dset_multipass_1.get_current_name() == dset_multipass_2.get_current_name());
+	++dset_multipass_1;
+	dset_multipass_2++;
+    }
+
+    while(sgroup_multipass_1 != container_group.subgroups().end()) {
+	BOOST_CHECK(sgroup_multipass_1 == sgroup_multipass_2);
+	BOOST_CHECK(sgroup_multipass_1.get_current_name() == sgroup_multipass_2.get_current_name());
+	++sgroup_multipass_1;
+	sgroup_multipass_2++;
+    }
 }
 
 BOOST_AUTO_TEST_CASE( iterator_expressions )
@@ -139,13 +191,7 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     BOOST_TEST_MESSAGE("testing dereference operator");
     BOOST_CHECK_THROW(*sgroup_iter, std::invalid_argument);
     BOOST_CHECK_THROW(*dset_iter, std::invalid_argument);
-
-    /** check It->m equivalent to (*It).m */
-    /** FIXME: How to check for this?
-    BOOST_CHECK(dset_iter-> == (*dset_iter). );
-    BOOST_CHECK(sgroup_iter-> == (*sgroup_iter). );
-     **/
-
+ 
     /** check operator++() */
     BOOST_TEST_MESSAGE("testing pre-increment operator");
     BOOST_CHECK_THROW(++dset_iter, std::invalid_argument);
@@ -157,17 +203,26 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     BOOST_CHECK_THROW(sgroup_iter++, std::invalid_argument);
     
     /** TODO: check (void) i++ == (void)++i */
-     
-    
+      
     /** check operator!= / operator== */
     BOOST_TEST_MESSAGE("testing (in)equality operators");
     BOOST_CHECK(dset_iter == dset_iter_2);
     BOOST_CHECK(!(dset_iter != dset_iter_2));
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
     BOOST_CHECK(!(sgroup_iter != sgroup_iter_2));
-    
-    /** TODO: check Multipass guarantee */
 
+     /** check It->m equivalent to (*It).m */
+    group container_group(file);
+    dataset dset = create_dataset<int>(container_group, "dset");
+    group sgroup = group(container_group, "grp");
+
+    dset_iter = container_group.datasets().begin();
+    sgroup_iter = container_group.subgroups().begin();
+
+    BOOST_TEST_MESSAGE("testing equivalnece of operator-> and operator*/.");
+    BOOST_CHECK(dset_iter->valid() == (*dset_iter).valid());
+    BOOST_CHECK(sgroup_iter->valid() == (*sgroup_iter).valid());
+    
 }
 
 BOOST_AUTO_TEST_CASE( default_group )
@@ -438,9 +493,9 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     dataset_container::iterator dset_iter_end = container_group.datasets().end();
     subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
     subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
-
-    BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
+ 
     // begin- and end-iterator over subgroups should not be equal
+    BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
     BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp1");
 

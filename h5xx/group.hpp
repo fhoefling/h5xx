@@ -92,12 +92,11 @@ private:
 
 /** iterator template class **/
 template <typename T>
-class group_iterator : public std::iterator<std::forward_iterator_tag, T>
+class group_iterator : public std::iterator<std::forward_iterator_tag, T, std::ptrdiff_t, std::unique_ptr<T> >
 {
 
 public:
 
-    //FIXME: swappable?
     //FIXME: noexcept in constructor?
     group_iterator() noexcept;
     group_iterator(const group&) noexcept;
@@ -110,7 +109,7 @@ public:
 
     /** returns h5xx-object */
     T operator*();
-    //T* operator->():
+    std::unique_ptr<T> operator->();
 
     /** comparison operators
      *  determined on basis of hdf5 id
@@ -119,11 +118,17 @@ public:
     bool operator!=(group_iterator const&) const;
 
     /** return name of current element
-     * just for testing 
+     *  just for testing 
      */
-    std::string get_current_name()
-    {
+    std::string get_current_name() {
         return(name_of_current_element);
+    };
+
+    /** return stop_idx
+     *  just for testing
+     */
+    hsize_t get_idx() {
+        return(stop_idx);
     };
 
     /** initialize iterator
@@ -424,10 +429,9 @@ herr_t find_name_of_type_impl(hid_t g_id, const char* name, const H5L_info_t *in
 } // namespace detail
 
 template <typename T>
-inline group_iterator<T>::group_iterator() noexcept
+inline group_iterator<T>::group_iterator() noexcept : container_group_(NULL)
 {
     stop_idx = -1U;
-    container_group_ = NULL;
 }
 
 template <typename T>
@@ -550,6 +554,14 @@ inline T group_iterator<T>::operator*()
     
     T retval(*container_group_, name_of_current_element);
     return(move(retval));
+}
+
+template <typename T>
+inline std::unique_ptr<T> group_iterator<T>::operator->()
+{
+    T* temp = new T(this->operator*());
+    std::unique_ptr<T> ptr(temp);
+    return ptr;
 }
 
 template <typename T>

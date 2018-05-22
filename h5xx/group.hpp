@@ -23,9 +23,9 @@
 
 namespace h5xx {
 
-/** forward declaration **/
-class dataset_container;
-class subgroup_container;
+// forward declaration
+template <typename h5xxObject>
+class container;
 
 // this class is meant to replace the H5::Group class
 class group
@@ -78,9 +78,9 @@ public:
     /** close handle to HDF5 group (called by default destructor) */
     void close();
 
-    /** methods for iterator-adapters **/
-    dataset_container datasets();
-    subgroup_container subgroups();
+    /** methods to yield container adapters */
+    container<h5xx::dataset> datasets();
+    container<h5xx::group> groups();
 
 private:
     /** HDF5 object ID */
@@ -154,14 +154,17 @@ private:
 // FIXME the same again for const_group_iterator and "const T", compare with /usr/include/c++/4.9.2/bits/stl_list.h
 
 /**
- * adapter classes for iterators
+ * adapter class to convert a group into a container of HDF5 objects of given type
+ *
+ * Provides an iterator interface and can be used in a range-based loop.
  */
-class dataset_container
+template <typename h5xxObject>
+class container
 {
 public:
-    typedef group_iterator<dataset> iterator;
-    typedef group_iterator<dataset const> const_iterator;
-    dataset_container(group const&);
+    typedef group_iterator<h5xxObject> iterator;
+    typedef group_iterator<h5xxObject const> const_iterator;
+    container(group const&);
 
     iterator begin() noexcept;
     iterator end() noexcept;
@@ -173,26 +176,7 @@ private:
     group const* parent_;
 };
 
-class subgroup_container
-{
-public:
-    typedef group_iterator<group> iterator;
-    typedef group_iterator<group const> const_iterator;
-    subgroup_container(group const&);
-
-    iterator begin() noexcept;
-    iterator end() noexcept;
-
-    const_iterator cbegin() const noexcept;
-    const_iterator cend() const noexcept;
-
-private:
-    group const* parent_;
-};
-
-/**
- * return true if group "name" exists in group "grp"
- */
+// forward declaration
 inline bool exists_group(group const& grp, std::string const& name);
 
 /*
@@ -283,75 +267,50 @@ inline hid_t open_group(hid_t loc_id, std::string const& path)
     return group_id;
 }
 
-inline dataset_container group::datasets()
+inline container<h5xx::dataset> group::datasets()
 {
-    dataset_container container(*this);
-    return(container);
+    return container<h5xx::dataset>(*this);
 }
 
-inline subgroup_container group::subgroups()
+inline container<h5xx::group> group::groups()
 {
-    subgroup_container container(*this);
-    return(container);
+    return container<h5xx::group>(*this);
 }
 
 /*
- * implementation of adapter classes for group container
+ * implementation of adapter classes for group containers
  */
-inline dataset_container::dataset_container(const group& grp) : parent_(&grp) {}
+template <typename h5xxObject>
+inline container<h5xxObject>::container(const group& grp)
+  : parent_(&grp)
+{}
 
-inline dataset_container::iterator dataset_container::begin() noexcept
+template <typename h5xxObject>
+inline typename container<h5xxObject>::iterator container<h5xxObject>::begin() noexcept
 {
-    iterator iter(*parent_);
-    return(iter);
+    return iterator(*parent_);
 }
 
-inline dataset_container::iterator dataset_container::end() noexcept
+template <typename h5xxObject>
+inline typename container<h5xxObject>::const_iterator container<h5xxObject>::cbegin() const noexcept
 {
-    iterator iter(*parent_);
-    iter.set_to_end_();
-    return(iter);
+    return const_iterator(*parent_);
 }
 
-inline dataset_container::const_iterator dataset_container::cbegin() const noexcept
-{
-    const_iterator iter(*parent_);
-    return(iter);
-}
-
-inline dataset_container::const_iterator dataset_container::cend() const noexcept
-{
-    const_iterator iter(*parent_);
-    iter.set_to_end_();
-    return(iter);
-}
-
-inline subgroup_container::subgroup_container(const group& grp) : parent_(&grp) {}
-
-inline subgroup_container::iterator subgroup_container::begin() noexcept
-{
-    iterator iter(*parent_);
-    return(iter);
-}
-
-inline subgroup_container::iterator subgroup_container::end() noexcept
+template <typename h5xxObject>
+inline typename container<h5xxObject>::iterator container<h5xxObject>::end() noexcept
 {
     iterator iter(*parent_);
     iter.set_to_end_();
-    return(iter);
+    return iter;
 }
 
-inline subgroup_container::const_iterator subgroup_container::cbegin() const noexcept
-{
-    const_iterator iter(*parent_);
-    return(iter);
-}
-
-inline subgroup_container::const_iterator subgroup_container::cend() const noexcept
+template <typename h5xxObject>
+inline typename container<h5xxObject>::const_iterator container<h5xxObject>::cend() const noexcept
 {
     const_iterator iter(*parent_);
     iter.set_to_end_();
-    return(iter);
+    return iter;
 }
 
 /*
@@ -419,7 +378,7 @@ inline group_iterator<T>& group_iterator<T>::operator++() // ++it
         stop_idx_ = -1U;
     }
 
-    return(*this);
+    return *this;
 }
 
 template <typename T>
@@ -427,7 +386,7 @@ inline group_iterator<T> group_iterator<T>::operator++(int) // it++
 {
     group_iterator<T> tmp(*this);
     ++(*this);
-    return(tmp);
+    return tmp;
 }
 
 template <typename T>
@@ -524,25 +483,25 @@ herr_t find_name_of_type_impl(hid_t g_id, char const* name, H5L_info_t const* in
 template <>
 herr_t find_name_of_type<group>(hid_t g_id, char const* name, H5L_info_t const* info, void* op_data)
 {
-    return(find_name_of_type_impl<H5O_TYPE_GROUP>(g_id, name, info, op_data));
+    return find_name_of_type_impl<H5O_TYPE_GROUP>(g_id, name, info, op_data);
 }
 
 template <>
 herr_t find_name_of_type<group const>(hid_t g_id, char const* name, H5L_info_t const* info, void* op_data)
 {
-    return(find_name_of_type_impl<H5O_TYPE_GROUP>(g_id, name, info, op_data));
+    return find_name_of_type_impl<H5O_TYPE_GROUP>(g_id, name, info, op_data);
 }
 
 template <>
 herr_t find_name_of_type<dataset>(hid_t g_id, char const* name, H5L_info_t const* info, void* op_data)
 {
-    return(find_name_of_type_impl<H5O_TYPE_DATASET>(g_id, name, info, op_data));
+    return find_name_of_type_impl<H5O_TYPE_DATASET>(g_id, name, info, op_data);
 }
 
 template <>
 herr_t find_name_of_type<dataset const>(hid_t g_id, char const* name, H5L_info_t const* info, void* op_data)
 {
-    return(find_name_of_type_impl<H5O_TYPE_DATASET>(g_id, name, info, op_data));
+    return find_name_of_type_impl<H5O_TYPE_DATASET>(g_id, name, info, op_data);
 }
 
 } // namespace detail

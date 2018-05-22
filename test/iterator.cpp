@@ -67,49 +67,49 @@ BOOST_AUTO_TEST_CASE( iterator_constructors )
 
     /** check default constructor */
     BOOST_TEST_MESSAGE("testing default constructor");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter);
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter);
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter);
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter);
 
-    dataset_container::iterator dset_iter;
-    subgroup_container::iterator sgroup_iter;
+    container<dataset>::iterator dset_iter;
+    container<group>::iterator sgroup_iter;
 
-    BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator());  // TODO why the assignments here?
-    BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator());
+    BOOST_CHECK_NO_THROW(dset_iter = container<dataset>::iterator());  // TODO why the assignments here?
+    BOOST_CHECK_NO_THROW(sgroup_iter = container<group>::iterator());
 
     /** check non-default constructor */
     BOOST_TEST_MESSAGE("testing constructor on (empty) group");
-    BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator(container_group));
-    BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator(container_group));
+    BOOST_CHECK_NO_THROW(dset_iter = container<dataset>::iterator(container_group));
+    BOOST_CHECK_NO_THROW(sgroup_iter = container<group>::iterator(container_group));
 
     /** check copy constructor */
     BOOST_TEST_MESSAGE("testing copy constructor");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_2 = dset_iter);
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_2 = sgroup_iter);
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_2 = dset_iter);
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_2 = sgroup_iter);
 }
 
 BOOST_AUTO_TEST_CASE( iterator_requirements )
 {
     BOOST_TEST_MESSAGE("\nTesting basic requirements of ForwardIterator");
 
-    dataset_container::iterator dset_iter, dset_iter_2, dset_iter_3;
-    subgroup_container::iterator sgroup_iter, sgroup_iter_2, sgroup_iter_3;
+    container<dataset>::iterator dset_iter, dset_iter_2, dset_iter_3;
+    container<group>::iterator sgroup_iter, sgroup_iter_2, sgroup_iter_3;
 
     /** check DefaultConstructible and MoveAssignable*/
     BOOST_TEST_MESSAGE("testing DefaultConstructible and MoveAssignable");
-    BOOST_CHECK_NO_THROW(dset_iter = dataset_container::iterator());
-    BOOST_CHECK_NO_THROW(sgroup_iter = subgroup_container::iterator());
+    BOOST_CHECK_NO_THROW(dset_iter = container<dataset>::iterator());
+    BOOST_CHECK_NO_THROW(sgroup_iter = container<group>::iterator());
 
     /** check MoveConstructible */
     BOOST_TEST_MESSAGE("testing MoveConstructible");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator temp = dataset_container::iterator());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator temp(dataset_container::iterator()));
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator temp = subgroup_container::iterator());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator temp(subgroup_container::iterator()));
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator temp = container<dataset>::iterator());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator temp(container<dataset>::iterator()));
+    BOOST_CHECK_NO_THROW(container<group>::iterator temp = container<group>::iterator());
+    BOOST_CHECK_NO_THROW(container<group>::iterator temp(container<group>::iterator()));
 
     /** check CopyConstructible */
     BOOST_TEST_MESSAGE("testing CopyConstructible");
-    BOOST_CHECK_NO_THROW(dset_iter_2 = dataset_container::iterator(dset_iter));
-    BOOST_CHECK_NO_THROW(sgroup_iter_2 = subgroup_container::iterator(sgroup_iter));
+    BOOST_CHECK_NO_THROW(dset_iter_2 = container<dataset>::iterator(dset_iter));
+    BOOST_CHECK_NO_THROW(sgroup_iter_2 = container<group>::iterator(sgroup_iter));
 
     /** check CopyAssignable */
     BOOST_TEST_MESSAGE("testing CopyAssignable");
@@ -135,10 +135,10 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
 {
     BOOST_TEST_MESSAGE("\nTesting basic iterator expressions");
 
-    dataset_container::iterator dset_iter;
-    dataset_container::iterator dset_iter_2;
-    subgroup_container::iterator sgroup_iter;
-    subgroup_container::iterator sgroup_iter_2;
+    container<dataset>::iterator dset_iter;
+    container<dataset>::iterator dset_iter_2;
+    container<group>::iterator sgroup_iter;
+    container<group>::iterator sgroup_iter_2;
 
     /** check operator*
      *  should throw h5xx::error, since container_group_ does not exist
@@ -183,13 +183,13 @@ BOOST_AUTO_TEST_CASE( default_group )
     group container_group = group();
 
     BOOST_TEST_MESSAGE("setting up iterators");
-    dataset_container::iterator dset_iter_begin, dset_iter_end;
-    subgroup_container::iterator sgroup_iter_begin, sgroup_iter_end;
+    container<dataset>::iterator dset_iter_begin, dset_iter_end;
+    container<group>::iterator sgroup_iter_begin, sgroup_iter_end;
 
     BOOST_CHECK_NO_THROW(dset_iter_begin = container_group.datasets().begin());
     BOOST_CHECK_NO_THROW(dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.groups().end());
 
     BOOST_TEST_MESSAGE("testing for equality of begin and end iterators");
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
@@ -205,13 +205,13 @@ BOOST_AUTO_TEST_CASE( empty_group )
     group container_group(file);
 
     BOOST_TEST_MESSAGE("setting up iterators");
-    dataset_container::iterator dset_iter_begin, dset_iter_end;
-    subgroup_container::iterator sgroup_iter_begin, sgroup_iter_end;
+    container<dataset>::iterator dset_iter_begin, dset_iter_end;
+    container<group>::iterator sgroup_iter_begin, sgroup_iter_end;
 
     BOOST_CHECK_NO_THROW(dset_iter_begin = container_group.datasets().begin());
     BOOST_CHECK_NO_THROW(dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.groups().end());
 
     // begin- and end-iterator should be equal in empty group
     BOOST_TEST_MESSAGE("testing for equality of begin and end iterators");
@@ -234,17 +234,17 @@ BOOST_AUTO_TEST_CASE( only_datasets )
 
     // testing begin(), end()
     BOOST_TEST_MESSAGE("testing begin/end");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
 
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
-    dataset_container::iterator dset_iter_begin_2 = container_group.datasets().begin();
+    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
+    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
+    container<dataset>::iterator dset_iter_begin_2 = container_group.datasets().begin();
 
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
+    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
+    container<group>::iterator sgroup_iter_end = container_group.groups().end();
 
     // no subgroups: begin and end iterators over subgroups should be equal
     BOOST_TEST_MESSAGE("testing (in)equality begin and end iterators");
@@ -288,17 +288,17 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     group grp3(container_group, "grp3");
 
     BOOST_TEST_MESSAGE("testing begin/end");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
 
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
+    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
+    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
 
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
-    subgroup_container::iterator sgroup_iter_begin_2 = container_group.subgroups().begin();
+    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
+    container<group>::iterator sgroup_iter_end = container_group.groups().end();
+    container<group>::iterator sgroup_iter_begin_2 = container_group.groups().begin();
 
     // begin and end iterator over subgroups should not be equal
     BOOST_TEST_MESSAGE("testing (in)equality begin and end iterators");
@@ -347,15 +347,15 @@ BOOST_AUTO_TEST_CASE( mixed_1 )
     dataset dset2 = create_dataset<int>(container_group, "dset2");
 
     BOOST_TEST_MESSAGE("testing begin/end");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
 
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
+    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
+    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
+    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
+    container<group>::iterator sgroup_iter_end = container_group.groups().end();
 
     BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
     // begin- and end-iterator over subgroups should not be equal
@@ -393,15 +393,15 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     group temp_group;
 
     BOOST_TEST_MESSAGE("testing begin/end");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
 
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
+    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
+    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
+    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
+    container<group>::iterator sgroup_iter_end = container_group.groups().end();
 
     BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
     // begin- and end-iterator over subgroups should not be equal
@@ -436,15 +436,15 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     dataset dset2 = create_dataset<int>(container_group, "dset2");
 
     BOOST_TEST_MESSAGE("testing begin/end");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
 
-    dataset_container::iterator dset_iter_begin = container_group.datasets().begin();
-    dataset_container::iterator dset_iter_end = container_group.datasets().end();
-    subgroup_container::iterator sgroup_iter_begin = container_group.subgroups().begin();
-    subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end();
+    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
+    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
+    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
+    container<group>::iterator sgroup_iter_end = container_group.groups().end();
 
     BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
     // begin- and end-iterator over subgroups should not be equal

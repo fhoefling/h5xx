@@ -245,7 +245,7 @@ BOOST_AUTO_TEST_CASE( only_datasets )
 
     // begin and end iterators over datasets should not be equal
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset1"); // FIXME: do we have a guarantee that the order is  maintained?
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset1"); // FIXME: do we have a guarantee that the order is  maintained?
     BOOST_CHECK(dset_iter_begin == dset_iter_begin_2);
 
     // check operators / expressions FIXME to seperate test
@@ -255,12 +255,12 @@ BOOST_AUTO_TEST_CASE( only_datasets )
     BOOST_TEST_MESSAGE("testing 1st increment operator");
     BOOST_CHECK((*dset_iter_begin).valid());
     BOOST_CHECK(dset_iter_begin++ != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset2");
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset2");
 
     BOOST_TEST_MESSAGE("testing 2nd increment operator");
     ++dset_iter_begin;
     BOOST_CHECK((*dset_iter_begin).valid());
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset3");
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset3");
     ++dset_iter_begin;
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
 
@@ -297,7 +297,7 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     BOOST_TEST_MESSAGE("testing (in)equality begin and end iterators");
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
     BOOST_CHECK(sgroup_iter_begin == sgroup_iter_begin_2++);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp1");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
 
     // begin- and end-iterator over datasets should be equal
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
@@ -310,13 +310,13 @@ BOOST_AUTO_TEST_CASE( only_subgroups )
     ++sgroup_iter_begin;
     BOOST_CHECK((*sgroup_iter_begin).valid());
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp2");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp2");
 
     BOOST_TEST_MESSAGE("testing 2nd increment operator");
     ++sgroup_iter_begin;
     BOOST_CHECK((*sgroup_iter_begin).valid());
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp3");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp3");
 
     BOOST_TEST_MESSAGE("testing 3rd increment operator");
     ++sgroup_iter_begin;
@@ -353,11 +353,11 @@ BOOST_AUTO_TEST_CASE( mixed_1 )
     BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
     // begin- and end-iterator over subgroups should not be equal
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp1");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
 
     // begin- and end-iterator over datasets should not be equal
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset1");
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
 
     // iterate subgroup iter
     BOOST_TEST_MESSAGE("testing increment operator of subgroup iterator");
@@ -368,7 +368,7 @@ BOOST_AUTO_TEST_CASE( mixed_1 )
     BOOST_TEST_MESSAGE("testing increment operator of dataset iterator");
     BOOST_CHECK((*dset_iter_begin++).valid());
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset2");
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset2");
     dset_iter_begin++;
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
 }
@@ -399,17 +399,17 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
     // begin- and end-iterator over subgroups should not be equal
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp1");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
 
     // begin- and end-iterator over datasets should not be equal
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset1");
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
 
     // iterate subgroup iter
     BOOST_TEST_MESSAGE("testing increment operator of subgroup iterator");
     BOOST_CHECK((*sgroup_iter_begin++).valid());
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp2");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp2");
     
     // iterate dataset iter
     BOOST_TEST_MESSAGE("testing increment operator of dataset iterator");
@@ -442,21 +442,21 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
     // begin- and end-iterator over subgroups should not be equal
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp1");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
 
     // begin- and end-iterator over datasets should not be equal
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset1");
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
     
     // iterate both iterators
     BOOST_TEST_MESSAGE("testing increment dataset/subgroup iterators alternateingly");
     BOOST_CHECK((*sgroup_iter_begin++).valid());
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_current_name() == "grp2");
+    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp2");
     
     BOOST_CHECK((*dset_iter_begin++).valid());
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_current_name() == "dset2");
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset2");
     
     dset_iter_begin++;
     sgroup_iter_begin++;

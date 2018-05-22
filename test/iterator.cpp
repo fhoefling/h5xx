@@ -158,7 +158,7 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     dataset_container::iterator dset_multipass_2 = container_group.datasets().begin();
     subgroup_container::iterator sgroup_multipass_1 = container_group.subgroups().begin();
     subgroup_container::iterator sgroup_multipass_2 = container_group.subgroups().begin();
- 
+
     /** check Multipass guarantee */
     BOOST_TEST_MESSAGE("testing Multipass guarantee");
     while(dset_multipass_1 != container_group.datasets().end()) {

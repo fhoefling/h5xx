@@ -1,0 +1,33 @@
+image: debian:stretch
+
+before_script:
+    - apt-get update -qq
+    - apt-get install -qq g++ cmake
+    - apt-get install -qq libboost-dev libboost-test-dev libhdf5-dev
+
+stages:
+    - configure
+    - build
+    - test
+
+configure:
+    stage: configure
+    script:
+    - mkdir build && cd build
+    - CMAKE_PREFIX_PATH=/usr/lib/x86_64-linux-gnu/hdf5/serial cmake ..
+    artifacts:
+        paths:
+        - build/
+
+build:
+    stage: build
+    script: cd build && make -j
+    dependencies:
+    - configure
+    artifacts:
+        paths:
+        - build/
+
+unit tests:
+    stage: test
+    script: cd build && ctest

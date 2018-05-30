@@ -1,5 +1,6 @@
 # h5xx — a template-based C++ wrapper for the HDF5 library
 
+**Build status**: [![build status](https://git.imp.fu-berlin.de/h5md/h5xx/badges/master/build.svg)](https://git.imp.fu-berlin.de/h5md/h5xx/commits/master)
 
 ## Introduction
 

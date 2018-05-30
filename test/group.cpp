@@ -81,19 +81,19 @@ BOOST_AUTO_TEST_CASE( usage )
 BOOST_AUTO_TEST_CASE( iterator_begin_end )
 {
     group container_group(file);
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
     
     dataset dset1 = create_dataset<int>(container_group, "dset1");
     dataset dset2 = create_dataset<int>(container_group, "dset2");
     group grp1 = group(container_group, "grp1");
     group grp2 = group(container_group, "grp2");
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dataset_container::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter = container_group.subgroups().begin());
-    BOOST_CHECK_NO_THROW(subgroup_container::iterator sgroup_iter_end = container_group.subgroups().end());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter = container_group.datasets().begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter = container_group.groups().begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
 }
 
 } // namespace fixture

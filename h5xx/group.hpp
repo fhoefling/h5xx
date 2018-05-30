@@ -111,7 +111,7 @@ public:
 
     /** returns h5xx-object */
     T operator*();
-    std::unique_ptr<T> operator->();
+    T* operator->();
 
     /** comparison operators
      *  determined on basis of hdf5 id
@@ -413,6 +413,13 @@ inline T group_iterator<T>::operator*()
 
     T element(*parent_, name_);
     return(move(element));
+}
+
+template <typename T>
+inline T* group_iterator<T>::operator->() {
+
+    auto&& temp = **this;
+    return &temp;
 }
 
 namespace detail {

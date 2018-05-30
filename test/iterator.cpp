@@ -140,8 +140,8 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     BOOST_CHECK(typeid(container<dataset>::iterator::reference) == typeid(dataset&));
     BOOST_CHECK(typeid(container<group>::iterator::reference) == typeid(group&));
 
-    BOOST_CHECK(typeid(container<dataset>::iterator::pointer) == typeid(std::unique_ptr<dataset>));
-    BOOST_CHECK(typeid(container<group>::iterator::pointer) == typeid(std::unique_ptr<group>));
+    BOOST_CHECK(typeid(container<dataset>::iterator::pointer) == typeid(dataset*));
+    BOOST_CHECK(typeid(container<group>::iterator::pointer) == typeid(group*));
 
     BOOST_CHECK(typeid(container<dataset>::iterator::iterator_category) == typeid(std::forward_iterator_tag));
     BOOST_CHECK(typeid(container<group>::iterator::iterator_category) == typeid(std::forward_iterator_tag));
@@ -213,9 +213,6 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
     BOOST_CHECK(!(sgroup_iter != sgroup_iter_2));
 
-    /** TODO: check Multipass guarantee */
-
-
      /** check It->m equivalent to (*It).m */
     group container_group(file);
     dataset dset = create_dataset<int>(container_group, "dset");
@@ -225,8 +222,10 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     sgroup_iter = container_group.groups().begin();
 
     BOOST_TEST_MESSAGE("testing equivalnece of operator-> and operator*/.");
-    BOOST_CHECK(dset_iter->valid() == (*dset_iter).valid());
-    BOOST_CHECK(sgroup_iter->valid() == (*sgroup_iter).valid());
+    BOOST_CHECK(dset_iter->valid());
+    BOOST_CHECK((*dset_iter).valid());
+    BOOST_CHECK(sgroup_iter->valid());
+    BOOST_CHECK((*sgroup_iter).valid());
     
 }
 

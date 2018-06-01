@@ -103,14 +103,14 @@ public:
     group_iterator() noexcept;
     group_iterator(const group&) noexcept;
     group_iterator(group_iterator const&) noexcept;
-    ~group_iterator() {};
+    ~group_iterator() noexcept;
 
     /** pre- and post-increment operators */
     group_iterator& operator++();
     group_iterator operator++(int);
 
-    /** returns h5xx-object */
-    T operator*();
+    /** returns h5xx-object, reference is to internal copy */
+    T& operator*();
     T* operator->();
 
     /** comparison operators
@@ -122,6 +122,7 @@ public:
     /** return name of current element */
     std::string get_name()
     {
+        // FIXME, handle freshly constructed iterator
         return name_;
     };
 
@@ -149,6 +150,9 @@ private:
 
     /** name of HDF5 element pointed to */
     std::string name_;
+
+    /** instance of HDF5 element pointed to */
+    T* element_;
 }; // class group_iterator
 
 // FIXME the same again for const_group_iterator and "const T", compare with /usr/include/c++/4.9.2/bits/stl_list.h
@@ -320,12 +324,14 @@ template <typename T>
 inline group_iterator<T>::group_iterator() noexcept
   : parent_(nullptr)
   , stop_idx_(-1U)
+  , element_(nullptr)
 {}
 
 template <typename T>
 inline group_iterator<T>::group_iterator(const group& group) noexcept
   : parent_(&group)
   , stop_idx_(0)
+  , element_(nullptr)
 {}
 
 template <typename T>
@@ -333,7 +339,16 @@ inline group_iterator<T>::group_iterator(group_iterator const& other) noexcept
   : parent_(other.parent_)
   , stop_idx_(other.stop_idx_)
   , name_(other.name_)
+  , element_(nullptr)
 {}
+
+template <typename T>
+inline group_iterator<T>::~group_iterator() noexcept
+{
+    if (element_) {
+        delete element_;
+    }
+}
 
 template <typename T>
 inline bool group_iterator<T>::operator==(group_iterator const& other) const
@@ -364,6 +379,11 @@ inline bool group_iterator<T>::operator!=(group_iterator const& other) const
 template <typename T>
 inline group_iterator<T>& group_iterator<T>::operator++() // ++it
 {
+    if (element_) {
+        delete element_;
+    }
+    element_ = nullptr;
+
     if (!parent_) {
         throw std::invalid_argument("cannot increment default constructed h5xx::group_iterator");
     }
@@ -390,7 +410,7 @@ inline group_iterator<T> group_iterator<T>::operator++(int) // it++
 }
 
 template <typename T>
-inline T group_iterator<T>::operator*()
+inline T& group_iterator<T>::operator*()
 {
     if (!parent_) {
         throw std::invalid_argument("cannot dereference default constructed h5xx::group_iterator");
@@ -411,15 +431,17 @@ inline T group_iterator<T>::operator*()
         throw std::out_of_range(error_msg);
     }
 
-    T element(*parent_, name_);
-    return(move(element));
+    if (!element_) {
+        element_ = new T(*parent_, name_);
+    }
+    return *element_;
+//    return(move(element));
 }
 
 template <typename T>
-inline T* group_iterator<T>::operator->() {
-
-    auto&& temp = **this;
-    return &temp;
+inline T* group_iterator<T>::operator->()
+{
+    return &**this;
 }
 
 namespace detail {

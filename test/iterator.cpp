@@ -221,12 +221,16 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     dset_iter = container_group.datasets().begin();
     sgroup_iter = container_group.groups().begin();
 
+//    BOOST_CHECK_EQUAL(dset_iter.get_name(), "/dset");     // FIXME
+//    BOOST_CHECK_EQUAL(sgroup_iter.get_name(), "/grp");     // FIXME
+
     BOOST_TEST_MESSAGE("testing equivalnece of operator-> and operator*/.");
     BOOST_CHECK(dset_iter->valid());
     BOOST_CHECK((*dset_iter).valid());
+    BOOST_CHECK_EQUAL(get_name((*dset_iter).hid()), "/dset");
+    BOOST_CHECK_EQUAL(get_name(dset_iter->hid()), "/dset");
     BOOST_CHECK(sgroup_iter->valid());
     BOOST_CHECK((*sgroup_iter).valid());
-    
 }
 
 BOOST_AUTO_TEST_CASE( default_group )
@@ -438,6 +442,12 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     BOOST_TEST_MESSAGE("\nTesting iterator over 2nd mixed group");
     /** container group with 1 dataset and 2 subgroups **/
     group container_group(file);
+
+    std::vector<std::string> group_list = { "grp1", "grp2" };
+    for (auto& name : group_list) {
+        group(container_group, name);
+    }
+
     group grp1(container_group, "grp1");
     group grp2(container_group, "grp2");
     dataset dset1 = create_dataset<int>(container_group, "dset1");
@@ -474,6 +484,14 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     BOOST_TEST_MESSAGE("testing increment operator of dataset iterator");
     BOOST_CHECK((*dset_iter_begin++).valid());
     BOOST_CHECK(dset_iter_begin == dset_iter_end);
+
+
+//    BOOST_CHECK_EQUAL_COLLECTIONS(container_group.groups(), group_list);
+//    BOOST_CHECK_EQUAL_COLLECTIONS(container_group.groups().begin(), container_group.groups().end(), group_list.begin());
+
+    for (auto& dset : container_group.datasets()) {
+        get_name(dset);
+    }
 }
 
 

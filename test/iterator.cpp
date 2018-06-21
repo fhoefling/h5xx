@@ -443,11 +443,6 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     /** container group with 1 dataset and 2 subgroups **/
     group container_group(file);
 
-    std::vector<std::string> group_list = { "grp1", "grp2" };
-    for (auto& name : group_list) {
-        group(container_group, name);
-    }
-
     group grp1(container_group, "grp1");
     group grp2(container_group, "grp2");
     dataset dset1 = create_dataset<int>(container_group, "dset1");
@@ -488,10 +483,6 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
 
 //    BOOST_CHECK_EQUAL_COLLECTIONS(container_group.groups(), group_list);
 //    BOOST_CHECK_EQUAL_COLLECTIONS(container_group.groups().begin(), container_group.groups().end(), group_list.begin());
-
-    for (auto& dset : container_group.datasets()) {
-        get_name(dset);
-    }
 }
 
 
@@ -504,6 +495,18 @@ BOOST_AUTO_TEST_CASE( mixed_3 )
     group grp2(container_group, "grp2");
     dataset dset1 = create_dataset<int>(container_group, "dset1");
     dataset dset2 = create_dataset<int>(container_group, "dset2");
+
+    std::vector<std::string> group_list = { "/grp1", "/grp2" };
+    int dummy = 0;
+    for (auto& grp : container_group.groups()) {
+        BOOST_CHECK(get_name(grp) == group_list[dummy++]);
+    }
+
+    std::vector<std::string> dset_list = { "/dset1", "/dset2" };
+    dummy = 0;
+    for (auto& dset : container_group.datasets()) {
+        BOOST_CHECK(get_name(dset) == dset_list[dummy++]);
+    }
 
     BOOST_TEST_MESSAGE("testing begin/end");
     BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());

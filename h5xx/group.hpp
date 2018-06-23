@@ -93,9 +93,13 @@ private:
 /**
  * iterator template class
  */
-template <typename T>
+template <typename T, bool is_const>
 class group_iterator
-  : public std::iterator<std::forward_iterator_tag, T>
+  : public std::iterator<std::forward_iterator_tag,
+	                 T,
+			 std::ptrdiff_t,
+	                 typename std::conditional<is_const, T const*, T*>::type,
+			 typename std::conditional<is_const, T const&, T&>::type>
 {
 public:
 
@@ -166,8 +170,8 @@ template <typename h5xxObject>
 class container
 {
 public:
-    typedef group_iterator<h5xxObject> iterator;
-    typedef group_iterator<h5xxObject const> const_iterator;
+    typedef group_iterator<h5xxObject, false> iterator;
+    typedef group_iterator<h5xxObject, true> const_iterator;
     container(group const&);
 
     iterator begin() noexcept;
@@ -320,38 +324,38 @@ inline typename container<h5xxObject>::const_iterator container<h5xxObject>::cen
 /*
  * implementation of group:iterator
  */
-template <typename T>
-inline group_iterator<T>::group_iterator() noexcept
+template <typename T, bool is_const>
+inline group_iterator<T, is_const>::group_iterator() noexcept
   : parent_(nullptr)
   , stop_idx_(-1U)
   , element_(nullptr)
 {}
 
-template <typename T>
-inline group_iterator<T>::group_iterator(const group& group) noexcept
+template <typename T, bool is_const>
+inline group_iterator<T, is_const>::group_iterator(const group& group) noexcept
   : parent_(&group)
   , stop_idx_(0)
   , element_(nullptr)
 {}
 
-template <typename T>
-inline group_iterator<T>::group_iterator(group_iterator const& other) noexcept
+template <typename T, bool is_const>
+inline group_iterator<T, is_const>::group_iterator(group_iterator const& other) noexcept
   : parent_(other.parent_)
   , stop_idx_(other.stop_idx_)
   , name_(other.name_)
   , element_(nullptr)
 {}
 
-template <typename T>
-inline group_iterator<T>::~group_iterator() noexcept
+template <typename T, bool is_const>
+inline group_iterator<T, is_const>::~group_iterator() noexcept
 {
     if (element_) {
         delete element_;
     }
 }
 
-template <typename T>
-inline bool group_iterator<T>::operator==(group_iterator const& other) const
+template <typename T, bool is_const>
+inline bool group_iterator<T, is_const>::operator==(group_iterator const& other) const
 {
     // ensure that both iterators are fully initialised before the comparison.
     // reason: stop_idx = 0 and 1 (non-empty parent) or -1 (empty parent) are equivalent.
@@ -370,14 +374,14 @@ inline bool group_iterator<T>::operator==(group_iterator const& other) const
     return stop_idx_ == other.stop_idx_;
 }
 
-template <typename T>
-inline bool group_iterator<T>::operator!=(group_iterator const& other) const
+template <typename T, bool is_const>
+inline bool group_iterator<T, is_const>::operator!=(group_iterator const& other) const
 {
     return !(*this == other);
 }
 
-template <typename T>
-inline group_iterator<T>& group_iterator<T>::operator++() // ++it
+template <typename T, bool is_const>
+inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator++() // ++it
 {
     if (element_) {
         delete element_;
@@ -401,16 +405,16 @@ inline group_iterator<T>& group_iterator<T>::operator++() // ++it
     return *this;
 }
 
-template <typename T>
-inline group_iterator<T> group_iterator<T>::operator++(int) // it++
+template <typename T, bool is_const>
+inline group_iterator<T, is_const> group_iterator<T, is_const>::operator++(int) // it++
 {
-    group_iterator<T> tmp(*this);
+    group_iterator<T, is_const> tmp(*this);
     ++(*this);
     return tmp;
 }
 
-template <typename T>
-inline T& group_iterator<T>::operator*()
+template <typename T, bool is_const>
+inline T& group_iterator<T, is_const>::operator*()
 {
     if (!parent_) {
         throw std::invalid_argument("cannot dereference default constructed h5xx::group_iterator");
@@ -438,8 +442,8 @@ inline T& group_iterator<T>::operator*()
 //    return(move(element));
 }
 
-template <typename T>
-inline T* group_iterator<T>::operator->()
+template <typename T, bool is_const>
+inline T* group_iterator<T, is_const>::operator->()
 {
     return &**this;
 }
@@ -452,8 +456,8 @@ herr_t find_name_of_type(hid_t g_id, char const* name, H5L_info_t const* info, v
 
 } // namespace detail
 
-template <typename T>
-inline bool group_iterator<T>::increment_()
+template <typename T, bool is_const>
+inline bool group_iterator<T, is_const>::increment_()
 {
     // if parent_ is not a valid group, set iterator past the end and return false
     if(!parent_->valid()) {

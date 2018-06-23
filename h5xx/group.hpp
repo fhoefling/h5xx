@@ -128,11 +128,8 @@ public:
         return name_;
     };
 
-    /** initialize iterator as past-the-end */
-    void set_to_end_() noexcept
-    {
-        stop_idx_ = -1U;
-    }
+    friend typename container<T>::iterator container<T>::end() noexcept;
+    friend typename container<T>::const_iterator container<T>::cend() const noexcept;
 
 private:
     /** move forward by one step, calls H5Literate */
@@ -154,6 +151,7 @@ private:
 
     /** instance of HDF5 element pointed to */
     T* element_;
+
 }; // class group_iterator
 
 // FIXME the same again for const_group_iterator and "const T", compare with /usr/include/c++/4.9.2/bits/stl_list.h
@@ -306,7 +304,7 @@ template <typename h5xxObject>
 inline typename container<h5xxObject>::iterator container<h5xxObject>::end() noexcept
 {
     iterator iter(*parent_);
-    iter.set_to_end_();
+    iter.stop_idx_ = -1U;
     return iter;
 }
 
@@ -314,10 +312,9 @@ template <typename h5xxObject>
 inline typename container<h5xxObject>::const_iterator container<h5xxObject>::cend() const noexcept
 {
     const_iterator iter(*parent_);
-    iter.set_to_end_();
+    iter.stop_idx_ = -1U;
     return iter;
 }
-
 /*
  * implementation of group:iterator
  */

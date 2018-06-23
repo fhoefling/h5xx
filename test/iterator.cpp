@@ -130,7 +130,7 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     BOOST_CHECK_NO_THROW(std::swap(sgroup_iter, sgroup_iter_2));
  
     /** check member typedefs value_type, difference_type, reference, pointer and iterator_category */
-    BOOST_TEST_MESSAGE("testing std::iterator_traits");
+    BOOST_TEST_MESSAGE("testing std::iterator_traits for non-const iterator");
     BOOST_CHECK(typeid(container<dataset>::iterator::value_type) == typeid(dataset));
     BOOST_CHECK(typeid(container<group>::iterator::value_type) == typeid(group));
     
@@ -145,6 +145,22 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
 
     BOOST_CHECK(typeid(container<dataset>::iterator::iterator_category) == typeid(std::forward_iterator_tag));
     BOOST_CHECK(typeid(container<group>::iterator::iterator_category) == typeid(std::forward_iterator_tag));
+
+    BOOST_TEST_MESSAGE("testing std::iterator_traits for const iterator");
+    BOOST_CHECK(typeid(container<dataset>::const_iterator::value_type) == typeid(dataset));
+    BOOST_CHECK(typeid(container<group>::const_iterator::value_type) == typeid(group));
+    
+    BOOST_CHECK(typeid(container<dataset>::const_iterator::difference_type) == typeid(std::ptrdiff_t));
+    BOOST_CHECK(typeid(container<group>::const_iterator::difference_type) ==  typeid(std::ptrdiff_t));
+
+    BOOST_CHECK(typeid(container<dataset>::const_iterator::reference) == typeid(dataset const&));
+    BOOST_CHECK(typeid(container<group>::const_iterator::reference) == typeid(group const&));
+
+    BOOST_CHECK(typeid(container<dataset>::const_iterator::pointer) == typeid(dataset const*));
+    BOOST_CHECK(typeid(container<group>::const_iterator::pointer) == typeid(group const*));
+
+    BOOST_CHECK(typeid(container<dataset>::const_iterator::iterator_category) == typeid(std::forward_iterator_tag));
+    BOOST_CHECK(typeid(container<group>::const_iterator::iterator_category) == typeid(std::forward_iterator_tag));
 
     /** setting up further test with a real group */
     group container_group(file);

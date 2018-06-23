@@ -114,8 +114,8 @@ public:
     group_iterator operator++(int);
 
     /** returns h5xx-object, reference is to internal copy */
-    T& operator*();
-    T* operator->();
+    typename std::conditional<is_const, T const&, T&>::type operator*();
+    typename std::conditional<is_const, T const*, T*>::type operator->();
 
     /** comparison operators
      *  determined on basis of hdf5 id
@@ -414,7 +414,7 @@ inline group_iterator<T, is_const> group_iterator<T, is_const>::operator++(int) 
 }
 
 template <typename T, bool is_const>
-inline T& group_iterator<T, is_const>::operator*()
+inline typename std::conditional<is_const, T const&, T&>::type group_iterator<T, is_const>::operator*()
 {
     if (!parent_) {
         throw std::invalid_argument("cannot dereference default constructed h5xx::group_iterator");
@@ -443,7 +443,7 @@ inline T& group_iterator<T, is_const>::operator*()
 }
 
 template <typename T, bool is_const>
-inline T* group_iterator<T, is_const>::operator->()
+inline typename std::conditional<is_const, T const*, T*>::type group_iterator<T, is_const>::operator->()
 {
     return &**this;
 }

@@ -103,7 +103,6 @@ class group_iterator
 {
 public:
 
-    //FIXME: noexcept in constructor?
     group_iterator() noexcept;
     group_iterator(const group&) noexcept;
     group_iterator(group_iterator const&) noexcept;
@@ -126,12 +125,10 @@ public:
     /** return name of current element */
     std::string get_name()
     {
-        // FIXME, handle freshly constructed iterator
         return name_;
     };
 
     /** initialize iterator as past-the-end */
-    // FIXME should be private and friend, or copy this line to end() and cend()
     void set_to_end_() noexcept
     {
         stop_idx_ = -1U;

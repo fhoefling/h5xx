@@ -154,8 +154,6 @@ private:
 
 }; // class group_iterator
 
-// FIXME the same again for const_group_iterator and "const T", compare with /usr/include/c++/4.9.2/bits/stl_list.h
-
 /**
  * adapter class to convert a group into a container of HDF5 objects of given type
  *

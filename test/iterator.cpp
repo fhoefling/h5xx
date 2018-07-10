@@ -39,7 +39,6 @@
 #define BOOST_TEST_MODULE h5xx_group
 #include <boost/test/unit_test.hpp>
 
-// #include <h5xx/dataset.hpp>  FIXME dataset.hpp must be included after group.hpp
 #include <h5xx/group.hpp>
 #include <h5xx/dataset.hpp>
 
@@ -206,18 +205,18 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
      *  should throw h5xx::error, since container_group_ does not exist
      */
     BOOST_TEST_MESSAGE("testing dereference operator");
-    BOOST_CHECK_THROW(*sgroup_iter, std::invalid_argument);
-    BOOST_CHECK_THROW(*dset_iter, std::invalid_argument);
+    BOOST_CHECK_THROW(*sgroup_iter, h5xx::error);
+    BOOST_CHECK_THROW(*dset_iter, h5xx::error);
  
     /** check operator++() */
     BOOST_TEST_MESSAGE("testing pre-increment operator");
-    BOOST_CHECK_THROW(++dset_iter, std::invalid_argument);
-    BOOST_CHECK_THROW(++sgroup_iter, std::invalid_argument);
+    BOOST_CHECK_THROW(++dset_iter, h5xx::error);
+    BOOST_CHECK_THROW(++sgroup_iter, h5xx::error);
 
     /** check operator++(int) */
     BOOST_TEST_MESSAGE("testing post-increment operator");
-    BOOST_CHECK_THROW(dset_iter++, std::invalid_argument);
-    BOOST_CHECK_THROW(sgroup_iter++, std::invalid_argument);
+    BOOST_CHECK_THROW(dset_iter++, h5xx::error);
+    BOOST_CHECK_THROW(sgroup_iter++, h5xx::error);
 
     /** TODO: check (void) i++ == (void)++i */
 
@@ -365,7 +364,7 @@ BOOST_AUTO_TEST_CASE( only_datasets )
 
     // begin and end iterators over datasets should not be equal
     BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset1"); // FIXME: do we have a guarantee that the order is  maintained?
+    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
     BOOST_CHECK(dset_iter_begin == dset_iter_begin_2);
 
     BOOST_CHECK(dset_citer_begin != dset_citer_end);

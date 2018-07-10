@@ -384,7 +384,7 @@ inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator++() //
     element_ = nullptr;
 
     if (!parent_) {
-        throw std::invalid_argument("cannot increment default constructed h5xx::group_iterator");
+        throw error("cannot increment default constructed h5xx::group_iterator");
     }
 
     // if needed, fully initialise iterator
@@ -412,7 +412,7 @@ template <typename T, bool is_const>
 inline typename std::conditional<is_const, T const&, T&>::type group_iterator<T, is_const>::operator*()
 {
     if (!parent_) {
-        throw std::invalid_argument("cannot dereference default constructed h5xx::group_iterator");
+        throw error("cannot dereference default constructed h5xx::group_iterator");
     }
 
     if (stop_idx_ == 0) {       // initialise iterator freshly returned by begin()
@@ -502,7 +502,7 @@ herr_t find_name_of_type_impl(hid_t g_id, char const* name, H5L_info_t const* in
         }
     }
     else {
-        throw std::runtime_error("Cannot get object info of "+std::string(name));
+        throw error("Cannot get object info of "+std::string(name));
     }
 
     return retval;

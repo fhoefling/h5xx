@@ -607,7 +607,7 @@ BOOST_AUTO_TEST_CASE( mixed_2 )
     container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin();
     container<group>::const_iterator sgroup_citer_end = container_group.groups().cend();
 
-    BOOST_TEST_MESSAGE("testing (in)equality of begin/cbegin and end/cedn iterators");
+    BOOST_TEST_MESSAGE("testing (in)equality of begin/cbegin and end/cend iterators");
     // begin- and end-iterator over subgroups should not be equal
     BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
     BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");

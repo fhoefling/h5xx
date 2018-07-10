@@ -236,9 +236,9 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
 
     dset_iter = container_group.datasets().begin();
     sgroup_iter = container_group.groups().begin();
-
-//    BOOST_CHECK_EQUAL(dset_iter.get_name(), "/dset");     // FIXME
-//    BOOST_CHECK_EQUAL(sgroup_iter.get_name(), "/grp");     // FIXME
+    
+    BOOST_CHECK_EQUAL(dset_iter.get_name(), "dset");
+    BOOST_CHECK_EQUAL(sgroup_iter.get_name(), "grp");
 
     BOOST_TEST_MESSAGE("testing equivalnece of operator-> and operator*/.");
     BOOST_CHECK(dset_iter->valid());
@@ -247,6 +247,8 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     BOOST_CHECK_EQUAL(get_name(dset_iter->hid()), "/dset");
     BOOST_CHECK(sgroup_iter->valid());
     BOOST_CHECK((*sgroup_iter).valid());
+    BOOST_CHECK_EQUAL(get_name((*sgroup_iter).hid()), "/grp");
+    BOOST_CHECK_EQUAL(get_name(sgroup_iter->hid()), "/grp");
 }
 
 BOOST_AUTO_TEST_CASE( default_group )

@@ -125,6 +125,9 @@ public:
     /** return name of current element */
     std::string get_name()
     {
+        if(stop_idx_ == 0)
+            increment_();
+
         return name_;
     };
 

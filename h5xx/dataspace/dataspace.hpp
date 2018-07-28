@@ -323,23 +323,24 @@ inline bool dataspace::is_simple() const
 //        throw error("selecting hyperslab");
 //}
 
-inline void dataspace::select(slice const& _slice, int mode)
+inline void dataspace::select(slice const& _s, int mode)
 {
     if (!valid())
         throw error("invalid dataspace");
+    
     // --- to interpret the slicing string inside "slice" we need the dataspace's extents
-    //     and, unfortunately, a non-const local copy
-    slice selection = _slice;
-    if (selection.has_string())
-        selection.parse_string( extents() );
-    if (selection.rank() != rank())
+    //     slice is kept constant, while we get a local copy of count, which is clipped
+    //     according to extents
+    std::vector<hsize_t> count = _s.get_count_clipped( extents() );
+    
+    if (_s.rank() != rank())
         throw error("dataspace and slice have mismatching rank");
     if (H5Sselect_hyperslab(    hid_
                                  , (H5S_seloper_t)mode
-                                 , &*selection.get_offset().begin()
-                                 , selection.get_stride().size() > 0 ? &*selection.get_stride().begin() : NULL
-                                 , &*selection.get_count().begin()
-                                 , selection.get_block().size() > 0 ? &*selection.get_block().begin() : NULL
+                                 , &*_s.get_offset().begin()
+                                 , _s.get_stride().size() > 0 ? &*_s.get_stride().begin() : NULL
+                                 , &*count.begin()
+                                 , _s.get_block().size() > 0 ? &*_s.get_block().begin() : NULL
                               ) < 0) {
         throw error("H5Sselect_hyperslab");
     }

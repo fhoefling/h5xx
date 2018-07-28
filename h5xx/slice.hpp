@@ -58,12 +58,11 @@ public:
      * Return true if a slice string has been set via the constructor.
      */
     bool has_string() const;
-
-    /**
-     * Fill offset_, count_, stride_, block_ arrays based on the slice string.
-     * When ranges ":" are used, the extents of the dataset must be given.
+    
+    /** 
+     * Replace -1 in counts with extents - offsset and returns the count vector
      */
-    void parse_string(const std::vector<hsize_t> & extents = std::vector<hsize_t>());
+    std::vector<hsize_t> get_count_clipped(const std::vector<hsize_t> & extents = std::vector<hsize_t>()) const;
 
 private:
     std::vector<hsize_t> offset_, count_, stride_, block_;
@@ -82,12 +81,19 @@ private:
     regex_t slice_full_range_stride_rex;   // "::2"
     void prepare_rex(regex_t & rex, std::string const& str);
     bool match_rex(regex_t const& rex, std::string const& str);
+    
+    /**
+     * Fill offset_, count_, stride_, block_ arrays based on the slice string.
+     * When ranges ":" are used, count is set to -1.
+     */
+    void parse_string();
 };
 
 
 inline slice::slice(const std::string & slice_str)
 {
     slice_str_ = slice_str;
+    parse_string();
 }
 
 
@@ -173,7 +179,7 @@ inline bool slice::has_string() const
     return (slice_str_.length() > 0);
 }
 
-inline void slice::parse_string(const std::vector<hsize_t> & extents)
+inline void slice::parse_string()
 {
     if (!has_string()) {
         throw error( "missing array slice string" );
@@ -198,11 +204,6 @@ inline void slice::parse_string(const std::vector<hsize_t> & extents)
     // --- create string vector with slice specification separated for each dimension
     std::vector<std::string> slice_specs = chop(slice_str_, ",");
 
-    // --- in case of range operations ":", the extent vector must be provided and has to fit the string dimension
-    if (match_rex(colon_rex, slice_str_))
-        if ((extents.size() == 0) || (slice_specs.size() != extents.size()))
-            throw error("dimensions of slice string and dataset extents do not match");
-
     // --- decrypt the slice specification, dimension by dimension
     typedef std::vector<std::string>::iterator vsit_t;
     int dim = 0;
@@ -210,7 +211,7 @@ inline void slice::parse_string(const std::vector<hsize_t> & extents)
     {
         std::string spec = *it;
 
-        if      ( match_rex(slice_single_rex, spec) )
+        if ( match_rex(slice_single_rex, spec) )
         { // "a"
             int i = str2num<int>(spec);
             offset_.push_back(i);
@@ -239,7 +240,7 @@ inline void slice::parse_string(const std::vector<hsize_t> & extents)
         else if ( match_rex(slice_full_range_rex, spec) )
         { // ":"
             offset_.push_back(0);
-            count_.push_back(extents[dim]);
+            count_.push_back(-1);
             stride_.push_back(1);
         }
         else if ( match_rex(slice_full_range_ceil_rex, spec) )
@@ -255,7 +256,7 @@ inline void slice::parse_string(const std::vector<hsize_t> & extents)
             std::vector<std::string> range_nums = chop(spec, ":");
             int lo = str2num<int>( range_nums[0] );
             offset_.push_back(lo);
-            count_.push_back(extents[dim]-lo);
+            count_.push_back(-1);
             stride_.push_back(1);
         }
         else if ( match_rex(slice_full_range_stride_rex, spec) )
@@ -263,7 +264,7 @@ inline void slice::parse_string(const std::vector<hsize_t> & extents)
             std::vector<std::string> range_nums = chop(spec, ":");
             int dx = str2num<int>( range_nums[0] );
             offset_.push_back(0);
-            count_.push_back((extents[dim]-1)/dx + 1);
+            count_.push_back(-1);
             stride_.push_back(dx);
         }
         else
@@ -309,6 +310,21 @@ inline bool slice::match_rex(regex_t const& rex, std::string const& str)
 {
     int ret = regexec(&rex, str.c_str(), 0, NULL, 0);
     return (ret == 0);
+}
+
+inline std::vector<hsize_t> slice::get_count_clipped(const std::vector<hsize_t> & extents) const
+{
+    std::vector<hsize_t> clipped_count(count_);
+    if (clipped_count.size() != extents.size())
+        throw error(std::string("mismatch dimensionality of slice and extents in slice::get_count_clipped"));
+
+    for (unsigned int i = 0; i < clipped_count.size(); i++) {
+        if (clipped_count[i] == -1) {
+            clipped_count[i] = (extents[i] - offset_[i] - 1)/stride_[i] + 1;
+        }
+    }
+
+    return clipped_count;
 }
 
 } // namespace h5xx

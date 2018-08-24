@@ -283,20 +283,23 @@ inline T str2num(std::string const& str)
 inline std::vector<std::string> chop(std::string const& str, std::string const& sep)
 {
     std::vector<std::string> items;
-    std::string::size_type begIdx, endIdx;
-    begIdx = str.find_first_not_of(sep);
-    while (begIdx != std::string::npos) {
-        endIdx = str.find_first_of(sep, begIdx);
-        if (endIdx == std::string::npos) {
-            endIdx = str.length();
+    std::string::size_type begin = str.find_first_not_of(sep);
+
+    while (begin != std::string::npos) {
+        std::string::size_type end = str.find_first_of(sep, begin);
+        if (end == std::string::npos) {
+            end = str.length();
         }
-        std::string buf; buf.clear();
-        for (std::string::size_type i = begIdx; i<endIdx; ++i) {
+
+        std::string buf;
+        for (std::string::size_type i = begin; i < end; ++i) {
             buf.push_back(str[i]);
         }
         items.push_back(buf);
-        begIdx = str.find_first_not_of (sep, endIdx);
+
+        begin = str.find_first_not_of(sep, end);
     }
+
     return items;
 }
 

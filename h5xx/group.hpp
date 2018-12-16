@@ -79,8 +79,8 @@ public:
     void close();
 
     /** methods to yield container adapters */
-    container<h5xx::dataset> datasets();
-    container<h5xx::group> groups();
+    container<h5xx::dataset> datasets() const;
+    container<h5xx::group> groups() const;
 
 private:
     /** HDF5 object ID */
@@ -271,12 +271,12 @@ inline hid_t open_group(hid_t loc_id, std::string const& path)
     return group_id;
 }
 
-inline container<h5xx::dataset> group::datasets()
+inline container<h5xx::dataset> group::datasets() const
 {
     return container<h5xx::dataset>(*this);
 }
 
-inline container<h5xx::group> group::groups()
+inline container<h5xx::group> group::groups() const
 {
     return container<h5xx::group>(*this);
 }

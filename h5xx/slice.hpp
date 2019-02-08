@@ -336,7 +336,7 @@ inline std::vector<hsize_t> slice::get_count_clipped(const std::vector<hsize_t> 
         throw error(std::string("mismatch dimensionality of slice and extents in slice::get_count_clipped"));
 
     for (unsigned int i = 0; i < clipped_count.size(); i++) {
-        if (clipped_count[i] == -1) {
+        if (clipped_count[i] == -1U) {
             clipped_count[i] = (extents[i] - offset_[i] - 1)/stride_[i] + 1;
         }
     }

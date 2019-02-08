@@ -7,11 +7,11 @@ if(DEFINED CMAKE_CXX_COMPILER_ID)
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
 
-    set(CMAKE_CXX_FLAGS_INIT "-fPIC -Wall")
+    set(CMAKE_CXX_FLAGS_INIT "-fPIC -Wall -std=c++98 -pedantic -Wno-long-long -Wno-c99-extensions")
 
   elseif(CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
 
-    set(CMAKE_CXX_FLAGS_INIT "-fPIC -Wall")
+    set(CMAKE_CXX_FLAGS_INIT "-fPIC -Wall -std=c++98 -pedantic -Wno-long-long")
 
   else()
 

@@ -32,8 +32,7 @@ the 3-clause BSD license.
 ## Requirements
 
 * A compiler that supports at least C++98 is required.  h5xx was developed
-and tested using g++ on x86_64 Linux.  h5xx was tested in addition with Intel
-icpc.
+and tested using GCC, Intel's compiler, and Clang on x86_64 Linux.
 * HDF5: h5xx requires an installation of the HDF5 library.  HDF5 may be built
 with MPI to support parallel IO.  The (deprecated) HDF5 C++ bindings are *not* required.
 * Boost: h5xx requires an installation of the Boost C++ library.

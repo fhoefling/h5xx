@@ -24,7 +24,9 @@ struct h5file
     h5file()
       : file(filename, h5xx::file::trunc)
     {
-        BOOST_TEST_MESSAGE("HDF5 file created: " << filename);
+//      The following syntax is preferred, but seems to be broken with Boost 1.65.0
+//      BOOST_TEST_MESSAGE("HDF5 file created: " << filename);
+        BOOST_TEST_MESSAGE(std::string("HDF5 file created: ") + filename);
     }
 
     ~h5file()
@@ -32,7 +34,7 @@ struct h5file
         file.close(true);
 #ifdef NDEBUG
         remove(filename);
-        BOOST_TEST_MESSAGE("HDF5 file removed: " << filename);
+        BOOST_TEST_MESSAGE(std::string("HDF5 file removed: ") + filename);
 #endif
     }
 

@@ -13,7 +13,7 @@ option(MPI "Build with MPI support for parallel IO" OFF)
 # installed system Boost libraries, this causes the system libraries (with
 # "-mt") to override the custom-compiled libraries (without "-mt").
 if(NOT DEFINED Boost_USE_MULTITHREADED)
-  set(Boost_USE_MULTITHREADED TRUE)
+  set(Boost_USE_MULTITHREADED FALSE CACHE BOOL "Prefer multi-threaded Boost libraries, with -mt suffix")
 endif(NOT DEFINED Boost_USE_MULTITHREADED)
 
 find_package(Boost 1.40.0 QUIET REQUIRED COMPONENTS unit_test_framework)

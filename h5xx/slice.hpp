@@ -57,6 +57,7 @@ public:
      * Replace -1U in counts with 'extents - offset'. Returns the list of element counts.
      */
     std::vector<hsize_t> get_count(std::vector<hsize_t> const& extents = std::vector<hsize_t>()) const;
+    std::vector<hsize_t> get_count_clipped(const std::vector<hsize_t> & extents) const;
 
 private:
     std::vector<hsize_t> offset_, count_, stride_, block_;

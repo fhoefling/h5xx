@@ -1,6 +1,6 @@
 /*
- * Copyright © 2018 Matthias Werner
- * Copyright © 2018 Felix Höfling
+ * Copyright © 2018      Matthias Werner
+ * Copyright © 2018-2019 Felix Höfling
  * All rights reserved.
  *
  * This file is part of h5xx — a C++ wrapper for the HDF5 library.
@@ -10,7 +10,7 @@
  */
 
 /**
- * Requirements fo Iterator(It)
+ * Requirements of Iterator(It)
  * http://en.cppreference.com/w/cpp/concept/ForwardIterator
  *
  *  - DefaultConstructible
@@ -31,10 +31,9 @@
  *  - operator!= / operator== - tested
  *  - It->m should be equivalent to (*It).m -tested
  *
- *  and (for ForwarIterator)
+ *  and (for ForwardIterator)
  *
  *  - Multipass guarantee - tested
- *
  */
 #define BOOST_TEST_MODULE h5xx_group
 #include <boost/test/unit_test.hpp>
@@ -55,84 +54,102 @@ typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
 using namespace h5xx;
 
-// FIXME test begin(), end() in test/group.cpp,
-// for default constructed group, empty group, group with 1 and 2 members.
-
 BOOST_AUTO_TEST_CASE( iterator_constructors )
 {
-    BOOST_TEST_MESSAGE("\nTesting iterator constructors");
+    BOOST_TEST_MESSAGE("\nTesting iterator constructors:");
 
     group container_group(file);
 
-    /** check default constructor */
-    BOOST_TEST_MESSAGE("testing default constructor");
+    // default constructor
+    BOOST_TEST_MESSAGE("  default constructor");
     BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter);
     BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter);
 
     container<dataset>::iterator dset_iter;
     container<group>::iterator sgroup_iter;
 
-    BOOST_CHECK_NO_THROW(dset_iter = container<dataset>::iterator());  // TODO why the assignments here?
-    BOOST_CHECK_NO_THROW(sgroup_iter = container<group>::iterator());
+    // custom constructor
+    BOOST_TEST_MESSAGE("  constructor on empty group");
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator(container_group));
+    BOOST_CHECK_NO_THROW(container<group>::iterator(container_group));
 
-    /** check non-default constructor */
-    BOOST_TEST_MESSAGE("testing constructor on (empty) group");
-    BOOST_CHECK_NO_THROW(dset_iter = container<dataset>::iterator(container_group));
-    BOOST_CHECK_NO_THROW(sgroup_iter = container<group>::iterator(container_group));
+    // populate group
+    create_dataset<int>(container_group, "dset");
+    group(container_group, "grp");
 
-    /** check copy constructor */
-    BOOST_TEST_MESSAGE("testing copy constructor");
+    // custom constructor on non-empty group
+    BOOST_TEST_MESSAGE("  constructor on non-empty group");
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator(container_group));
+    BOOST_CHECK_NO_THROW(container<group>::iterator(container_group));
 
+    // copy constructor
+    BOOST_TEST_MESSAGE("  copy constructor");
     BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_2 = dset_iter);
     BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_2 = sgroup_iter);
+
+    // move constructor
+    BOOST_TEST_MESSAGE("  move constructor");
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_2 = container_group.datasets().begin());    // temporary on the right
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_2 = container_group.groups().begin());
+
+    container<dataset>::iterator dset_iter_2(container_group);
+    container<group>::iterator sgroup_iter_2(container_group);
+
+    // assignment operator
+    BOOST_TEST_MESSAGE("  assignment operator");
+    BOOST_CHECK_NO_THROW(dset_iter = dset_iter_2);
+    BOOST_CHECK_NO_THROW(sgroup_iter_2 = sgroup_iter);
+    BOOST_CHECK_NO_THROW(dset_iter = container<dataset>::iterator());
+    BOOST_CHECK_NO_THROW(sgroup_iter = container<group>::iterator(container_group));
 }
 
 BOOST_AUTO_TEST_CASE( iterator_requirements )
 {
-    BOOST_TEST_MESSAGE("\nTesting basic requirements of ForwardIterator");
+    BOOST_TEST_MESSAGE("\nTesting basic requirements of ForwardIterator:");
+
+    // DefaultConstructible
+    BOOST_TEST_MESSAGE("  DefaultConstructible");
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator());
+    BOOST_CHECK_NO_THROW(container<group>::iterator());
+
+    // MoveConstructible
+    BOOST_TEST_MESSAGE("  MoveConstructible");
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator temp(container<dataset>::iterator()));
+    BOOST_CHECK_NO_THROW(container<group>::iterator temp(container<group>::iterator()));
 
     container<dataset>::iterator dset_iter, dset_iter_2, dset_iter_3;
     container<group>::iterator sgroup_iter, sgroup_iter_2, sgroup_iter_3;
 
-    /** check DefaultConstructible and MoveAssignable*/
-    BOOST_TEST_MESSAGE("testing DefaultConstructible and MoveAssignable");
+    // MoveAssignable
+    BOOST_TEST_MESSAGE("  MoveAssignable");
     BOOST_CHECK_NO_THROW(dset_iter = container<dataset>::iterator());
     BOOST_CHECK_NO_THROW(sgroup_iter = container<group>::iterator());
 
-    /** check MoveConstructible */
-    BOOST_TEST_MESSAGE("testing MoveConstructible");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator temp = container<dataset>::iterator());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator temp(container<dataset>::iterator()));
-    BOOST_CHECK_NO_THROW(container<group>::iterator temp = container<group>::iterator());
-    BOOST_CHECK_NO_THROW(container<group>::iterator temp(container<group>::iterator()));
+    // CopyConstructible
+    BOOST_TEST_MESSAGE("  CopyConstructible");
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator(dset_iter));
+    BOOST_CHECK_NO_THROW(container<group>::iterator(sgroup_iter));
 
-    /** check CopyConstructible */
-    BOOST_TEST_MESSAGE("testing CopyConstructible");
-    BOOST_CHECK_NO_THROW(dset_iter_2 = container<dataset>::iterator(dset_iter));
-    BOOST_CHECK_NO_THROW(sgroup_iter_2 = container<group>::iterator(sgroup_iter));
+    // CopyAssignable
+    BOOST_TEST_MESSAGE("  CopyAssignable");
+    BOOST_CHECK_NO_THROW(dset_iter_2 = dset_iter;);
+    BOOST_CHECK_NO_THROW(sgroup_iter_2 = sgroup_iter);
 
-    /** check CopyAssignable */
-    BOOST_TEST_MESSAGE("testing CopyAssignable");
-    BOOST_CHECK_NO_THROW(dset_iter_3 = dset_iter;);
-    BOOST_CHECK_NO_THROW(sgroup_iter_3 = sgroup_iter);
-    BOOST_CHECK(dset_iter_3 == dset_iter);
-    BOOST_CHECK(sgroup_iter_3 == sgroup_iter);
-
-    /** check EqualityComparable */
-    BOOST_TEST_MESSAGE("testing EqualityComparable");
+    // EqualityComparable
+    BOOST_TEST_MESSAGE("  EqualityComparable");
     BOOST_CHECK(dset_iter == dset_iter_2);
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
 
-    /** check lvalues are Swappable */
-    BOOST_TEST_MESSAGE("testing lvalues are swappable");
+    // lvalues are Swappable
+    BOOST_TEST_MESSAGE("  lvalues are swappable");
     BOOST_CHECK_NO_THROW(std::swap(dset_iter, dset_iter_2));
     BOOST_CHECK_NO_THROW(std::swap(sgroup_iter, sgroup_iter_2));
- 
-    /** check member typedefs value_type, difference_type, reference, pointer and iterator_category */
-    BOOST_TEST_MESSAGE("testing std::iterator_traits for non-const iterator");
+
+    // member typedefs value_type, difference_type, reference, pointer and iterator_category
+    BOOST_TEST_MESSAGE("  std::iterator_traits for non-const iterator");
     BOOST_CHECK(typeid(container<dataset>::iterator::value_type) == typeid(dataset));
     BOOST_CHECK(typeid(container<group>::iterator::value_type) == typeid(group));
-    
+
     BOOST_CHECK(typeid(container<dataset>::iterator::difference_type) == typeid(std::ptrdiff_t));
     BOOST_CHECK(typeid(container<group>::iterator::difference_type) ==  typeid(std::ptrdiff_t));
 
@@ -145,10 +162,10 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     BOOST_CHECK(typeid(container<dataset>::iterator::iterator_category) == typeid(std::forward_iterator_tag));
     BOOST_CHECK(typeid(container<group>::iterator::iterator_category) == typeid(std::forward_iterator_tag));
 
-    BOOST_TEST_MESSAGE("testing std::iterator_traits for const iterator");
+    BOOST_TEST_MESSAGE("  std::iterator_traits for const iterator");
     BOOST_CHECK(typeid(container<dataset>::const_iterator::value_type) == typeid(dataset));
     BOOST_CHECK(typeid(container<group>::const_iterator::value_type) == typeid(group));
-    
+
     BOOST_CHECK(typeid(container<dataset>::const_iterator::difference_type) == typeid(std::ptrdiff_t));
     BOOST_CHECK(typeid(container<group>::const_iterator::difference_type) ==  typeid(std::ptrdiff_t));
 
@@ -161,93 +178,99 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     BOOST_CHECK(typeid(container<dataset>::const_iterator::iterator_category) == typeid(std::forward_iterator_tag));
     BOOST_CHECK(typeid(container<group>::const_iterator::iterator_category) == typeid(std::forward_iterator_tag));
 
-    /** setting up further test with a real group */
+    // further test with a real group
     group container_group(file);
-    dataset dset1 = create_dataset<int>(container_group, "dset1");
-    dataset dset2 = create_dataset<int>(container_group, "dset2");
-    dataset dset3 = create_dataset<int>(container_group, "dset3");
-    group grp1(container_group, "grp1");
-    group grp2(container_group, "grp2");
-    group grp3(container_group, "grp3");
+    create_dataset<int>(container_group, "dset1");
+    create_dataset<int>(container_group, "dset2");
+    group(container_group, "grp1");
+    group(container_group, "grp2");
+    group(container_group, "grp3");
 
-    container<dataset>::iterator dset_multipass_1 = container_group.datasets().begin();
-    container<dataset>::iterator dset_multipass_2 = container_group.datasets().begin();
     container<group>::iterator sgroup_multipass_1 = container_group.groups().begin();
     container<group>::iterator sgroup_multipass_2 = container_group.groups().begin();
 
-    /** check Multipass guarantee */
-    BOOST_TEST_MESSAGE("testing Multipass guarantee");
-    while(dset_multipass_1 != container_group.datasets().end()) {
-        BOOST_CHECK(dset_multipass_1 == dset_multipass_2);
-	BOOST_CHECK(dset_multipass_1.get_name() == dset_multipass_2.get_name());
-	++dset_multipass_1;
-	dset_multipass_2++;
+    // Multipass guarantee
+    BOOST_TEST_MESSAGE("  Multipass guarantee");
+
+    auto datasets = container_group.datasets();
+    container<dataset>::iterator dset_it1 = datasets.begin();
+    for (auto dset_it2 = datasets.begin(); dset_it2 != datasets.end(); ++dset_it2) {
+        BOOST_CHECK(dset_it1 == dset_it2);
+        BOOST_CHECK(dset_it1.get_name() == dset_it2.get_name());
+        dset_it1++;
     }
 
-    while(sgroup_multipass_1 != container_group.groups().end()) {
-	BOOST_CHECK(sgroup_multipass_1 == sgroup_multipass_2);
-	BOOST_CHECK(sgroup_multipass_1.get_name() == sgroup_multipass_2.get_name());
-	++sgroup_multipass_1;
-	sgroup_multipass_2++;
+    auto groups = container_group.groups();
+    container<group>::iterator grp_it1 = groups.begin();
+    for (auto grp_it2 = groups.begin(); grp_it2 != groups.end(); ++grp_it2) {
+        BOOST_CHECK(grp_it1 == grp_it2);
+        BOOST_CHECK(grp_it1.get_name() == grp_it2.get_name());
+        grp_it1++;
     }
 }
 
 BOOST_AUTO_TEST_CASE( iterator_expressions )
 {
-    BOOST_TEST_MESSAGE("\nTesting basic iterator expressions");
+    BOOST_TEST_MESSAGE("\nTesting basic iterator expressions:");
 
-    container<dataset>::iterator dset_iter;
-    container<dataset>::iterator dset_iter_2;
-    container<group>::iterator sgroup_iter;
-    container<group>::iterator sgroup_iter_2;
+    // create a small group with a single dataset and no subgroups
+    group container_group(file);
+    create_dataset<int>(container_group, "dset");
+    create_dataset<double>(container_group, "dset2");
 
-    /** check operator*
-     *  should throw h5xx::error, since container_group_ does not exist
-     */
-    BOOST_TEST_MESSAGE("testing dereference operator");
+    // a default constructed iterator, and one over the above group
+    container<dataset>::iterator dset_iter, dset_iter_2(container_group);
+    container<group>::iterator sgroup_iter, sgroup_iter_2(container_group);
+
+    // operator*
+    BOOST_TEST_MESSAGE("  dereference operator");
+    // throws h5xx::error since default constructed (underlying group does not exist)
     BOOST_CHECK_THROW(*sgroup_iter, h5xx::error);
     BOOST_CHECK_THROW(*dset_iter, h5xx::error);
- 
-    /** check operator++() */
-    BOOST_TEST_MESSAGE("testing pre-increment operator");
+    BOOST_CHECK_EQUAL(get_name(*dset_iter_2), "/dset");
+    BOOST_CHECK_THROW(*sgroup_iter_2, std::out_of_range);
+
+    // operator++()
+    BOOST_TEST_MESSAGE("  pre-increment operator");
     BOOST_CHECK_THROW(++dset_iter, h5xx::error);
     BOOST_CHECK_THROW(++sgroup_iter, h5xx::error);
+    BOOST_CHECK_EQUAL(get_name(*(++dset_iter_2)), "/dset2");
+    BOOST_CHECK_THROW(*(++sgroup_iter_2), std::out_of_range);
 
-    /** check operator++(int) */
-    BOOST_TEST_MESSAGE("testing post-increment operator");
+    auto datasets = container_group.datasets();
+    auto groups = container_group.groups();
+    dset_iter_2 = datasets.begin();                 // go back to start
+    sgroup_iter_2 = groups.begin();
+
+    // operator++(int)
+    BOOST_TEST_MESSAGE("  post-increment operator");
     BOOST_CHECK_THROW(dset_iter++, h5xx::error);
     BOOST_CHECK_THROW(sgroup_iter++, h5xx::error);
+    BOOST_CHECK_EQUAL(get_name(*dset_iter_2++), "/dset");
+    BOOST_CHECK_THROW(*sgroup_iter_2++, std::out_of_range);
 
-    /** TODO: check (void) i++ == (void)++i */
+    // operator!= and operator==
+    BOOST_TEST_MESSAGE("  comparison operators");
+    BOOST_CHECK_THROW(dset_iter == dset_iter_2, h5xx::error);   // different parent groups
+    BOOST_CHECK(groups.begin() == groups.end());                // empty group
 
+    dset_iter_2 = datasets.begin();                             // go back to start
+    BOOST_CHECK(dset_iter_2 == datasets.begin());               // dset_iter_2 was never accessed
+    BOOST_CHECK(dset_iter_2 == datasets.begin());               // dset_iter_2 accessed before for comparison
 
-    /** check operator!= / operator== */
-    BOOST_TEST_MESSAGE("testing (in)equality operators");
-    BOOST_CHECK(dset_iter == dset_iter_2);
-    BOOST_CHECK(!(dset_iter != dset_iter_2));
-    BOOST_CHECK(sgroup_iter == sgroup_iter_2);
-    BOOST_CHECK(!(sgroup_iter != sgroup_iter_2));
+    dset_iter_2 = datasets.begin();                             // reset iterator and dereference
+    BOOST_CHECK_NO_THROW(*dset_iter_2);
+    BOOST_CHECK(datasets.begin() == dset_iter_2);               // dset_iter_2 dereferenced before
+    BOOST_CHECK(++dset_iter_2 != datasets.end());
 
-     /** check It->m equivalent to (*It).m */
-    group container_group(file);
-    dataset dset = create_dataset<int>(container_group, "dset");
-    group sgroup = group(container_group, "grp");
+    // (void) i++ == (void) ++i
+    auto dset_iter_3 = datasets.begin(); dset_iter_3++;         // post-increment here, pre-increment there
+    BOOST_CHECK(dset_iter_2 == dset_iter_3);
+    BOOST_CHECK_EQUAL(get_name(*dset_iter_2), get_name(*dset_iter_3));
 
-    dset_iter = container_group.datasets().begin();
-    sgroup_iter = container_group.groups().begin();
-    
-    BOOST_CHECK_EQUAL(dset_iter.get_name(), "dset");
-    BOOST_CHECK_EQUAL(sgroup_iter.get_name(), "grp");
-
-    BOOST_TEST_MESSAGE("testing equivalnece of operator-> and operator*/.");
-    BOOST_CHECK(dset_iter->valid());
-    BOOST_CHECK((*dset_iter).valid());
-    BOOST_CHECK_EQUAL(get_name((*dset_iter).hid()), "/dset");
-    BOOST_CHECK_EQUAL(get_name(dset_iter->hid()), "/dset");
-    BOOST_CHECK(sgroup_iter->valid());
-    BOOST_CHECK((*sgroup_iter).valid());
-    BOOST_CHECK_EQUAL(get_name((*sgroup_iter).hid()), "/grp");
-    BOOST_CHECK_EQUAL(get_name(sgroup_iter->hid()), "/grp");
+    // check It->m equivalent to (*It).m
+    BOOST_TEST_MESSAGE("  equivalence of operator-> and operator*");
+    BOOST_CHECK_EQUAL((*dset_iter_2).hid(), dset_iter_2->hid());
 }
 
 BOOST_AUTO_TEST_CASE( default_group )

@@ -1,5 +1,6 @@
 /*
- * Copyright © 2010-2014 Felix Höfling
+ * Copyright © 2010-2019 Felix Höfling
+ * Copyright © 2018      Matthias Werner
  * Copyright © 2013      Manuel Dibak
  * All rights reserved.
  *
@@ -80,20 +81,37 @@ BOOST_AUTO_TEST_CASE( usage )
 
 BOOST_AUTO_TEST_CASE( iterator_begin_end )
 {
+    // create empty group and test iterators of group/dataset containers
     group container_group(file);
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
-    
-    dataset dset1 = create_dataset<int>(container_group, "dset1");
-    dataset dset2 = create_dataset<int>(container_group, "dset2");
-    group grp1 = group(container_group, "grp1");
-    group grp2 = group(container_group, "grp2");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
+    auto datasets = container_group.datasets();
+    auto groups = container_group.groups();
+
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter = datasets.begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = datasets.end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter = groups.begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = groups.end());
+    BOOST_CHECK(datasets.begin() == datasets.end());
+    BOOST_CHECK(groups.begin() == groups.end());
+
+    // populate group
+    create_dataset<int>(container_group, "dset1");
+    create_dataset<int>(container_group, "dset2");
+    group(container_group, "grp");
+
+    // test iterators of non-empty group/dataset containers
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter = datasets.begin());
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = datasets.end());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter = groups.begin());
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = groups.end());
+    BOOST_CHECK_EQUAL(datasets.begin().get_name(), "dset1");
+    BOOST_CHECK(++groups.begin() == groups.end());
+
+    // count elements from forward iterators
+    unsigned int size = 0;
+    for (auto const& dset : datasets) {
+        size += dset.valid();                    // do something with dset
+    }
+    BOOST_CHECK_EQUAL(size, 2);
 }
 
 } // namespace fixture

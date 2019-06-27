@@ -253,6 +253,7 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
     BOOST_TEST_MESSAGE("  comparison operators");
     BOOST_CHECK_THROW(dset_iter == dset_iter_2, h5xx::error);   // different parent groups
     BOOST_CHECK(groups.begin() == groups.end());                // empty group
+    BOOST_CHECK(groups.begin() == groups.cend());               // non-const and const
 
     dset_iter_2 = datasets.begin();                             // go back to start
     BOOST_CHECK(dset_iter_2 == datasets.begin());               // dset_iter_2 was never accessed
@@ -276,163 +277,102 @@ BOOST_AUTO_TEST_CASE( iterator_expressions )
 BOOST_AUTO_TEST_CASE( default_group )
 {
     BOOST_TEST_MESSAGE("\nTesting iterator over default constructed group");
-    group container_group = group();
+    group container_group;
+    container<dataset> datasets = container_group.datasets();
+    container<group> groups = container_group.groups();
 
-    BOOST_TEST_MESSAGE("setting up iterators/const_iterators");
-    container<dataset>::iterator dset_iter_begin, dset_iter_end;
-    container<group>::iterator sgroup_iter_begin, sgroup_iter_end;
-    container<dataset>::const_iterator dset_citer_begin, dset_citer_end;
-    container<group>::const_iterator sgroup_citer_begin, sgroup_citer_end;
+    BOOST_TEST_MESSAGE("  setting iterators to begin of containers");
+    container<dataset>::iterator dset_iter;
+    container<dataset>::const_iterator dset_citer;
+    container<group>::iterator sgroup_iter;
+    container<group>::const_iterator sgroup_citer;
 
-    BOOST_CHECK_NO_THROW(dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.groups().end());
+    BOOST_CHECK_NO_THROW(dset_iter = datasets.begin());
+    BOOST_CHECK_NO_THROW(dset_citer = datasets.cbegin());
+    BOOST_CHECK_NO_THROW(sgroup_iter = groups.begin());
+    BOOST_CHECK_NO_THROW(sgroup_citer = groups.cbegin());
 
-    BOOST_CHECK_NO_THROW(dset_citer_begin = container_group.datasets().cbegin());
-    BOOST_CHECK_NO_THROW(dset_citer_end = container_group.datasets().cend());
-    BOOST_CHECK_NO_THROW(sgroup_citer_begin = container_group.groups().cbegin());
-    BOOST_CHECK_NO_THROW(sgroup_citer_end = container_group.groups().cend());
+    BOOST_TEST_MESSAGE("  equality of begin/cbegin and end/cend iterators");
+    BOOST_CHECK(dset_iter == datasets.end());
+    BOOST_CHECK(dset_citer == datasets.cend());
+    BOOST_CHECK(sgroup_iter == groups.end());
+    BOOST_CHECK(sgroup_citer == groups.cend());
 
-    BOOST_TEST_MESSAGE("testing for equality of begin/cbegin and end/cend iterators");
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_begin);
-    
-    BOOST_CHECK(dset_citer_begin == dset_citer_end);
-    BOOST_CHECK(sgroup_citer_begin == sgroup_citer_begin);
-
-    BOOST_CHECK_THROW(*dset_iter_begin, std::out_of_range);
-    BOOST_CHECK_THROW(*sgroup_iter_begin, std::out_of_range);
-    
-    BOOST_CHECK_THROW(*dset_citer_begin, std::out_of_range);
-    BOOST_CHECK_THROW(*sgroup_citer_begin, std::out_of_range);
+    BOOST_CHECK_THROW(*dset_iter, std::out_of_range);
+    BOOST_CHECK_THROW(*dset_citer, std::out_of_range);
+    BOOST_CHECK_THROW(*sgroup_iter, std::out_of_range);
+    BOOST_CHECK_THROW(*sgroup_citer, std::out_of_range);
 }
 
 BOOST_AUTO_TEST_CASE( empty_group )
 {
     BOOST_TEST_MESSAGE("\nTesting iterator over empty group");
     group container_group(file);
+    container<dataset> datasets = container_group.datasets();
+    container<group> groups = container_group.groups();
 
-    BOOST_TEST_MESSAGE("setting up iterators/const_iterator");
-    container<dataset>::iterator dset_iter_begin, dset_iter_end;
-    container<group>::iterator sgroup_iter_begin, sgroup_iter_end;
-    container<dataset>::const_iterator dset_citer_begin, dset_citer_end;
-    container<group>::const_iterator sgroup_citer_begin, sgroup_citer_end;
+    BOOST_TEST_MESSAGE("  setting iterators to begin of containers");
+    container<dataset>::iterator dset_iter;
+    container<dataset>::const_iterator dset_citer;
+    container<group>::iterator sgroup_iter;
+    container<group>::const_iterator sgroup_citer;
 
-    BOOST_CHECK_NO_THROW(dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(sgroup_iter_begin = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(sgroup_iter_end = container_group.groups().end());
+    BOOST_CHECK_NO_THROW(dset_iter = datasets.begin());
+    BOOST_CHECK_NO_THROW(dset_citer = datasets.cbegin());
+    BOOST_CHECK_NO_THROW(sgroup_iter = groups.begin());
+    BOOST_CHECK_NO_THROW(sgroup_citer = groups.cbegin());
 
-    BOOST_CHECK_NO_THROW(dset_citer_begin = container_group.datasets().cbegin());
-    BOOST_CHECK_NO_THROW(dset_citer_end = container_group.datasets().cend());
-    BOOST_CHECK_NO_THROW(sgroup_citer_begin = container_group.groups().cbegin());
-    BOOST_CHECK_NO_THROW(sgroup_citer_end = container_group.groups().cend());
+    // begin and end iterators should be equal in empty group
+    BOOST_TEST_MESSAGE("  equality of begin/cbegin and end/cend iterators");
+    BOOST_CHECK(dset_iter == datasets.end());
+    BOOST_CHECK(dset_citer == datasets.cend());
+    BOOST_CHECK(sgroup_iter == groups.end());
+    BOOST_CHECK(sgroup_citer == groups.cend());
 
-    // begin- and end-iterator should be equal in empty group
-    BOOST_TEST_MESSAGE("testing for equality of begin/cbegin and end/cend iterators");
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
-
-    BOOST_CHECK_THROW(*dset_iter_begin, std::out_of_range);
-    BOOST_CHECK_THROW(*sgroup_iter_begin, std::out_of_range);
-    
-    BOOST_CHECK(dset_citer_begin == dset_citer_end);
-    BOOST_CHECK(sgroup_citer_begin == sgroup_citer_end);
-
-    BOOST_CHECK_THROW(*dset_citer_begin, std::out_of_range);
-    BOOST_CHECK_THROW(*sgroup_citer_begin, std::out_of_range);
+    // dereferencing of past-the-end iterators is not allowed
+    BOOST_CHECK_THROW(*dset_iter, std::out_of_range);
+    BOOST_CHECK_THROW(*sgroup_iter, std::out_of_range);
+    BOOST_CHECK_THROW(*dset_citer, std::out_of_range);
+    BOOST_CHECK_THROW(*sgroup_citer, std::out_of_range);
 }
-
 
 BOOST_AUTO_TEST_CASE( only_datasets )
 {
     BOOST_TEST_MESSAGE("\nTesting iterator over dataset-only group");
     group container_group(file);
 
-    dataset dset1 = create_dataset<int>(container_group, "dset1");
-    dataset dset2 = create_dataset<int>(container_group, "dset2");
-    dataset dset3 = create_dataset<int>(container_group, "dset3");
+    create_dataset<int>(container_group, "dset1");
+    create_dataset<int>(container_group, "dset2");
 
-    // testing begin(), end()
-    BOOST_TEST_MESSAGE("testing begin/end/cbegin/cend");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
+    container<dataset> datasets = container_group.datasets();
+    container<group> groups = container_group.groups();
 
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin());
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_end = container_group.groups().cend());
-
-    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
-    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
-    container<dataset>::iterator dset_iter_begin_2 = container_group.datasets().begin();
-
-    container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin();
-    container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend();
-    container<dataset>::const_iterator dset_citer_begin_2 = container_group.datasets().cbegin();
-
-    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
-    container<group>::iterator sgroup_iter_end = container_group.groups().end();
-
-    container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin();
-    container<group>::const_iterator sgroup_citer_end = container_group.groups().cend();
+    // add one more after constructing the container adapter
+    create_dataset<double>(container_group, "dset3");
 
     // no subgroups: begin and end iterators over subgroups should be equal
-    BOOST_TEST_MESSAGE("testing (in)equality begin/cbegin and end/cend iterators");
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
-    BOOST_CHECK(sgroup_citer_begin == sgroup_citer_end);
+    BOOST_TEST_MESSAGE("  empty subgroup container");
+    BOOST_CHECK_NO_THROW(groups.begin() == groups.end());
 
-    // begin and end iterators over datasets should not be equal
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
-    BOOST_CHECK(dset_iter_begin == dset_iter_begin_2);
+    // use iterator to walk over datasets
+    BOOST_TEST_MESSAGE("  walk over datasets");
 
-    BOOST_CHECK(dset_citer_begin != dset_citer_end);
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset1");
-    BOOST_CHECK(dset_citer_begin == dset_citer_begin_2);
+    container<dataset>::iterator dset_iter = datasets.begin();
+    BOOST_CHECK(dset_iter != datasets.end());               // not empty
+    BOOST_CHECK(dset_iter->valid());
+    BOOST_CHECK_EQUAL(dset_iter.get_name(), "dset1");       // name of element
+    BOOST_CHECK_EQUAL(get_name(*dset_iter), "/dset1");      // absolute path
 
-    // check operators / expressions FIXME to seperate test
-    BOOST_TEST_MESSAGE("testing operator*()");
-    BOOST_CHECK((*dset_iter_begin).valid());
-    BOOST_CHECK((*dset_citer_begin).valid());
+    BOOST_TEST_MESSAGE("  pre-increment");
+    BOOST_CHECK(++dset_iter != datasets.end());             // more than 1 element in group
+    BOOST_CHECK_EQUAL(dset_iter.get_name(), "dset2");
 
-    BOOST_TEST_MESSAGE("testing 1st increment operator");
-    BOOST_CHECK((*dset_iter_begin).valid());
-    BOOST_CHECK(dset_iter_begin++ != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset2");
-    
-    BOOST_CHECK((*dset_citer_begin).valid());
-    BOOST_CHECK(dset_citer_begin++ != dset_citer_end);
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset2");
-
-    BOOST_TEST_MESSAGE("testing 2nd increment operator");
-    ++dset_iter_begin;
-    BOOST_CHECK((*dset_iter_begin).valid());
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset3");
-    ++dset_iter_begin;
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-
-    ++dset_citer_begin;
-    BOOST_CHECK((*dset_citer_begin).valid());
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset3");
-    ++dset_citer_begin;
-    BOOST_CHECK(dset_citer_begin == dset_citer_end);
-
-    BOOST_TEST_MESSAGE("testing increment operator of dset_iter_begin_2");
-    BOOST_CHECK(dset_iter_begin != dset_iter_begin_2++);
-    ++dset_iter_begin_2;
-    ++dset_iter_begin_2;
-    BOOST_CHECK(dset_iter_begin_2 == dset_iter_end);
-    
-    BOOST_CHECK(dset_citer_begin != dset_citer_begin_2++);
-    ++dset_citer_begin_2;
-    ++dset_citer_begin_2;
-    BOOST_CHECK(dset_citer_begin_2 == dset_citer_end);
+    BOOST_TEST_MESSAGE("  post-increment");
+    BOOST_CHECK_NO_THROW(dset_iter++);
+    BOOST_CHECK(dset_iter->valid());
+    BOOST_CHECK_EQUAL(dset_iter.get_name(), "dset3");
+    BOOST_CHECK(++dset_iter == datasets.end());
 }
-
 
 BOOST_AUTO_TEST_CASE( only_subgroups )
 {

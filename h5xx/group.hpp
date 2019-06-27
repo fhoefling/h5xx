@@ -140,6 +140,9 @@ public:
     friend typename container<T>::iterator container<T>::end() noexcept;
     friend typename container<T>::const_iterator container<T>::cend() const noexcept;
 
+    template <typename S, bool is_const2>
+    friend void std::swap(group_iterator<S, is_const2>& it1, group_iterator<S, is_const2>& it2) noexcept;
+
 private:
     /** move forward by one step, calls H5Literate */
     bool increment_();
@@ -355,6 +358,37 @@ inline group_iterator<T, is_const>::~group_iterator() noexcept
         delete element_;
     }
 }
+
+} // namespace h5xx
+
+namespace std {
+
+template <typename T, bool is_const>
+void swap(h5xx::group_iterator<T, is_const>& it1, h5xx::group_iterator<T, is_const>& it2) noexcept
+{
+    h5xx::group_iterator<T, is_const> tmp;
+    // tmp = std::move(it1);
+    tmp.parent_ = it1.parent_;
+    tmp.stop_idx_ = it1.stop_idx_;
+    tmp.name_ = it1.name_;
+    tmp.element_ = it1.element_;
+
+    // it1 = std::move(it2);
+    it1.parent_ = it2.parent_;
+    it1.stop_idx_ = it2.stop_idx_;
+    it1.name_ = it2.name_;
+    it1.element_ = it2.element_;
+
+    // it2 = std::move(tmp);
+    it2.parent_ = tmp.parent_;
+    it2.stop_idx_ = tmp.stop_idx_;
+    it2.name_ = tmp.name_;
+    it2.element_ = tmp.element_;
+}
+
+} // namespace std
+
+namespace h5xx {
 
 template <typename T, bool is_const>
 inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group_iterator const& other)

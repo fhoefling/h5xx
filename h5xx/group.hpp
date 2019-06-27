@@ -1,8 +1,8 @@
 /*
- * Copyright © 2008-2018 Felix Höfling
+ * Copyright © 2008-2019 Felix Höfling
  * Copyright © 2018      Matthias Werner
  * Copyright © 2014-2015 Klaus Reuter
- * Copyright © 2013      Manuael Dibak
+ * Copyright © 2013      Manuel Dibak
  * Copyright © 2008-2010 Peter Colberg
  * All rights reserved.
  *
@@ -107,6 +107,9 @@ public:
     group_iterator(const group&) noexcept;
     group_iterator(group_iterator const&) noexcept;
     ~group_iterator() noexcept;
+
+    /** assignment operator */
+    group_iterator<T, is_const>& operator=(group_iterator const& other);
 
     /** pre- and post-increment operators */
     group_iterator& operator++();
@@ -339,7 +342,7 @@ inline group_iterator<T, is_const>::group_iterator(group_iterator const& other) 
   : parent_(other.parent_)
   , stop_idx_(other.stop_idx_)
   , name_(other.name_)
-  , element_(nullptr)
+  , element_(nullptr)   // don't copy pointer to HDF5 resource
 {}
 
 template <typename T, bool is_const>
@@ -348,6 +351,21 @@ inline group_iterator<T, is_const>::~group_iterator() noexcept
     if (element_) {
         delete element_;
     }
+}
+
+template <typename T, bool is_const>
+inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group_iterator const& other)
+{
+    parent_ = other.parent_;
+    stop_idx_ = other.stop_idx_;
+    name_ = other.name_;
+
+    if (element_) {
+        delete element_;               // release HDF5 resource before assignment
+    }
+    element_ = nullptr;
+
+    return *this;
 }
 
 template <typename T, bool is_const>
@@ -405,6 +423,7 @@ template <typename T, bool is_const>
 inline group_iterator<T, is_const> group_iterator<T, is_const>::operator++(int) // it++
 {
     group_iterator<T, is_const> tmp(*this);
+    std::swap(tmp.element_, element_);      // pass HDF5 resource over to 'tmp'
     ++(*this);
     return tmp;
 }

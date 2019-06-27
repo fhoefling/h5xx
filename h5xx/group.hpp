@@ -141,7 +141,7 @@ public:
         return name_;
     };
 
-    friend typename container<T>::iterator container<T>::end() noexcept;
+    friend typename container<T>::iterator container<T>::end() const noexcept;
     friend typename container<T>::const_iterator container<T>::cend() const noexcept;
 
     template <typename S, bool is_const2>
@@ -185,8 +185,8 @@ public:
     typedef group_iterator<h5xxObject, true> const_iterator;
     container(group const&);
 
-    iterator begin() noexcept;
-    iterator end() noexcept;
+    iterator begin() const noexcept;
+    iterator end() const noexcept;
 
     const_iterator cbegin() const noexcept;
     const_iterator cend() const noexcept;
@@ -300,12 +300,12 @@ inline container<h5xx::group> group::groups() const
  * implementation of adapter classes for group containers
  */
 template <typename h5xxObject>
-inline container<h5xxObject>::container(const group& grp)
+inline container<h5xxObject>::container(group const& grp)
   : parent_(&grp)
 {}
 
 template <typename h5xxObject>
-inline typename container<h5xxObject>::iterator container<h5xxObject>::begin() noexcept
+inline typename container<h5xxObject>::iterator container<h5xxObject>::begin() const noexcept
 {
     return iterator(*parent_);
 }
@@ -317,7 +317,7 @@ inline typename container<h5xxObject>::const_iterator container<h5xxObject>::cbe
 }
 
 template <typename h5xxObject>
-inline typename container<h5xxObject>::iterator container<h5xxObject>::end() noexcept
+inline typename container<h5xxObject>::iterator container<h5xxObject>::end() const noexcept
 {
     iterator iter(*parent_);
     iter.stop_idx_ = -1U;
@@ -331,8 +331,36 @@ inline typename container<h5xxObject>::const_iterator container<h5xxObject>::cen
     iter.stop_idx_ = -1U;
     return iter;
 }
+
 /*
- * implementation of group:iterator
+ * free functions begin(), end(), cbegin(), cend() on container<>
+ */
+template <typename h5xxObject>
+inline typename container<h5xxObject>::iterator begin(container<h5xxObject> const& c) noexcept
+{
+    return c.begin();
+}
+
+template <typename h5xxObject>
+inline typename container<h5xxObject>::const_iterator cbegin(container<h5xxObject> const& c) noexcept
+{
+    return c.cbegin();
+}
+
+template <typename h5xxObject>
+inline typename container<h5xxObject>::iterator end(container<h5xxObject> const& c) noexcept
+{
+    return c.end();
+}
+
+template <typename h5xxObject>
+inline typename container<h5xxObject>::const_iterator cend(container<h5xxObject> const& c) noexcept
+{
+    return c.cend();
+}
+
+/*
+ * implementation of group_iterator
  */
 template <typename T, bool is_const>
 inline group_iterator<T, is_const>::group_iterator() noexcept
@@ -540,7 +568,7 @@ inline bool group_iterator<T, is_const>::increment_()
     return retval > 0;      // everything went fine
 }
 
-namespace detail{
+namespace detail {
 
 /**
  * determine whether a given HDF5 object has a given type and return its name

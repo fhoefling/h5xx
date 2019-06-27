@@ -90,24 +90,24 @@ BOOST_AUTO_TEST_CASE( container_adapter )
     BOOST_TEST_MESSAGE("  datasets");
     BOOST_CHECK(datasets.begin() == datasets.cbegin());
     BOOST_CHECK(datasets.end() == datasets.cend());
-/*    BOOST_CHECK(begin(datasets) == datasets.begin());
+    BOOST_CHECK(begin(datasets) == datasets.begin());
     BOOST_CHECK(end(datasets) == datasets.end());
     BOOST_CHECK_EQUAL(typeid(begin(datasets)).name(), typeid(datasets.begin()).name());
     BOOST_CHECK_EQUAL(typeid(cbegin(datasets)).name(), typeid(datasets.cbegin()).name());
     BOOST_CHECK_EQUAL(typeid(end(datasets)).name(), typeid(datasets.end()).name());
     BOOST_CHECK_EQUAL(typeid(cend(datasets)).name(), typeid(datasets.cend()).name());
-*/    BOOST_CHECK(datasets.begin() == datasets.end());
+    BOOST_CHECK(datasets.begin() == datasets.end());
 
     BOOST_TEST_MESSAGE("  subgroups");
     BOOST_CHECK(groups.begin() == groups.cbegin());
     BOOST_CHECK(groups.end() == groups.cend());
-/*    BOOST_CHECK(begin(groups) == groups.begin());
+    BOOST_CHECK(begin(groups) == groups.begin());
     BOOST_CHECK(end(groups) == groups.end());
     BOOST_CHECK_EQUAL(typeid(begin(groups)).name(), typeid(groups.begin()).name());
     BOOST_CHECK_EQUAL(typeid(cbegin(groups)).name(), typeid(groups.cbegin()).name());
     BOOST_CHECK_EQUAL(typeid(end(groups)).name(), typeid(groups.end()).name());
     BOOST_CHECK_EQUAL(typeid(cend(groups)).name(), typeid(groups.cend()).name());
-*/    BOOST_CHECK(groups.begin() == groups.end());
+    BOOST_CHECK(groups.begin() == groups.end());
 
     // populate group
     create_dataset<int>(container_group, "dset1");
@@ -118,24 +118,24 @@ BOOST_AUTO_TEST_CASE( container_adapter )
     BOOST_TEST_MESSAGE("  datasets");
     BOOST_CHECK(datasets.begin() == datasets.cbegin());
     BOOST_CHECK(datasets.end() == datasets.cend());
-/*    BOOST_CHECK(begin(datasets) == datasets.begin());
+    BOOST_CHECK(begin(datasets) == datasets.begin());
     BOOST_CHECK(end(datasets) == datasets.end());
     BOOST_CHECK_EQUAL(typeid(begin(datasets)).name(), typeid(datasets.begin()).name());
     BOOST_CHECK_EQUAL(typeid(cbegin(datasets)).name(), typeid(datasets.cbegin()).name());
     BOOST_CHECK_EQUAL(typeid(end(datasets)).name(), typeid(datasets.end()).name());
     BOOST_CHECK_EQUAL(typeid(cend(datasets)).name(), typeid(datasets.cend()).name());
-*/    BOOST_CHECK_EQUAL(datasets.begin().get_name(), "dset1");
+    BOOST_CHECK_EQUAL(datasets.begin().get_name(), "dset1");
 
     BOOST_TEST_MESSAGE("  subgroups");
     BOOST_CHECK(groups.begin() == groups.cbegin());
     BOOST_CHECK(groups.end() == groups.cend());
-/*    BOOST_CHECK(begin(groups) == groups.begin());
+    BOOST_CHECK(begin(groups) == groups.begin());
     BOOST_CHECK(end(groups) == groups.end());
     BOOST_CHECK_EQUAL(typeid(begin(groups)).name(), typeid(groups.begin()).name());
     BOOST_CHECK_EQUAL(typeid(cbegin(groups)).name(), typeid(groups.cbegin()).name());
     BOOST_CHECK_EQUAL(typeid(end(groups)).name(), typeid(groups.end()).name());
     BOOST_CHECK_EQUAL(typeid(cend(groups)).name(), typeid(groups.cend()).name());
-*/    BOOST_CHECK(++groups.begin() == groups.end());              // 1-element container
+    BOOST_CHECK(++groups.begin() == groups.end());              // 1-element container
 
     // range-based loop: count elements from forward iterator
     BOOST_TEST_MESSAGE("  range-based loop");

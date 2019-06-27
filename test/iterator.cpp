@@ -141,10 +141,9 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
     BOOST_CHECK(sgroup_iter == sgroup_iter_2);
 
     // lvalues are Swappable
-    using std::swap;
     BOOST_TEST_MESSAGE("  lvalues are swappable");
-    BOOST_CHECK_NO_THROW(swap(dset_iter, dset_iter_2));     // rely on argument-dependent lookup (ADL)
-    BOOST_CHECK_NO_THROW(swap(sgroup_iter, sgroup_iter_2));
+    BOOST_CHECK_NO_THROW(std::swap(dset_iter, dset_iter_2));
+    BOOST_CHECK_NO_THROW(std::swap(sgroup_iter, sgroup_iter_2));
 
     // member typedefs value_type, difference_type, reference, pointer and iterator_category
     BOOST_TEST_MESSAGE("  std::iterator_traits for non-const iterator");

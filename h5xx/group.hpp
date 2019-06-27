@@ -108,7 +108,8 @@ public:
     ~group_iterator() noexcept;
 
     /** assignment operator */
-    group_iterator<T, is_const>& operator=(group_iterator const& other);
+    template <bool is_const2>
+    group_iterator& operator=(group_iterator<T, is_const2> const& other);
 
     /** pre- and post-increment operators */
     group_iterator& operator++();
@@ -125,8 +126,11 @@ public:
      *  of the sequence, i.e., they were reached by the same number of
      *  increments.
      */
-    bool operator==(group_iterator const&) const;
-    bool operator!=(group_iterator const&) const;
+    template <bool is_const2>
+    bool operator==(group_iterator<T, is_const2> const&) const;
+
+    template <bool is_const2>
+    bool operator!=(group_iterator<T, is_const2> const&) const;
 
     /** return name of current element */
     std::string get_name()
@@ -164,6 +168,7 @@ private:
     /** instance of HDF5 element pointed to */
     T* element_;
 
+    friend class group_iterator<T, !is_const>;
 }; // class group_iterator
 
 /**
@@ -390,8 +395,8 @@ void swap(h5xx::group_iterator<T, is_const>& it1, h5xx::group_iterator<T, is_con
 
 namespace h5xx {
 
-template <typename T, bool is_const>
-inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group_iterator const& other)
+template <typename T, bool is_const> template <bool is_const2>
+inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group_iterator<T, is_const2> const& other)
 {
     parent_ = other.parent_;
     stop_idx_ = other.stop_idx_;
@@ -405,8 +410,8 @@ inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group
     return *this;
 }
 
-template <typename T, bool is_const>
-inline bool group_iterator<T, is_const>::operator==(group_iterator const& other) const
+template <typename T, bool is_const> template <bool is_const2>
+inline bool group_iterator<T, is_const>::operator==(group_iterator<T, is_const2> const& other) const
 {
     if (parent_ != other.parent_) {
         throw h5xx::error("comparing iterators over different groups");
@@ -423,14 +428,14 @@ inline bool group_iterator<T, is_const>::operator==(group_iterator const& other)
     }
 
     if (other.stop_idx_ == 0) {
-        const_cast<group_iterator*>(&other)->increment_();
+        const_cast<group_iterator<T, is_const2>*>(&other)->increment_();
     }
 
     return stop_idx_ == other.stop_idx_;
 }
 
-template <typename T, bool is_const>
-inline bool group_iterator<T, is_const>::operator!=(group_iterator const& other) const
+template <typename T, bool is_const> template <bool is_const2>
+inline bool group_iterator<T, is_const>::operator!=(group_iterator<T, is_const2> const& other) const
 {
     return !(*this == other);
 }

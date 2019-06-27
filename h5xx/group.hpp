@@ -95,16 +95,15 @@ private:
  */
 template <typename T, bool is_const>
 class group_iterator
-  : public std::iterator<std::forward_iterator_tag,
-	                 T,
-			 std::ptrdiff_t,
-	                 typename std::conditional<is_const, T const*, T*>::type,
-			 typename std::conditional<is_const, T const&, T&>::type>
+   : public std::iterator<std::forward_iterator_tag,
+     T,
+     std::ptrdiff_t,
+     typename std::conditional<is_const, T const*, T*>::type,
+     typename std::conditional<is_const, T const&, T&>::type>
 {
 public:
-
     group_iterator() noexcept;
-    group_iterator(const group&) noexcept;
+    group_iterator(group const&) noexcept;
     group_iterator(group_iterator const&) noexcept;
     ~group_iterator() noexcept;
 
@@ -120,7 +119,11 @@ public:
     typename std::conditional<is_const, T const*, T*>::type operator->();
 
     /** comparison operators
-     *  determined on basis of hdf5 id
+     *
+     *  Two iterators are equal if they refer to the same container (parent
+     *  group) and if the referred elements have the same distance to the start
+     *  of the sequence, i.e., they were reached by the same number of
+     *  increments.
      */
     bool operator==(group_iterator const&) const;
     bool operator!=(group_iterator const&) const;
@@ -371,6 +374,10 @@ inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group
 template <typename T, bool is_const>
 inline bool group_iterator<T, is_const>::operator==(group_iterator const& other) const
 {
+    if (parent_ != other.parent_) {
+        throw h5xx::error("comparing iterators over different groups");
+    }
+
     // ensure that both iterators are fully initialised before the comparison.
     // reason: stop_idx = 0 and 1 (non-empty parent) or -1 (empty parent) are equivalent.
     //
@@ -441,7 +448,7 @@ inline typename std::conditional<is_const, T const&, T&>::type group_iterator<T,
 
     if (stop_idx_ == -1U) {     // iterator is past the end, throw std::out_of_range
         std::string error_msg = "parent group";
-        if (parent_->valid()) {
+        if (parent_ && parent_->valid()) {
             error_msg += " " + h5xx::get_name(*parent_);
         }
         else {
@@ -475,7 +482,7 @@ template <typename T, bool is_const>
 inline bool group_iterator<T, is_const>::increment_()
 {
     // if parent_ is not a valid group, set iterator past the end and return false
-    if(!parent_->valid()) {
+    if(!parent_ || !parent_->valid()) {
         stop_idx_ = -1U;
         return false;
     }

@@ -95,21 +95,32 @@ private:
  */
 template <typename T, bool is_const>
 class group_iterator
-   : public std::iterator<std::forward_iterator_tag,
-     T,
-     std::ptrdiff_t,
-     typename std::conditional<is_const, T const*, T*>::type,
-     typename std::conditional<is_const, T const&, T&>::type>
+  : public std::iterator<std::forward_iterator_tag
+     , T
+     , std::ptrdiff_t
+     , typename std::conditional<is_const, T const*, T*>::type
+     , typename std::conditional<is_const, T const&, T&>::type
+    >
 {
 public:
     group_iterator() noexcept;
-    group_iterator(group const&) noexcept;
-    group_iterator(group_iterator const&) noexcept;
     ~group_iterator() noexcept;
 
-    /** assignment operator */
-    template <bool is_const2>
-    group_iterator& operator=(group_iterator<T, is_const2> const& other);
+    /** construct iterator over a group */
+    group_iterator(group const&) noexcept;
+
+    /** copy constructor, don't copy resource pointer */
+    group_iterator(group_iterator const&) noexcept;
+//    group_iterator(group_iterator<T, true> const&) noexcept;    // FIXME convert const_iterator to iterator
+
+    /** move constructor */
+    group_iterator(group_iterator&&) = default;                 // uses move assignment
+
+    /** copy assignment */
+    group_iterator& operator=(group_iterator const& other) = default;   // uses copy constructor
+
+    /** move assignment, special handling of resource pointer */
+    group_iterator& operator=(group_iterator&& other);
 
     /** pre- and post-increment operators */
     group_iterator& operator++();
@@ -146,21 +157,21 @@ private:
     bool increment_();
 
     /** pointer to parent group */
-    group const* parent_;
+    group const* parent_ = nullptr;
 
     /**
      * index of element in group as used by H5Literate.
-     * If stop_idx_ == -1, iterator points past the end.
+     * If stop_idx_ == -1U, iterator points past the end.
      * stop_idx_ == 0 indicates a freshly constructed iterator, which points at
      * the first element (non-empty group), or past the end (empty group).
      */
-    hsize_t stop_idx_;
+    hsize_t stop_idx_ = -1U;
 
     /** name of HDF5 element pointed to */
     std::string name_;
 
     /** instance of HDF5 element pointed to */
-    T* element_;
+    T* element_ = nullptr;
 
     friend class group_iterator<T, !is_const>;
 
@@ -179,7 +190,6 @@ private:
 template <typename h5xxObject>
 class container
 {
-
 public:
     typedef group_iterator<h5xxObject, false> iterator;
     typedef group_iterator<h5xxObject, true> const_iterator;
@@ -364,16 +374,12 @@ inline typename container<h5xxObject>::const_iterator cend(container<h5xxObject>
  */
 template <typename T, bool is_const>
 inline group_iterator<T, is_const>::group_iterator() noexcept
-  : parent_(nullptr)
-  , stop_idx_(-1U)
-  , element_(nullptr)
 {}
 
 template <typename T, bool is_const>
-inline group_iterator<T, is_const>::group_iterator(const group& group) noexcept
+inline group_iterator<T, is_const>::group_iterator(group const& group) noexcept
   : parent_(&group)
   , stop_idx_(0)
-  , element_(nullptr)
 {}
 
 template <typename T, bool is_const>
@@ -392,17 +398,26 @@ inline group_iterator<T, is_const>::~group_iterator() noexcept
     }
 }
 
-template <typename T, bool is_const> template <bool is_const2>
-inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group_iterator<T, is_const2> const& other)
+template <typename T, bool is_const>
+inline group_iterator<T, is_const>& group_iterator<T, is_const>::operator=(group_iterator&& other)
 {
-    parent_ = other.parent_;
-    stop_idx_ = other.stop_idx_;
-    name_ = other.name_;
+    if (this != &other) {
+        if (element_) {
+            delete element_;                // release HDF5 resource before assignment
+        }
 
-    if (element_) {
-        delete element_;               // release HDF5 resource before assignment
+        parent_ = other.parent_;
+        stop_idx_ = other.stop_idx_;
+        name_ = std::move(other.name_);
+        element_ = other.element_;
+
+        // leave behind default constructed object,
+        // destructor must not release *other.element_
+        other.parent_ = nullptr;
+        other.stop_idx_ = -1U;
+        other.name_ = std::string();
+        other.element_ = nullptr;
     }
-    element_ = nullptr;
 
     return *this;
 }
@@ -497,7 +512,6 @@ inline typename std::conditional<is_const, T const&, T&>::type group_iterator<T,
         element_ = new T(*parent_, name_);
     }
     return *element_;
-//    return(move(element));
 }
 
 template <typename T, bool is_const>

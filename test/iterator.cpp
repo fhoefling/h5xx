@@ -376,335 +376,74 @@ BOOST_AUTO_TEST_CASE( only_datasets )
 
 BOOST_AUTO_TEST_CASE( only_subgroups )
 {
-    BOOST_TEST_MESSAGE("\nTesting iterator over subgroup-only group");
+    BOOST_TEST_MESSAGE("\nTesting iterator over group that has only subgroups");
     group container_group(file);
-    group grp1(container_group, "grp1");
-    group grp2(container_group, "grp2");
-    group grp3(container_group, "grp3");
 
-    BOOST_TEST_MESSAGE("testing begin/end/cbegin/cend");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
+    group(container_group, "grp1");
+    group(container_group, "grp2");
 
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin());
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_end = container_group.groups().cend());
+    container<dataset> datasets = container_group.datasets();
+    container<group> groups = container_group.groups();
 
-    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
-    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
+    // add one more after constructing the container adapter
+    group(container_group, "grp3");
 
-    container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin();
-    container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend();
+    // no datasets: begin and end iterators over datasets should be equal
+    BOOST_TEST_MESSAGE("  empty dataset container");
+    BOOST_CHECK_NO_THROW(datasets.begin() == datasets.end());
 
-    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
-    container<group>::iterator sgroup_iter_end = container_group.groups().end();
-    container<group>::iterator sgroup_iter_begin_2 = container_group.groups().begin();
+    // use iterator to walk over subgroups
+    BOOST_TEST_MESSAGE("  walk over subgroups");
 
-    container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin();
-    container<group>::const_iterator sgroup_citer_end = container_group.groups().cend();
-    container<group>::const_iterator sgroup_citer_begin_2 = container_group.groups().cbegin();
+    container<group>::iterator sgroup_iter = groups.begin();
+    BOOST_CHECK(sgroup_iter != groups.end());              // not empty
+    BOOST_CHECK(sgroup_iter->valid());
+    BOOST_CHECK_EQUAL(sgroup_iter.get_name(), "grp1");     // name of element
+    BOOST_CHECK_EQUAL(get_name(*sgroup_iter), "/grp1");    // absolute path
 
-    // begin and end iterator over subgroups should not be equal
-    BOOST_TEST_MESSAGE("testing (in)equality begin/cbegin and end/cend iterators");
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_begin_2++);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
+    BOOST_TEST_MESSAGE("  post-increment");
+    BOOST_CHECK_NO_THROW(sgroup_iter++);
+    BOOST_CHECK(sgroup_iter != groups.end());              // more than 1 element in group
+    BOOST_CHECK(sgroup_iter->valid());
+    BOOST_CHECK_EQUAL(sgroup_iter.get_name(), "grp2");
 
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin == sgroup_citer_begin_2++);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp1");
-
-    // begin- and end-iterator over datasets should be equal
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-    BOOST_CHECK(dset_citer_begin == dset_citer_end);
-
-    // check operators
-    BOOST_TEST_MESSAGE("testing operator*()");
-    BOOST_CHECK((*sgroup_iter_begin).valid());
-    BOOST_CHECK((*sgroup_citer_begin).valid());
-
-    BOOST_TEST_MESSAGE("testing 1st increment operator");
-    ++sgroup_iter_begin;
-    BOOST_CHECK((*sgroup_iter_begin).valid());
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp2");
-
-    ++sgroup_citer_begin;
-    BOOST_CHECK((*sgroup_citer_begin).valid());
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp2");
-
-    BOOST_TEST_MESSAGE("testing 2nd increment operator");
-    ++sgroup_iter_begin;
-    BOOST_CHECK((*sgroup_iter_begin).valid());
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp3");
-
-    ++sgroup_citer_begin;
-    BOOST_CHECK((*sgroup_citer_begin).valid());
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp3");
-
-    BOOST_TEST_MESSAGE("testing 3rd increment operator");
-    ++sgroup_iter_begin;
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
-
-    ++sgroup_citer_begin;
-    BOOST_CHECK(sgroup_citer_begin == sgroup_citer_end);
-
-    BOOST_TEST_MESSAGE("testing increment operator of sgroup_iter_begin_2");
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_begin_2);
-    ++sgroup_iter_begin_2;
-    ++sgroup_iter_begin_2;
-    BOOST_CHECK(sgroup_iter_begin_2 == sgroup_iter_end);
-
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_begin_2);
-    ++sgroup_citer_begin_2;
-    ++sgroup_citer_begin_2;
-    BOOST_CHECK(sgroup_citer_begin_2 == sgroup_citer_end);
+    BOOST_TEST_MESSAGE("  pre-increment");
+    BOOST_CHECK_EQUAL((++sgroup_iter).get_name(), "grp3");
+    BOOST_CHECK(++sgroup_iter == groups.end());
 }
 
-
-BOOST_AUTO_TEST_CASE( mixed_1 )
+BOOST_AUTO_TEST_CASE( mixed_group )
 {
-    BOOST_TEST_MESSAGE("\nTesting iterator over 1st mixed group");
-    /** container group with 2 datasets and 1 subgroup **/
-    group container_group(file);
-    group grp1(container_group, "grp1");
-    dataset dset1 = create_dataset<int>(container_group, "dset1");
-    dataset dset2 = create_dataset<int>(container_group, "dset2");
-
-    BOOST_TEST_MESSAGE("testing begin/end/cbegin/cend");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
-
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin());
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_end = container_group.groups().cend());
-
-    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
-    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
-    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
-    container<group>::iterator sgroup_iter_end = container_group.groups().end();
-
-    container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin();
-    container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend();
-    container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin();
-    container<group>::const_iterator sgroup_citer_end = container_group.groups().cend();
-
-    BOOST_TEST_MESSAGE("testing (in)equality of begin and end iterators");
-    // begin- and end-iterator over subgroups should not be equal
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
-
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp1");
-
-    // begin- and end-iterator over datasets should not be equal
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
-
-    BOOST_CHECK(dset_citer_begin != dset_citer_end);
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset1");
-
-    // iterate subgroup iter
-    BOOST_TEST_MESSAGE("testing increment operator of subgroup iterator");
-    BOOST_CHECK((*sgroup_iter_begin++).valid());
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
-
-    BOOST_CHECK((*sgroup_citer_begin++).valid());
-    BOOST_CHECK(sgroup_citer_begin == sgroup_citer_end);
-
-    // iterate dataset iter
-    BOOST_TEST_MESSAGE("testing increment operator of dataset iterator");
-    BOOST_CHECK((*dset_iter_begin++).valid());
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset2");
-    dset_iter_begin++;
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-
-    BOOST_CHECK((*dset_citer_begin++).valid());
-    BOOST_CHECK(dset_citer_begin != dset_citer_end);
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset2");
-    dset_citer_begin++;
-    BOOST_CHECK(dset_citer_begin == dset_citer_end);
-}
-
-
-BOOST_AUTO_TEST_CASE( mixed_2 )
-{
-    BOOST_TEST_MESSAGE("\nTesting iterator over 2nd mixed group");
-    /** container group with 1 dataset and 2 subgroups **/
+    BOOST_TEST_MESSAGE("\nTesting iterator over group that both datasets and subgroups");
     group container_group(file);
 
-    group grp1(container_group, "grp1");
-    group grp2(container_group, "grp2");
-    dataset dset1 = create_dataset<int>(container_group, "dset1");
-    dataset temp_set;
-    group temp_group;
+    create_dataset<int>(container_group, "dset1");
+    create_dataset<int>(container_group, "dset2");
+    group(container_group, "grp1");
+    group(container_group, "grp2");
+    group(container_group, "grp3");
 
-    BOOST_TEST_MESSAGE("testing begin/end/cbegin/cend");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
+    container<dataset> datasets = container_group.datasets();
+    container<group> groups = container_group.groups();
 
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin());
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_end = container_group.groups().cend());
+    // use dataset iterator to walk over datasets
+    BOOST_TEST_MESSAGE("  walk over datasets using post-increment");
 
-    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
-    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
-    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
-    container<group>::iterator sgroup_iter_end = container_group.groups().end();
+    container<dataset>::iterator dset_iter = datasets.begin();
+    BOOST_CHECK(dset_iter != datasets.end());               // not empty
+    BOOST_CHECK_EQUAL((dset_iter++).get_name(), "dset1");
+    BOOST_CHECK_EQUAL((dset_iter++).get_name(), "dset2");
+    BOOST_CHECK(dset_iter == datasets.end());
 
-    container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin();
-    container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend();
-    container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin();
-    container<group>::const_iterator sgroup_citer_end = container_group.groups().cend();
+    // use iterator to walk over subgroups
+    BOOST_TEST_MESSAGE("  walk over subgroups using pre-increment");
 
-    BOOST_TEST_MESSAGE("testing (in)equality of begin/cbegin and end/cend iterators");
-    // begin- and end-iterator over subgroups should not be equal
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
-
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp1");
-
-    // begin- and end-iterator over datasets should not be equal
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
-
-    BOOST_CHECK(dset_citer_begin != dset_citer_end);
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset1");
-
-    // iterate subgroup iter
-    BOOST_TEST_MESSAGE("testing increment operator of subgroup iterator");
-    BOOST_CHECK((*sgroup_iter_begin++).valid());
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp2");
-
-    BOOST_CHECK((*sgroup_citer_begin++).valid());
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp2");
-
-    // iterate dataset iter
-    BOOST_TEST_MESSAGE("testing increment operator of dataset iterator");
-    BOOST_CHECK((*dset_iter_begin++).valid());
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-
-    BOOST_CHECK((*dset_citer_begin++).valid());
-    BOOST_CHECK(dset_citer_begin == dset_citer_end);
-
-
-//    BOOST_CHECK_EQUAL_COLLECTIONS(container_group.groups(), group_list);
-//    BOOST_CHECK_EQUAL_COLLECTIONS(container_group.groups().begin(), container_group.groups().end(), group_list.begin());
+    container<group>::iterator sgroup_iter = groups.begin();
+    BOOST_CHECK(sgroup_iter != groups.end());              // not empty
+    BOOST_CHECK_EQUAL(sgroup_iter.get_name(), "grp1");
+    BOOST_CHECK_EQUAL((++sgroup_iter).get_name(), "grp2");
+    BOOST_CHECK_EQUAL((++sgroup_iter).get_name(), "grp3");
+    BOOST_CHECK(++sgroup_iter == groups.end());
 }
 
-
-BOOST_AUTO_TEST_CASE( mixed_3 )
-{
-    BOOST_TEST_MESSAGE("\nTesting iterator over 3rd mixed group");
-    /** container group with 2 datasets and 2 subgroups **/
-    group container_group(file);
-    group grp1(container_group, "grp1");
-    group grp2(container_group, "grp2");
-    dataset dset1 = create_dataset<int>(container_group, "dset1");
-    dataset dset2 = create_dataset<int>(container_group, "dset2");
-
-    std::vector<std::string> group_list = { "/grp1", "/grp2" };
-    int dummy = 0;
-    for (auto& grp : container_group.groups()) {
-        BOOST_CHECK(get_name(grp) == group_list[dummy++]);
-    }
-
-    dummy = 0;
-    for(auto const& grp : container_group.groups()) {
-        BOOST_CHECK(get_name(grp) == group_list[dummy++]);
-    }
-
-    std::vector<std::string> dset_list = { "/dset1", "/dset2" };
-    dummy = 0;
-    for (auto& dset : container_group.datasets()) {
-        BOOST_CHECK(get_name(dset) == dset_list[dummy++]);
-    }
-
-    dummy = 0;
-    for (auto const& dset : container_group.datasets()) {
-        BOOST_CHECK(get_name(dset) == dset_list[dummy++]);
-    }
-
-    BOOST_TEST_MESSAGE("testing begin/end/cbegin/cend");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_begin = container_group.datasets().begin());
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter_end = container_group.datasets().end());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_begin = container_group.groups().begin());
-    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter_end = container_group.groups().end());
-
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin());
-    BOOST_CHECK_NO_THROW(container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin());
-    BOOST_CHECK_NO_THROW(container<group>::const_iterator sgroup_citer_end = container_group.groups().cend());
-
-    container<dataset>::iterator dset_iter_begin = container_group.datasets().begin();
-    container<dataset>::iterator dset_iter_end = container_group.datasets().end();
-    container<group>::iterator sgroup_iter_begin = container_group.groups().begin();
-    container<group>::iterator sgroup_iter_end = container_group.groups().end();
-
-    container<dataset>::const_iterator dset_citer_begin = container_group.datasets().cbegin();
-    container<dataset>::const_iterator dset_citer_end = container_group.datasets().cend();
-    container<group>::const_iterator sgroup_citer_begin = container_group.groups().cbegin();
-    container<group>::const_iterator sgroup_citer_end = container_group.groups().cend();
-
-    BOOST_TEST_MESSAGE("testing (in)equality of begin/cbegin and end/cend iterators");
-    // begin- and end-iterator over subgroups should not be equal
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp1");
-
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp1");
-
-    // begin- and end-iterator over datasets should not be equal
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset1");
-
-    BOOST_CHECK(dset_citer_begin != dset_citer_end);
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset1");
-
-    // iterate both iterators
-    BOOST_TEST_MESSAGE("testing increment dataset/subgroup iterators alternateingly");
-    BOOST_CHECK((*sgroup_iter_begin++).valid());
-    BOOST_CHECK(sgroup_iter_begin != sgroup_iter_end);
-    BOOST_CHECK(sgroup_iter_begin.get_name() == "grp2");
-
-    BOOST_CHECK((*dset_iter_begin++).valid());
-    BOOST_CHECK(dset_iter_begin != dset_iter_end);
-    BOOST_CHECK(dset_iter_begin.get_name() == "dset2");
-
-    dset_iter_begin++;
-    sgroup_iter_begin++;
-
-    BOOST_CHECK(sgroup_iter_begin == sgroup_iter_end);
-    BOOST_CHECK(dset_iter_begin == dset_iter_end);
-
-    BOOST_CHECK((*sgroup_citer_begin++).valid());
-    BOOST_CHECK(sgroup_citer_begin != sgroup_citer_end);
-    BOOST_CHECK(sgroup_citer_begin.get_name() == "grp2");
-
-    BOOST_CHECK((*dset_citer_begin++).valid());
-    BOOST_CHECK(dset_citer_begin != dset_citer_end);
-    BOOST_CHECK(dset_citer_begin.get_name() == "dset2");
-
-    dset_citer_begin++;
-    sgroup_citer_begin++;
-
-    BOOST_CHECK(sgroup_citer_begin == sgroup_citer_end);
-    BOOST_CHECK(dset_citer_begin == dset_citer_end);
-}
 } // namespace fixture

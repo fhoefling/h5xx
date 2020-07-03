@@ -1,8 +1,13 @@
-cmake_minimum_required(VERSION 2.8)
+cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "cmake/platform.cmake")
 
-project(H5XX CXX)
+# C language only needed due to regression in FindHDF5.
+project(H5XX LANGUAGES C CXX)
+set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD_REQUIRED ON)
+set(CMAKE_CXX_EXTENSIONS OFF)
+
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -17,13 +22,12 @@ if(NOT DEFINED Boost_USE_MULTITHREADED)
 endif(NOT DEFINED Boost_USE_MULTITHREADED)
 
 find_package(Boost 1.40.0 QUIET REQUIRED COMPONENTS unit_test_framework)
-find_package(HDF5 QUIET REQUIRED)
+find_package(HDF5 COMPONENTS C REQUIRED)
 
-#
 # use
 # $ cmake -DMPI=ON ...
 # to configure with MPI support
-#
+
 if (MPI)
    find_package(MPI)
 endif()
@@ -33,7 +37,7 @@ if (MPI_FOUND)
    add_definitions(-DH5XX_USE_MPI -DMPICH_IGNORE_CXX_SEEK)
 endif()
 
-include_directories(SYSTEM ${HDF5_INCLUDE_DIR})
+include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 

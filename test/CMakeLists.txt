@@ -35,7 +35,7 @@ foreach(module
   )
   target_link_libraries(test_h5xx_${module}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-    ${HDF5_LIBRARY}
+    ${HDF5_LIBRARIES}
     dl
     pthread
     dl
@@ -55,7 +55,7 @@ foreach(module
   )
   target_link_libraries(test_h5xx_${module}
     ${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-    ${HDF5_LIBRARY}
+    ${HDF5_LIBRARIES}
     pthread
     dl
     z
@@ -72,7 +72,7 @@ if (MPI_FOUND)
       )
       target_link_libraries(test_h5xx_${module}
         #${Boost_UNIT_TEST_FRAMEWORK_LIBRARY}
-        ${HDF5_LIBRARY}
+        ${HDF5_LIBRARIES}
         pthread
         dl
         z

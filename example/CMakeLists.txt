@@ -9,7 +9,7 @@ find_package(HDF5 QUIET REQUIRED)
 find_package(H5XX QUIET REQUIRED)
 
 include_directories(SYSTEM "${Boost_INCLUDE_DIR}")
-include_directories(SYSTEM "${HDF5_INCLUDE_DIR}")
+include_directories(SYSTEM "${HDF5_INCLUDE_DIRS}")
 include_directories("${H5XX_INCLUDE_DIR}")
 
 set(CMAKE_BUILD_TYPE "Release")
@@ -27,7 +27,7 @@ foreach(module
     ${module}.cpp
   )
   target_link_libraries(${module}
-    ${HDF5_LIBRARY}
+    ${HDF5_LIBRARIES}
     dl
     z
   )
@@ -41,7 +41,7 @@ if (MPI_FOUND)
       ${module}.cpp
     )
     target_link_libraries(${module}
-      ${HDF5_LIBRARY}
+      ${HDF5_LIBRARIES}
       dl
       z
     )

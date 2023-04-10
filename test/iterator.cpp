@@ -70,8 +70,8 @@ BOOST_AUTO_TEST_CASE( iterator_constructors )
 
     // custom constructor
     BOOST_TEST_MESSAGE("  constructor on empty group");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator(container_group));
-    BOOST_CHECK_NO_THROW(container<group>::iterator(container_group));
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator container_group);
+    BOOST_CHECK_NO_THROW(container<group>::iterator container_group);
 
     // populate group
     create_dataset<int>(container_group, "dset");
@@ -79,8 +79,8 @@ BOOST_AUTO_TEST_CASE( iterator_constructors )
 
     // custom constructor on non-empty group
     BOOST_TEST_MESSAGE("  constructor on non-empty group");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator(container_group));
-    BOOST_CHECK_NO_THROW(container<group>::iterator(container_group));
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator container_group);
+    BOOST_CHECK_NO_THROW(container<group>::iterator container_group);
 
     // copy constructor
     BOOST_TEST_MESSAGE("  copy constructor");
@@ -114,8 +114,8 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
 
     // MoveConstructible
     BOOST_TEST_MESSAGE("  MoveConstructible");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator temp(container<dataset>::iterator()));
-    BOOST_CHECK_NO_THROW(container<group>::iterator temp(container<group>::iterator()));
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator temp{container<dataset>::iterator()});
+    BOOST_CHECK_NO_THROW(container<group>::iterator temp{container<group>::iterator()});
 
     container<dataset>::iterator dset_iter, dset_iter_2, dset_iter_3;
     container<group>::iterator sgroup_iter, sgroup_iter_2, sgroup_iter_3;
@@ -127,8 +127,8 @@ BOOST_AUTO_TEST_CASE( iterator_requirements )
 
     // CopyConstructible
     BOOST_TEST_MESSAGE("  CopyConstructible");
-    BOOST_CHECK_NO_THROW(container<dataset>::iterator(dset_iter));
-    BOOST_CHECK_NO_THROW(container<group>::iterator(sgroup_iter));
+    BOOST_CHECK_NO_THROW(container<dataset>::iterator dset_iter);
+    BOOST_CHECK_NO_THROW(container<group>::iterator sgroup_iter);
 
     // CopyAssignable
     BOOST_TEST_MESSAGE("  CopyAssignable");

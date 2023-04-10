@@ -2,12 +2,14 @@ cmake_minimum_required(VERSION 3.1)
 
 set(CMAKE_USER_MAKE_RULES_OVERRIDE "cmake/platform.cmake")
 
-# C language only needed due to regression in FindHDF5.
+# C language is only needed due to regression in FindHDF5.
 project(H5XX LANGUAGES C CXX)
+
+set(H5XX_VERSION 0.9.2)
+
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
 set(CMAKE_CXX_EXTENSIONS OFF)
-
 
 set(CMAKE_MODULE_PATH "${CMAKE_SOURCE_DIR}/cmake")
 
@@ -41,9 +43,22 @@ include_directories(SYSTEM ${HDF5_INCLUDE_DIRS})
 include_directories(SYSTEM ${Boost_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 
+#
+# define target as a header-only library
+#
+add_library(h5xx INTERFACE)
+target_compile_features(h5xx INTERFACE cxx_std_11)
+target_include_directories(h5xx INTERFACE
+    $<BUILD_INTERFACE:${CMAKE_SOURCE_DIR}>
+    $<INSTALL_INTERFACE:include>
+)
+
+include("${CMAKE_SOURCE_DIR}/cmake/install.cmake")
+
+#
+# provide unit tests
+#
 enable_testing()
 include(CTest)
 add_subdirectory(test)
 
-set(H5XX_INCLUDE_DIR "${CMAKE_SOURCE_DIR}/h5xx")
-add_subdirectory(example)

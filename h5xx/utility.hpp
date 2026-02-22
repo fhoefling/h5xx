@@ -182,54 +182,90 @@ template <typename T, typename Alloc>
 struct is_vector<std::vector<T, Alloc> >
   : boost::true_type {};
 
-
 /**
  * h5xx implementation for checking data types of abstract datasets (dataset or attribute)
  */
-template <typename T>
+template <typename T, typename h5xxObject>
 inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
-has_type(hid_t const& hid)
+has_type(h5xxObject const& object)
 {
-    hid_t type_id = H5Aget_type(hid); // FIXME works for attributes only
-    return H5Tget_class(type_id) == ctype<T>::hid();
+    hid_t type_id = get_type(object);
+    H5T_class_t obj_class = H5Tget_class(type_id);
+    H5T_class_t target_class = H5Tget_class(ctype<T>::hid());
+    H5Tclose(type_id);
+
+    return obj_class == target_class;
 }
 
-template <typename T>
+template <typename T, typename h5xxObject>
 inline typename boost::enable_if<boost::is_same<T, std::string>, bool>::type
-has_type(hid_t const& hid)
+has_type(h5xxObject const& object)
 {
-    hid_t type_id = H5Aget_type(hid);
-    return H5Tget_class(type_id) == H5T_STRING;
+    hid_t type_id = get_type(object);
+    H5T_class_t obj_class = H5Tget_class(type_id);
+    H5Tclose(type_id); // Clean up resource
+    return obj_class == H5T_STRING;
 }
 
-template <typename T>
+template <typename T, typename h5xxObject>
 inline typename boost::enable_if<boost::is_same<T, char const*>, bool>::type
-has_type(hid_t const& hid)
+has_type(h5xxObject const& object)
 {
-    return has_type<std::string>(hid);
+    return has_type<std::string>(object);
 }
 
-template <typename T>
+template <typename T, typename h5xxObject>
 inline typename boost::enable_if<is_vector<T>, bool>::type
-has_type(hid_t const& hid)
+has_type(h5xxObject const& object)
 {
-    return has_type<typename T::value_type>(hid);
+    return has_type<typename T::value_type>(object);
 }
 
-template <typename T>
+template <typename T, typename h5xxObject>
 inline typename boost::enable_if<is_array<T>, bool>::type
-has_type(hid_t const& hid)
+has_type(h5xxObject const& object)
 {
-    return has_type<typename T::value_type>(hid);
+    return has_type<typename T::value_type>(object);
 }
 
-template <typename T>
+template <typename T, typename h5xxObject>
 inline typename boost::enable_if<is_multi_array<T>, bool>::type
-has_type(hid_t const& hid)
+has_type(h5xxObject const& object)
 {
-    return has_type<typename T::element>(hid);
+    return has_type<typename T::element>(object);
 }
 
+template <typename h5xxObject>
+inline hid_t get_type(h5xxObject const& obj)
+{
+    hid_t loc_id = obj.hid();
+    H5I_type_t id_type = H5Iget_type(loc_id);
+    hid_t type_id = -1;
+
+    switch (id_type)
+    {
+        case H5I_DATASET:
+            type_id = H5Dget_type(loc_id);
+            break;
+        case H5I_ATTR:
+            type_id = H5Aget_type(loc_id);
+            break;
+        case H5I_DATATYPE:
+            // If the object is already a datatype, we return a copy to maintain consistency
+            // (caller owns the returned resource).
+            type_id = H5Tcopy(loc_id);
+            break;
+        default:
+            // H5I_DATASPACE, H5I_GROUP, etc. do not have an associated H5T datatype.
+            throw error("h5xx::get_type: object is not a dataset or attribute (dataspace has no datatype)");
+    }
+
+    if (type_id < 0) {
+        throw error("h5xx::get_type: failed to retrieve datatype");
+    }
+
+    return type_id;
+}
 
 /** swaps two h5xx objects */
 template <typename h5xxObject>

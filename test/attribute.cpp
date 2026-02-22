@@ -46,6 +46,9 @@ BOOST_AUTO_TEST_CASE( construction )
     BOOST_CHECK_EQUAL(foo.name(), "/foo");             // NEW: full path of the attribute
     BOOST_CHECK(foo.valid());
 
+    BOOST_CHECK(( has_type<int>(foo) ));               // Check if it matches int (INTEGER class)
+    BOOST_CHECK(( !has_type<double>(foo) ));           // Check if it does NOT match double (FLOAT class)
+
     hid_t hid = foo.hid();
     attribute bar;
     BOOST_CHECK_THROW(bar = foo, h5xx::error);         // assignment is not allowed (it makes a copy)
@@ -65,6 +68,7 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     BOOST_CHECK_NO_THROW(write_attribute(file, "bool, scalar", test_bool));
     BOOST_CHECK(read_attribute<bool>(file, "bool, scalar") == test_bool);
     BOOST_CHECK(exists_attribute(file, "bool, scalar") == true);
+    BOOST_CHECK(( has_type<bool>(attribute(file, "bool, scalar")) ));
     BOOST_CHECK_NO_THROW(delete_attribute(file, "bool, scalar"));
     BOOST_CHECK(exists_attribute(file, "bool, scalar") == false);
     H5E_BEGIN_TRY{
@@ -76,6 +80,8 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     BOOST_CHECK_NO_THROW(write_attribute(file, "double, scalar", double_value));
     BOOST_CHECK(exists_attribute(file, "double, scalar") == true);
     BOOST_CHECK(read_attribute<double>(file,"double, scalar") == double_value);
+    BOOST_CHECK(( has_type<double>(attribute(file, "double, scalar")) ));
+    BOOST_CHECK(( !has_type<int>(attribute(file, "double, scalar")) ));
 
     uint64_t uint_value = 9223372036854775783LLU;  // largest prime below 2^63
     BOOST_CHECK_NO_THROW(write_attribute(file, "integral, scalar", uint64_t(1)));   // store wrong value of correct type first
@@ -92,6 +98,9 @@ BOOST_AUTO_TEST_CASE( scalar_stdstring )
     BOOST_CHECK_NO_THROW(write_attribute(file, "scalar, stdstring", wrongstring));
     BOOST_CHECK_NO_THROW(write_attribute(file, "scalar, stdstring", stdstring));
     BOOST_CHECK(exists_attribute(file, "scalar, stdstring"));
+    BOOST_CHECK(( has_type<std::string>(attribute(file, "scalar, stdstring")) ));
+    BOOST_CHECK(( has_type<char const*>(attribute(file, "scalar, stdstring")) )); // Check specialized overload
+    BOOST_CHECK(( !has_type<int>(attribute(file, "scalar, stdstring")) ));
     BOOST_CHECK_NO_THROW(read_attribute<std::string>(file, "scalar, stdstring"));
     BOOST_CHECK_NO_THROW(read = read_attribute<std::string>(file, "scalar, stdstring"));
     BOOST_CHECK_EQUAL(read, stdstring);
@@ -131,6 +140,7 @@ BOOST_AUTO_TEST_CASE( scalar_cstring )
     BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, nullpad") == cstring);
     BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, spacepad") == cstring);
 //    BOOST_CHECK(read_attribute<std::string>(file, "scalar, cstring, empty") == "");
+    BOOST_CHECK(( has_type<char const*>(attribute(file, "scalar, cstring")) ));
 }
 
 BOOST_AUTO_TEST_CASE( array_int )
@@ -143,6 +153,7 @@ BOOST_AUTO_TEST_CASE( array_int )
     BOOST_CHECK_NO_THROW(write_attribute(file, "array, int", int_array));            // overwrite with correct array
     BOOST_CHECK(exists_attribute(file, "array, int"));
     BOOST_CHECK(read_attribute<int_array_type>(file, "array, int") == int_array);    // check if overwriting was successful
+    BOOST_CHECK(( has_type<int>(attribute(file, "array, int")) ));
 }
 
 BOOST_AUTO_TEST_CASE( array_bool )
@@ -155,6 +166,7 @@ BOOST_AUTO_TEST_CASE( array_bool )
     BOOST_CHECK_NO_THROW(write_attribute(file, "array, bool", true_array));
     BOOST_CHECK_NO_THROW(read = read_attribute<bool_array_type>(file, "array, bool"));
     BOOST_CHECK(read == true_array);
+    BOOST_CHECK(( has_type<bool>(attribute(file, "array, bool")) ));
 }
 
 BOOST_AUTO_TEST_CASE( array_cstring )
@@ -183,6 +195,7 @@ BOOST_AUTO_TEST_CASE( array_cstring )
     BOOST_CHECK(read_attribute<string_array_type>(file, "array, cstring, varlen") == string_array);
     BOOST_CHECK(read_attribute<string_array_type>(file, "array, cstring, nullpad") == string_array);
     BOOST_CHECK(read_attribute<string_array_type>(file, "array, cstring, spacepad") == string_array);
+    BOOST_CHECK(( has_type<char const*>(attribute(file, "array, cstring, nullterm")) ));
 }
 
 BOOST_AUTO_TEST_CASE( array_string )
@@ -213,6 +226,7 @@ BOOST_AUTO_TEST_CASE( array_string )
     BOOST_CHECK(string_array == read_nullpad);
     BOOST_CHECK(string_array == read_spacepad);
     BOOST_CHECK(string_array == read_variable_length);
+    BOOST_CHECK(( has_type<std::string>(attribute(file, "array, string, nullterm")) ));
 }
 
 BOOST_AUTO_TEST_CASE( stdvector_double )
@@ -224,6 +238,7 @@ BOOST_AUTO_TEST_CASE( stdvector_double )
     BOOST_CHECK_NO_THROW(write_attribute(file, "stdvector, double", double_vector));
     BOOST_CHECK_NO_THROW(read = read_attribute<double_vector_type>(file, "stdvector, double"));
     BOOST_CHECK(read == double_vector);
+    BOOST_CHECK(( has_type<double>(attribute(file, "stdvector, double")) ));
 }
 
 BOOST_AUTO_TEST_CASE( stdvector_int )
@@ -235,6 +250,7 @@ BOOST_AUTO_TEST_CASE( stdvector_int )
     BOOST_CHECK_NO_THROW(write_attribute(file, "stdvector, int", int_vector));
     BOOST_CHECK_NO_THROW(read = read_attribute<int_vector_type>(file, "stdvector, int"));
     BOOST_CHECK(read == int_vector);
+    BOOST_CHECK(( has_type<int>(attribute(file, "stdvector, int")) ));
 }
 
 BOOST_AUTO_TEST_CASE( stdvector_string )
@@ -246,6 +262,9 @@ BOOST_AUTO_TEST_CASE( stdvector_string )
     BOOST_CHECK_NO_THROW(write_attribute(file, "std::vector, string", output));
     BOOST_CHECK_NO_THROW(input = read_attribute<std::vector<std::string> >(file, "std::vector, string"));
     BOOST_CHECK_EQUAL_COLLECTIONS(input.begin(), input.end(), output.begin(), output.end());
+    BOOST_CHECK(( has_type<std::string>(attribute(file, "std::vector, string")) ));
+    BOOST_CHECK(( has_type<char const*>(attribute(file, "std::vector, string")) )); // Check specialized overload
+    BOOST_CHECK(( !has_type<int>(attribute(file, "std::vector, string")) ));
 }
 
 BOOST_AUTO_TEST_CASE( boost_multi_array)
@@ -258,5 +277,6 @@ BOOST_AUTO_TEST_CASE( boost_multi_array)
     BOOST_CHECK_NO_THROW(write_attribute(file, "boost multi array, int", multi_array_value));
     BOOST_CHECK_NO_THROW(read = read_attribute<multi_array3>(file, "boost multi array, int"));
     BOOST_CHECK(read == multi_array_value);
+    BOOST_CHECK(( has_type<int>(attribute(file, "boost multi array, int")) ));
 }
 } //namespace fixture

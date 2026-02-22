@@ -52,6 +52,9 @@ BOOST_AUTO_TEST_CASE( construction )
     BOOST_CHECK_EQUAL(get_name(foo), "/foo"); // full path of the dataset
     BOOST_CHECK(foo.valid());
 
+    BOOST_CHECK(( has_type<int>(foo) ));               // Check if it matches int (INTEGER class)
+    BOOST_CHECK(( !has_type<double>(foo) ));           // Check if it does NOT match double (FLOAT class)
+
     hid_t hid = foo.hid();
     dataset bar;
     BOOST_CHECK_THROW(bar = foo, h5xx::error); // assignment is not allowed (it makes a copy)
@@ -73,6 +76,7 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     BOOST_CHECK_NO_THROW(read_dataset<bool>(file, bool_name));
     BOOST_CHECK(read_dataset<bool>(file, bool_name) == bool_value);
     BOOST_CHECK(exists_dataset(file, bool_name) == true);
+    BOOST_CHECK(( has_type<bool>(dataset(file, bool_name)) ));
     H5E_BEGIN_TRY{
         BOOST_CHECK_THROW(read_attribute<bool>(file, "X"+bool_name), h5xx::error);
     } H5E_END_TRY
@@ -87,6 +91,8 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     BOOST_CHECK_NO_THROW(write_dataset(file, double_name, 0.5*double_value));
     BOOST_CHECK_NO_THROW(read_dataset<double>(file, double_name));
     BOOST_CHECK(exists_dataset(file, double_name) == true);
+    BOOST_CHECK(( has_type<double>(dataset(file, double_name)) ));
+    BOOST_CHECK(( !has_type<int>(dataset(file, double_name)) ));
 
     uint64_t uint64_value = 9223372036854775783LLU;  // largest prime below 2^63
     std::string uint64_name = "uint64, scalar";
@@ -94,6 +100,7 @@ BOOST_AUTO_TEST_CASE( scalar_fundamental )
     BOOST_CHECK_NO_THROW(write_dataset(file, uint64_name, uint64_value));
     BOOST_CHECK_NO_THROW(read_dataset<uint64_t>(file, uint64_name));
     BOOST_CHECK(exists_dataset(file, uint64_name) == true);
+    BOOST_CHECK(( has_type<uint64_t>(dataset(file, uint64_name)) ));
 }
 
 // test default creation of a dataset (no storage policy provided)
@@ -109,6 +116,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_simple )
     BOOST_CHECK_NO_THROW(write_dataset(file, name, multi_array_value));
     BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
     BOOST_CHECK(arrayRead == multi_array_value);
+    BOOST_CHECK((has_type<int>(dataset(file, name))));
 }
 
 // test chunked dataset and the filters (compression, etc) it can use
@@ -134,6 +142,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -145,6 +154,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -156,6 +166,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -167,6 +178,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -178,6 +190,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -189,6 +202,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -200,6 +214,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_chunked )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 }
@@ -227,6 +242,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -242,6 +258,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
         for (unsigned int i = 0; i < array4711.num_elements(); i++)
             array4711.data()[i] = fillValue;
         BOOST_CHECK(arrayRead == array4711);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -253,6 +270,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_contiguous )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 }
@@ -280,6 +298,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -297,6 +316,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
         for (unsigned int i = 0; i < array4711.num_elements(); i++)
             array4711.data()[i] = fillValue;
         BOOST_CHECK(arrayRead == array4711);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
@@ -308,6 +328,7 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
+        BOOST_CHECK((has_type<int>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 }
@@ -347,6 +368,8 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset_hyperslab )
     BOOST_CHECK_NO_THROW(h5xx::read_dataset(file, name, arrayRead));
 
     BOOST_CHECK(arrayRead != arrayWrite);
+
+    BOOST_CHECK((has_type<int>(dataset(file, name))));
 
     // manipulate arrayWrite such that it should be equal to arrayRead at this point
     {

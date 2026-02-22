@@ -48,7 +48,7 @@ public:
     attribute & operator=(attribute other);
 
     /** default destructor */
-    ~attribute();
+    ~attribute() noexcept(false);
 
     /** deduce dataspace from attribute */
     operator dataspace() const;
@@ -148,7 +148,7 @@ inline attribute & attribute::operator=(attribute other)
     return *this;
 }
 
-inline attribute::~attribute()
+inline attribute::~attribute() noexcept(false)
 {
     if (hid_ >= 0) {
         if(H5Aclose(hid_) < 0){

@@ -41,7 +41,7 @@ public:
     );
 
     /** destructor, implicitly closes the dataset's hid_ */
-    ~dataset();
+    ~dataset() noexcept(false);
 
     /**
      * deleted copy constructor
@@ -146,7 +146,7 @@ dataset::dataset(
     }
 }
 
-inline dataset::~dataset()
+inline dataset::~dataset() noexcept(false)
 {
     if (hid_ >= 0) {
         if(H5Dclose(hid_) < 0){

@@ -13,7 +13,7 @@
 # --- actions ---
 CLEAN="yes"
 BUILD="yes"
-#TEST="yes"
+TEST="yes"
 #DOXYGEN="yes"
 
 # --- configuration options ---

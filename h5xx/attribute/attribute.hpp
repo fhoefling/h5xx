@@ -88,8 +88,11 @@ public:
     /** read attribute */
     void read(hid_t mem_type_id, void* buffer);
 
-    /** return copy of attribute's type */
-    hid_t get_type();
+    /**
+     *  returns copy of attribute's type,
+     *  must be closed with H5Tclose()
+     */
+    hid_t get_type() const;
 
     /**
      * returns the name of the attribute.
@@ -187,7 +190,7 @@ inline void attribute::read(hid_t mem_type_id, void * buffer)
     }
 }
 
-inline hid_t attribute::get_type()
+inline hid_t attribute::get_type() const
 {
     hid_t type_id = H5Aget_type(hid_);
     if (type_id < 0)

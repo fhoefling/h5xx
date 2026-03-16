@@ -75,7 +75,9 @@ public:
     /** read from the dataset into the buffer */
     void read(hid_t type_id, void* buffer, hid_t mem_space_id = H5S_ALL, hid_t file_space_id = H5S_ALL, hid_t xfer_plist_id = H5P_DEFAULT);
 
-    /** return copy of dataset's type */
+    /** returns copy of dataset's type,
+     *  must be closed with H5Tclose()
+     */
     hid_t get_type() const;
 
 private:

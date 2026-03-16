@@ -1,5 +1,5 @@
 /*
- * Copyright © 2008-2015 Felix Höfling
+ * Copyright © 2008-2026 Felix Höfling
  * Copyright © 2014-2015 Klaus Reuter
  * Copyright © 2014      Manuel Dibak
  * Copyright © 2008-2009 Peter Colberg
@@ -185,26 +185,25 @@ struct is_vector<std::vector<T, Alloc> >
 /**
  * h5xx implementation for checking data types of abstract datasets (dataset or attribute)
  */
+
 template <typename T, typename h5xxObject>
 inline typename boost::enable_if<boost::is_fundamental<T>, bool>::type
 has_type(h5xxObject const& object)
 {
-    hid_t type_id = get_type(object);
-    H5T_class_t obj_class = H5Tget_class(type_id);
-    H5T_class_t target_class = H5Tget_class(ctype<T>::hid());
+    hid_t type_id = object.get_type();
+    H5T_class_t class_id = H5Tget_class(type_id);
     H5Tclose(type_id);
-
-    return obj_class == target_class;
+    return class_id == H5Tget_class(ctype<T>::hid());
 }
 
 template <typename T, typename h5xxObject>
 inline typename boost::enable_if<boost::is_same<T, std::string>, bool>::type
 has_type(h5xxObject const& object)
 {
-    hid_t type_id = get_type(object);
-    H5T_class_t obj_class = H5Tget_class(type_id);
-    H5Tclose(type_id); // Clean up resource
-    return obj_class == H5T_STRING;
+    hid_t type_id = object.get_type();
+    H5T_class_t class_id = H5Tget_class(type_id);
+    H5Tclose(type_id);
+    return class_id == H5T_STRING;
 }
 
 template <typename T, typename h5xxObject>
@@ -213,6 +212,8 @@ has_type(h5xxObject const& object)
 {
     return has_type<std::string>(object);
 }
+
+// use generic templates to test value type of more complex data types
 
 template <typename T, typename h5xxObject>
 inline typename boost::enable_if<is_vector<T>, bool>::type

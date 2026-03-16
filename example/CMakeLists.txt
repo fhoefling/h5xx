@@ -1,4 +1,4 @@
-cmake_minimum_required(VERSION 3.1)
+cmake_minimum_required(VERSION 3.5)
 
 # C language is only needed due to regression in FindHDF5.
 project(EXAMPLE LANGUAGES C CXX)

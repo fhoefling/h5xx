@@ -1,5 +1,5 @@
 /*
- * Copyright © 2010-2016 Felix Höfling
+ * Copyright © 2010-2026 Felix Höfling
  * Copyright © 2014-2016 Klaus Reuter
  * All rights reserved.
  *
@@ -39,7 +39,7 @@ typedef h5file<filename> BOOST_AUTO_TEST_CASE_FIXTURE;
 
 typedef boost::multi_array<int, 1> array_1d_t;
 typedef boost::multi_array<int, 2> array_2d_t;
-
+typedef boost::multi_array<double, 2> array_2d_double_t;
 
 BOOST_AUTO_TEST_CASE( construction )
 {
@@ -282,8 +282,8 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
     const int NI=10;
     const int NJ=NI;
     std::string name;
-    array_2d_t arrayRead(boost::extents[NJ][NI]);
-    array_2d_t arrayWrite(boost::extents[NJ][NI]);
+    array_2d_double_t arrayRead(boost::extents[NJ][NI]);
+    array_2d_double_t arrayWrite(boost::extents[NJ][NI]);
     {
         const int nelem = NI*NJ;
         int data[nelem];
@@ -292,18 +292,18 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
     }
 
     {
-        name = "boost multi array, int, compact";
+        name = "boost multi array, double, compact";
         h5xx::policy::storage::compact storagePolicy;
         BOOST_CHECK_NO_THROW(create_dataset(file, name, arrayWrite, storagePolicy));
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
-        BOOST_CHECK((has_type<int>(dataset(file, name))));
+        BOOST_CHECK((has_type<double>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
     {
-        name = "boost multi array, int, compact, fill_value";
+        name = "boost multi array, double, compact, fill_value";
         const int fillValue = 4711;
         h5xx::policy::storage::compact storagePolicy;
         storagePolicy.set(h5xx::policy::storage::fill_value(fillValue));
@@ -312,23 +312,23 @@ BOOST_AUTO_TEST_CASE( boost_multi_array_compact )
 //                write_dataset(file, name, arrayWrite)
 //        );
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
-        array_2d_t array4711(boost::extents[NJ][NI]);
+        array_2d_double_t array4711(boost::extents[NJ][NI]);
         for (unsigned int i = 0; i < array4711.num_elements(); i++)
             array4711.data()[i] = fillValue;
         BOOST_CHECK(arrayRead == array4711);
-        BOOST_CHECK((has_type<int>(dataset(file, name))));
+        BOOST_CHECK((has_type<double>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 
     {
-        name = "boost multi array, int, compact, track_times";
+        name = "boost multi array, double, compact, track_times";
         h5xx::policy::storage::compact storagePolicy;
         storagePolicy.set(h5xx::policy::storage::track_times());
         BOOST_CHECK_NO_THROW(create_dataset(file, name, arrayWrite, storagePolicy));
         BOOST_CHECK_NO_THROW(write_dataset(file, name, arrayWrite));
         BOOST_CHECK_NO_THROW(read_dataset(file, name, arrayRead));
         BOOST_CHECK(arrayRead == arrayWrite);
-        BOOST_CHECK((has_type<int>(dataset(file, name))));
+        BOOST_CHECK((has_type<double>(dataset(file, name))));
         zero_multi_array(arrayRead);
     }
 }
@@ -340,8 +340,8 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset_hyperslab )
     const int NI=10;
     const int NJ=NI;
     std::string name;
-    array_2d_t arrayRead(boost::extents[NJ][NI]);
-    array_2d_t arrayWrite(boost::extents[NJ][NI]);
+    array_2d_double_t arrayRead(boost::extents[NJ][NI]);
+    array_2d_double_t arrayWrite(boost::extents[NJ][NI]);
     {
         const int nelem = NI*NJ;
         int data[nelem];
@@ -349,7 +349,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset_hyperslab )
         arrayWrite.assign(data, data + nelem);
     }
 
-    name = "integer array";
+    name = "double array, assigning integers";
     h5xx::create_dataset(file, name, arrayWrite);
     h5xx::write_dataset(file, name, arrayWrite);
 
@@ -369,7 +369,7 @@ BOOST_AUTO_TEST_CASE( h5xx_dataset_hyperslab )
 
     BOOST_CHECK(arrayRead != arrayWrite);
 
-    BOOST_CHECK((has_type<int>(dataset(file, name))));
+    BOOST_CHECK((has_type<double>(dataset(file, name))));
 
     // manipulate arrayWrite such that it should be equal to arrayRead at this point
     {
